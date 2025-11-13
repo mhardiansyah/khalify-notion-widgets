@@ -21,7 +21,8 @@ export async function POST(req: Request) {
 
   tokenStore.set(id, token);
 
-  const embedUrl = `http://localhost:3000/embed/${id}?db=${db}`;
+  // const embedUrl = `http://localhost:3000/embed/${id}?db=${db}`;
+  const embedUrl = `https://khalify-notion-widgets.vercel.app//embed/${id}?db=${db}`;
 
   return NextResponse.json({ success: true, embedUrl });
 }
