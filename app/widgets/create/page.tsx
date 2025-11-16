@@ -8,6 +8,8 @@ export default function CreateWidgetPage() {
   const [db, setDb] = useState<string | null>(null);
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // AUTO GENERATE EMBED WHEN token + db ready
   useEffect(() => {
     if (!token || !db) return;
 

@@ -38,6 +38,7 @@ function extractImage(item: any) {
   return "/placeholder.png";
 }
 
+/** 👉 Ambil NAME dari database Notion */
 function extractName(item: any) {
   return item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
 }
@@ -52,14 +53,9 @@ export default async function EmbedPage(props: any) {
 
     if (!db) return <p style={{ color: "red" }}>Missing database ID.</p>;
 
-    // 🔥 Get token from Redis
     const token = await getToken(id);
     if (!token)
-      return (
-        <p style={{ color: "red", padding: 20 }}>
-          Invalid or expired embed link.
-        </p>
-      );
+      return <p style={{ color: "red" }}>Invalid or expired embed link.</p>;
 
     const data = await queryDatabase(token, db);
 
@@ -78,8 +74,10 @@ export default async function EmbedPage(props: any) {
                   bg-gray-900 rounded-lg overflow-hidden
                 "
               >
+                {/* Thumbnail */}
                 <AutoThumbnail src={url} />
 
+                {/* Hover Overlay */}
                 <div
                   className="
                     absolute inset-0 bg-black/60 

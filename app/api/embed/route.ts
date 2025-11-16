@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { redis } from "@/app/lib/redis";
+import { kv } from "@vercel/kv";
 
 export async function POST(req: Request) {
   const { token, db } = await req.json();
@@ -9,20 +9,24 @@ export async function POST(req: Request) {
   if (!token || !db)
     return NextResponse.json({ error: "Missing token/db" }, { status: 400 });
 
+  // slug ID untuk embed
   const id = randomUUID().slice(0, 6);
 
-  // Simpan token ke Redis
-  await redis.set(`notion-token:${id}`, token, {
-    ex: 60 * 60 * 2, // expire 2 jam
+  // simpan ke Vercel KV
+  await kv.set(`widget:${id}`, {
+    token,
+    db,
+    created_at: Date.now(),
   });
 
-  // Bangun embed URL
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const embedUrl = `${baseUrl}/embed/${id}?db=${db}`;
+  // URL embed final
+  const embedUrl = `https://khalify-notion-widgets.vercel.app/embed/${id}?db=${db}`;
 
   return NextResponse.json({ success: true, embedUrl });
 }
 
+// digunakan di halaman embed
 export async function getToken(id: string) {
-  return await redis.get<string>(`notion-token:${id}`);
+  const data = await kv.get(`widget:${id}`);
+  return (data as any)?.token || null;
 }
