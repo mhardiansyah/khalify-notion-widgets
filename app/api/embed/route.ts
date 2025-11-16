@@ -3,8 +3,6 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { redis } from "@/app/lib/redis";
 
-// ⛔️ globalThis + Map udah nggak dipakai lagi
-
 export async function POST(req: Request) {
   const { token, db } = await req.json();
 
@@ -13,18 +11,18 @@ export async function POST(req: Request) {
 
   const id = randomUUID().slice(0, 6);
 
-  // simpan token ke Redis dengan expiry, misal 2 jam
+  // Simpan token ke Redis
   await redis.set(`notion-token:${id}`, token, {
-    ex: 60 * 60 * 2, // 2 jam
+    ex: 60 * 60 * 2, // expire 2 jam
   });
 
+  // Bangun embed URL
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const embedUrl = `${baseUrl}/embed/${id}?db=${db}`;
 
   return NextResponse.json({ success: true, embedUrl });
 }
 
-// helper yang dipakai EmbedPage
 export async function getToken(id: string) {
   return await redis.get<string>(`notion-token:${id}`);
 }

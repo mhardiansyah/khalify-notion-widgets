@@ -50,11 +50,10 @@ export default async function EmbedPage(props: any) {
     const id = paramsObj.id;
     const db = searchObj?.db;
 
-    if (!db)
-      return <p style={{ color: "red" }}>Missing database ID.</p>;
+    if (!db) return <p style={{ color: "red" }}>Missing database ID.</p>;
 
+    // 🔥 Get token from Redis
     const token = await getToken(id);
-
     if (!token)
       return (
         <p style={{ color: "red", padding: 20 }}>
@@ -79,10 +78,8 @@ export default async function EmbedPage(props: any) {
                   bg-gray-900 rounded-lg overflow-hidden
                 "
               >
-                {/* Thumbnail */}
                 <AutoThumbnail src={url} />
 
-                {/* Hover Overlay */}
                 <div
                   className="
                     absolute inset-0 bg-black/60 
