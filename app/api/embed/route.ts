@@ -13,11 +13,12 @@ export async function POST(req: Request) {
   const id = randomUUID().slice(0, 6);
 
   // simpan ke Vercel KV
-  await kv.set(`widget:${id}`, {
-    token,
-    db,
-    created_at: Date.now(),
-  });
+  await kv.set(`widget:${id}`, JSON.stringify({
+  token,
+  db,
+  created_at: Date.now(),
+}));
+
 
   // URL embed final
   const embedUrl = `https://khalify-notion-widgets.vercel.app/embed/${id}?db=${db}`;
@@ -27,6 +28,9 @@ export async function POST(req: Request) {
 
 // digunakan di halaman embed
 export async function getToken(id: string) {
-  const data = await kv.get(`widget:${id}`);
-  return (data as any)?.token || null;
+  const raw = await kv.get(`widget:${id}`);
+  if (!raw) return null;
+
+  const data = JSON.parse(raw as string);
+  return data.token;
 }
