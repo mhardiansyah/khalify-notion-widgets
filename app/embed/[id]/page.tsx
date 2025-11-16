@@ -50,11 +50,17 @@ export default async function EmbedPage(props: any) {
     const id = paramsObj.id;
     const db = searchObj?.db;
 
-    if (!db) return <p style={{ color: "red" }}>Missing database ID.</p>;
+    if (!db)
+      return <p style={{ color: "red" }}>Missing database ID.</p>;
 
     const token = await getToken(id);
+
     if (!token)
-      return <p style={{ color: "red" }}>Invalid or expired embed link.</p>;
+      return (
+        <p style={{ color: "red", padding: 20 }}>
+          Invalid or expired embed link.
+        </p>
+      );
 
     const data = await queryDatabase(token, db);
 
@@ -66,16 +72,13 @@ export default async function EmbedPage(props: any) {
             const name = extractName(item);
 
             return (
-
               <div
-
                 key={i}
                 className="
                   relative group 
                   bg-gray-900 rounded-lg overflow-hidden
                 "
               >
-
                 {/* Thumbnail */}
                 <AutoThumbnail src={url} />
 
