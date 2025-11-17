@@ -12,7 +12,6 @@ export async function POST(req: Request) {
 
   const id = randomUUID().slice(0, 6);
 
-  // Simpan ke Supabase
   const { error } = await supabaseAdmin.from("widgets").insert({
     id,
     token,
