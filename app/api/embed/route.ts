@@ -1,36 +1,46 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { kv } from "@vercel/kv";
+import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
 
 export async function POST(req: Request) {
   const { token, db } = await req.json();
 
-  if (!token || !db)
+  if (!token || !db) {
     return NextResponse.json({ error: "Missing token/db" }, { status: 400 });
+  }
 
-  // slug ID untuk embed
   const id = randomUUID().slice(0, 6);
 
-  // simpan ke Vercel KV
-  await kv.set(`widget:${id}`, JSON.stringify({
-  token,
-  db,
-  created_at: Date.now(),
-}));
+  // Simpan ke Supabase
+  const { error } = await supabaseAdmin.from("widgets").insert({
+    id,
+    token,
+    db,
+    created_at: Date.now(),
+  });
 
+  if (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Failed to store token" }, { status: 500 });
+  }
 
-  // URL embed final
-  const embedUrl = `https://khalify-notion-widgets.vercel.app/embed/${id}?db=${db}`;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL!;
+  const embedUrl = `${baseUrl}/embed/${id}?db=${db}`;
 
   return NextResponse.json({ success: true, embedUrl });
 }
 
-// digunakan di halaman embed
 export async function getToken(id: string) {
-  const raw = await kv.get(`widget:${id}`);
-  if (!raw) return null;
+  const { data, error } = await supabaseAdmin
+    .from("widgets")
+    .select("token")
+    .eq("id", id)
+    .maybeSingle();
 
-  const data = JSON.parse(raw as string);
+  if (error || !data) {
+    return null;
+  }
+
   return data.token;
 }
