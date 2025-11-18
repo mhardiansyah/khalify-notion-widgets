@@ -105,30 +105,7 @@ export default function CreateWidgetPage() {
                     </a>
                   </div>
 
-                  {/* EMBED HTML */}
-                  <div className="mt-3">
-                    <p className="text-sm text-gray-400 flex items-center justify-between">
-                      Embed HTML:
-                      <button
-                        onClick={() =>
-                          copyText(
-                            `<iframe src="${embedUrl}" style="width:100%;height:600px;border:0;" frameborder="0"></iframe>`,
-                            "html"
-                          )
-                        }
-                        className="text-xs bg-purple-600 px-2 py-1 rounded hover:bg-purple-700 transition"
-                      >
-                        {copiedHtml ? "Copied!" : "Copy"}
-                      </button>
-                    </p>
-
-                    <pre className="bg-gray-800 p-3 rounded text-xs overflow-auto">
-                                              {`<iframe src="${embedUrl}"
-                                                     style="width:100%;height:600px;border:0;"
-  frameborder="0"
-></iframe>`}
-                    </pre>
-                  </div>
+                  
                 </>
               )}
             </>
