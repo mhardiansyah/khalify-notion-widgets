@@ -123,8 +123,8 @@ export default function CreateWidgetPage() {
                     </p>
 
                     <pre className="bg-gray-800 p-3 rounded text-xs overflow-auto">
-{`<iframe src="${embedUrl}"
-  style="width:100%;height:600px;border:0;"
+                                              {`<iframe src="${embedUrl}"
+                                                     style="width:100%;height:600px;border:0;"
   frameborder="0"
 ></iframe>`}
                     </pre>
