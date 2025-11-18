@@ -71,9 +71,10 @@ export default async function EmbedPage(props: any) {
               <div
                 key={i}
                 className="
-                  relative group 
-                  bg-gray-900 rounded-lg overflow-hidden
-                "
+          relative group 
+          bg-gray-900 rounded-lg overflow-hidden
+          aspect-[4/5]
+        "
               >
                 {/* Thumbnail */}
                 <AutoThumbnail src={url} />
@@ -81,11 +82,11 @@ export default async function EmbedPage(props: any) {
                 {/* Hover Overlay */}
                 <div
                   className="
-                    absolute inset-0 bg-black/60 
-                    opacity-0 group-hover:opacity-100
-                    transition-all duration-300
-                    flex items-center justify-center
-                  "
+            absolute inset-0 bg-black/60 
+            opacity-0 group-hover:opacity-100
+            transition-all duration-300
+            flex items-center justify-center
+          "
                 >
                   <p className="text-white font-semibold text-center px-2 text-sm">
                     {name}
@@ -95,6 +96,7 @@ export default async function EmbedPage(props: any) {
             );
           })}
         </div>
+
         <RefreshButton />
       </main>
     );
