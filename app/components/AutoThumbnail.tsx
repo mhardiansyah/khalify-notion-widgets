@@ -3,7 +3,15 @@
 
 import { useEffect, useState } from "react";
 
-export default function AutoThumbnail({ src }: { src: string }) {
+export default function AutoThumbnail({
+  src,
+  className = "",
+  style = {},
+}: {
+  src: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   const [thumb, setThumb] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -61,7 +69,7 @@ export default function AutoThumbnail({ src }: { src: string }) {
     <div
       style={{
         width: "100%",
-        height: "160px",
+        height: "100%",
         position: "relative",
         overflow: "hidden",
         borderRadius: "4px",
@@ -70,12 +78,14 @@ export default function AutoThumbnail({ src }: { src: string }) {
       {/* Thumbnail */}
       <img
         src={thumb || "/video-placeholder.png"}
+        className={className}
         style={{
           objectFit: "cover",
           width: "100%",
           height: "100%",
           opacity: loading ? 0 : 1,
           transition: "opacity 0.4s ease",
+          ...style,
         }}
         alt="thumbnail"
       />
@@ -87,7 +97,8 @@ export default function AutoThumbnail({ src }: { src: string }) {
           style={{
             position: "absolute",
             inset: 0,
-            background: "linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)",
+            background:
+              "linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)",
             backgroundSize: "200% 100%",
             animation: "shimmerMove 1.4s ease-in-out infinite",
           }}

@@ -67,33 +67,26 @@ export default function CreateWidgetPage() {
 
               {embedUrl && (
                 <>
-                  <div className="flex items-center gap-3">
+                  <div>
                     <p className="text-sm text-gray-400 mb-1">Embed URL:</p>
-
-                    {/* COPY BUTTON */}
-                    <button
-                      onClick={() => navigator.clipboard.writeText(embedUrl)}
-                      className="px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-xs"
+                    <a
+                      href={embedUrl}
+                      className="text-purple-400 underline break-all"
+                      target="_blank"
                     >
-                      Copy 📋
-                    </button>
+                      {embedUrl}
+                    </a>
                   </div>
 
-                  <a
-                    href={embedUrl}
-                    className="text-purple-400 underline break-all"
-                    target="_blank"
-                  >
-                    {embedUrl}
-                  </a>
-
-                  {/* Refresh Button */}
-                  <button
-                    onClick={() => setDb((prev) => prev)} // trigger re-fetch
-                    className="mt-3 px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm"
-                  >
-                    Refresh Data 🔄
-                  </button>
+                  <div className="mt-3">
+                    <p className="text-sm text-gray-400">Embed HTML:</p>
+                    <pre className="bg-gray-800 p-3 rounded text-xs overflow-auto">
+                      {`<iframe src="${embedUrl}"
+  style="width:100%;height:600px;border:0;"
+  frameborder="0"
+></iframe>`}
+                    </pre>
+                  </div>
                 </>
               )}
             </>
