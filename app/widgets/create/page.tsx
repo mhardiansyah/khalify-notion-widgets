@@ -9,6 +9,23 @@ export default function CreateWidgetPage() {
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // state untuk feedback "Copied!"
+  const [copied, setCopied] = useState(false);
+  const [copiedHtml, setCopiedHtml] = useState(false);
+
+  // copy function
+  const copyText = async (text: string, type: "url" | "html") => {
+    await navigator.clipboard.writeText(text);
+
+    if (type === "url") {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } else {
+      setCopiedHtml(true);
+      setTimeout(() => setCopiedHtml(false), 1500);
+    }
+  };
+
   // AUTO GENERATE EMBED WHEN token + db ready
   useEffect(() => {
     if (!token || !db) return;
@@ -67,8 +84,18 @@ export default function CreateWidgetPage() {
 
               {embedUrl && (
                 <>
+                  {/* EMBED URL */}
                   <div>
-                    <p className="text-sm text-gray-400 mb-1">Embed URL:</p>
+                    <p className="text-sm text-gray-400 mb-1 flex items-center justify-between">
+                      Embed URL:
+                      <button
+                        onClick={() => copyText(embedUrl, "url")}
+                        className="text-xs bg-purple-600 px-2 py-1 rounded hover:bg-purple-700 transition"
+                      >
+                        {copied ? "Copied!" : "Copy"}
+                      </button>
+                    </p>
+
                     <a
                       href={embedUrl}
                       className="text-purple-400 underline break-all"
@@ -78,10 +105,25 @@ export default function CreateWidgetPage() {
                     </a>
                   </div>
 
+                  {/* EMBED HTML */}
                   <div className="mt-3">
-                    <p className="text-sm text-gray-400">Embed HTML:</p>
+                    <p className="text-sm text-gray-400 flex items-center justify-between">
+                      Embed HTML:
+                      <button
+                        onClick={() =>
+                          copyText(
+                            `<iframe src="${embedUrl}" style="width:100%;height:600px;border:0;" frameborder="0"></iframe>`,
+                            "html"
+                          )
+                        }
+                        className="text-xs bg-purple-600 px-2 py-1 rounded hover:bg-purple-700 transition"
+                      >
+                        {copiedHtml ? "Copied!" : "Copy"}
+                      </button>
+                    </p>
+
                     <pre className="bg-gray-800 p-3 rounded text-xs overflow-auto">
-                      {`<iframe src="${embedUrl}"
+{`<iframe src="${embedUrl}"
   style="width:100%;height:600px;border:0;"
   frameborder="0"
 ></iframe>`}
