@@ -52,11 +52,11 @@ export default async function EmbedPage(props: any) {
     const id = paramsObj.id;
     const db = searchObj?.db;
 
-    if (!db) return <p style={{ color: "red" }}>Database ID not valid.</p>;
+    if (!db) return <p style={{ color: "red", fontSize: "2rem" }}>Database ID not valid.</p>;
 
     const token = await getToken(id);
     if (!token)
-      return <p style={{ color: "red" }}>Token error</p>;
+      return <p style={{ color: "red", fontSize: "2rem" }}>Token not valid.</p>;
 
     const data = await queryDatabase(token, db);
 
