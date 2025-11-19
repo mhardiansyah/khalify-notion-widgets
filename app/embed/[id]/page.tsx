@@ -53,24 +53,24 @@ export default async function EmbedPage(props: any) {
     const db = searchObj?.db;
 
     // 🔥 Ambil filter dari query URL
+    // Decode URL value (fix + issue)
     const decode = (v: string) => decodeURIComponent(v).replace(/\+/g, " ");
+
     const statusFilter = searchObj?.status ? decode(searchObj.status) : null;
-    const platformFilter = searchObj?.platform;
-    const pillarFilter = searchObj?.pillar;
-    const pinnedFilter = searchObj?.pinned; // true / false
+    const platformFilter = searchObj?.platform
+      ? decode(searchObj.platform)
+      : null;
+    const pillarFilter = searchObj?.pillar ? decode(searchObj.pillar) : null;
+    const pinnedFilter = searchObj?.pinned;
 
     if (!db)
       return (
-        <p style={{ color: "red", fontSize: "2rem" }}>
-          Database ID not valid.
-        </p>
+        <p style={{ color: "red", fontSize: "2rem" }}>Database ID not valid.</p>
       );
 
     const token = await getToken(id);
     if (!token)
-      return (
-        <p style={{ color: "red", fontSize: "2rem" }}>Token not valid.</p>
-      );
+      return <p style={{ color: "red", fontSize: "2rem" }}>Token not valid.</p>;
 
     const data = await queryDatabase(token, db);
 
