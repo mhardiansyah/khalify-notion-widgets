@@ -26,7 +26,6 @@ export default function CreateWidgetPage() {
     }
   };
 
-  // AUTO GENERATE EMBED WHEN token + db ready
   useEffect(() => {
     if (!token || !db) return;
 

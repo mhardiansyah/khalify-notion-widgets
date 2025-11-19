@@ -39,7 +39,6 @@ function extractImage(item: any) {
   return "/placeholder.png";
 }
 
-/** 👉 Ambil NAME dari database Notion */
 function extractName(item: any) {
   return item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
 }
@@ -52,42 +51,94 @@ export default async function EmbedPage(props: any) {
     const id = paramsObj.id;
     const db = searchObj?.db;
 
-    if (!db) return <p style={{ color: "red", fontSize: "2rem" }}>Database ID not valid.</p>;
+    // 🔥 Ambil filter dari query URL
+    const statusFilter = searchObj?.status;
+    const platformFilter = searchObj?.platform;
+    const pillarFilter = searchObj?.pillar;
+    const pinnedFilter = searchObj?.pinned; // true / false
+
+    if (!db)
+      return (
+        <p style={{ color: "red", fontSize: "2rem" }}>
+          Database ID not valid.
+        </p>
+      );
 
     const token = await getToken(id);
     if (!token)
-      return <p style={{ color: "red", fontSize: "2rem" }}>Token not valid.</p>;
+      return (
+        <p style={{ color: "red", fontSize: "2rem" }}>Token not valid.</p>
+      );
 
     const data = await queryDatabase(token, db);
 
+    // 🧠 START FILTERING
+    let filtered = data;
+
+    // Filter Status
+    if (statusFilter) {
+      filtered = filtered.filter((item: any) => {
+        const status = item.properties?.Status?.select?.name;
+        return status?.toLowerCase() === statusFilter.toLowerCase();
+      });
+    }
+
+    // Filter Platform
+    if (platformFilter) {
+      filtered = filtered.filter((item: any) => {
+        const platform = item.properties?.Platform?.select?.name;
+        return platform?.toLowerCase() === platformFilter.toLowerCase();
+      });
+    }
+
+    // Filter Content Pillar
+    if (pillarFilter) {
+      filtered = filtered.filter((item: any) => {
+        const pillar = item.properties?.["Content Pillar"]?.select?.name;
+        return pillar?.toLowerCase() === pillarFilter.toLowerCase();
+      });
+    }
+
+    // Filter Pinned (checkbox)
+    if (pinnedFilter === "true") {
+      filtered = filtered.filter(
+        (item: any) => item.properties?.Pinned?.checkbox === true
+      );
+    }
+
+    if (pinnedFilter === "false") {
+      filtered = filtered.filter(
+        (item: any) => item.properties?.Pinned?.checkbox === false
+      );
+    }
+
+    // END FILTERING 🔥
+
     return (
-      
       <main className="bg-black min-h-screen p-4">
         <div className="grid grid-cols-3 md:grid-cols-3 gap-3">
-          {data.map((item: any, i: number) => {
+          {filtered.map((item: any, i: number) => {
             const url = extractImage(item);
             const name = extractName(item);
 
-            return (  
+            return (
               <div
                 key={i}
                 className="
-          relative group 
-          bg-gray-900 rounded-lg overflow-hidden
-          aspect-4/5
-        "
+                relative group 
+                bg-gray-900 rounded-lg overflow-hidden
+                aspect-4/5
+              "
               >
-                {/* Thumbnail */}
                 <AutoThumbnail src={url} />
 
-                {/* Hover Overlay */}
                 <div
                   className="
-            absolute inset-0 bg-black/60 
-            opacity-0 group-hover:opacity-100
-            transition-all duration-300
-            flex items-center justify-center
-          "
+                    absolute inset-0 bg-black/60 
+                    opacity-0 group-hover:opacity-100
+                    transition-all duration-300
+                    flex items-center justify-center
+                  "
                 >
                   <p className="text-white font-semibold text-center px-2 text-sm">
                     {name}
@@ -97,7 +148,8 @@ export default async function EmbedPage(props: any) {
             );
           })}
         </div>
-                <RefreshButton />
+
+        <RefreshButton />
       </main>
     );
   } catch (err: any) {
