@@ -75,18 +75,16 @@ export default async function EmbedPage(props: any) {
     let filtered = data;
 
     // Filter Status
-    // Filter Status
-if (statusFilter) {
-  filtered = filtered.filter((item: any) => {
-    const statuses = item.properties?.Status?.multi_select;
+    if (statusFilter) {
+      filtered = filtered.filter((item: any) => {
+        const val =
+          item.properties?.Status?.status?.name ||
+          item.properties?.Status?.select?.name ||
+          item.properties?.Status?.multi_select?.[0]?.name;
 
-    // handle multi-select
-    return statuses?.some(
-      (s: any) => s.name.toLowerCase() === statusFilter.toLowerCase()
-    );
-  });
-}
-
+        return val?.toLowerCase() === statusFilter.toLowerCase();
+      });
+    }
 
     // Filter Platform
     if (platformFilter) {
