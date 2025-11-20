@@ -74,6 +74,11 @@ export default async function EmbedPage(props: any) {
     // 🧠 START FILTERING
     let filtered = data;
 
+    // Hide Post (if Hide checkbox = true)
+    filtered = filtered.filter(
+      (item: any) => item.properties?.Hide?.checkbox !== true
+    );
+
     // Filter Status
     if (statusFilter) {
       filtered = filtered.filter((item: any) => {
@@ -115,15 +120,24 @@ export default async function EmbedPage(props: any) {
       );
     }
 
+    // SORTING (pinned items always on top)
+    filtered = filtered.sort((a: any, b: any) => {
+      const aPinned = a.properties?.Pinned?.checkbox ? 1 : 0;
+      const bPinned = b.properties?.Pinned?.checkbox ? 1 : 0;
+      return bPinned - aPinned; // pinned first
+    });
+
     // END FILTERING 🔥
 
     return (
       <main className="bg-black min-h-screen p-4">
         <EmbedFilter />
+
         <div className="grid grid-cols-3 md:grid-cols-3 gap-3">
           {filtered.map((item: any, i: number) => {
             const url = extractImage(item);
             const name = extractName(item);
+            const isPinned = item.properties?.Pinned?.checkbox === true;
 
             return (
               <div
@@ -134,6 +148,20 @@ export default async function EmbedPage(props: any) {
                 aspect-4/5
               "
               >
+                {/* PIN ICON */}
+                {isPinned && (
+                  <div className="absolute top-2 right-2 z-20">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                      className="w-5 h-5 text-yellow-400 drop-shadow"
+                    >
+                      <path d="M9 2l6 6-1.5 1.5L17 13l-1 1-3.5-3.5L11 12l6 6H7l6-6-1.5-1.5L5 7l4-4z" />
+                    </svg>
+                  </div>
+                )}
+
                 <AutoThumbnail src={url} />
 
                 <div
