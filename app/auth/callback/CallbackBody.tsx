@@ -16,7 +16,7 @@ export default function CallbackBody() {
     const errorCode = searchParams.get("error_code");
     const code = searchParams.get("code");
 
-    console.log("PARAMS:", { error, errorCode, code }); // 🔥 DEBUG #1
+    console.log("PARAMS:", { error, errorCode, code }); 
 
     if (error || errorCode) {
       setStatus("error");
