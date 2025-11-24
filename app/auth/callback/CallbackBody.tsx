@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,11 +17,12 @@ export default function CallbackBody() {
     const errorCode = searchParams.get("error_code");
     const code = searchParams.get("code");
 
-    console.log("PARAMS:", { error, errorCode, code }); 
+    console.log("PARAMS:", { error, errorCode, code });
 
+    // ERROR langsung dari Supabase (misal otp_expired)
     if (error || errorCode) {
       setStatus("error");
-      setMessage("Magic link invalid atau sudah expired bro 😭");
+      setMessage("Magic link invalid atau expired bro 😭");
       return;
     }
 
@@ -31,24 +33,43 @@ export default function CallbackBody() {
     }
 
     const run = async () => {
-      console.log("📩 EXCHANGE START dengan code:", code); // 🔥 DEBUG #2
+      try {
+        console.log("📩 EXCHANGE START dengan code:", code);
 
-      const { data, error: exchangeError } =
-        await supabase.auth.exchangeCodeForSession(code);
+        const { data, error: exchangeError } =
+          await supabase.auth.exchangeCodeForSession(code);
 
-      // DEBUG LOG PALING PENTING
-      console.log("📌 SUPABASE RESPONSE:", {
-        data,
-        exchangeError,
-      }); // 🔥 DEBUG #3
+        console.log("📌 SUPABASE EXCHANGE RESPONSE:", {
+          data,
+          exchangeError,
+        });
 
-      if (exchangeError) {
+        // Meskipun error, Supabase bisa tetap login via cookie (PKCE)
+        const { data: userData } = await supabase.auth.getUser();
+
+        console.log("📌 COOKIE SESSION CHECK:", userData);
+
+        // Kalau user sudah ada → login berhasil
+        if (userData?.user) {
+          console.log("🎉 LOGIN BERHASIL VIA COOKIE");
+          return router.replace("/dashboard");
+        }
+
+        // Kalau user tidak ada, dan exchange error → beneran gagal
+        if (exchangeError) {
+          setStatus("error");
+          setMessage("Gagal verifikasi session bro 😭");
+          return;
+        }
+
+        // fallback → kalau tiba2 tidak error tapi user null
         setStatus("error");
-        setMessage("Gagal verifikasi session 😭");
-        return;
+        setMessage("Tidak bisa memverifikasi login 😭");
+      } catch (err) {
+        console.error("UNEXPECTED ERROR:", err);
+        setStatus("error");
+        setMessage("Terjadi kesalahan tak terduga 😭");
       }
-
-      router.replace("/dashboard");
     };
 
     run();
