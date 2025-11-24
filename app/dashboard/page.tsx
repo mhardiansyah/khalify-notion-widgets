@@ -28,7 +28,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-10">
-      <h1>Welcome bro 👋</h1>
+      <h1>Welcome bro </h1>
       <p>Email: {user.email}</p>
     </div>
   );

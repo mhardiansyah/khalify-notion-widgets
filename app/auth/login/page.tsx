@@ -9,7 +9,7 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     if (!email) {
-      alert("Masukin email dulu bro 😆");
+      alert("Masukin email dulu bro ");
       return;
     }
 
@@ -26,11 +26,11 @@ export default function LoginPage() {
 
     if (error) {
       console.error(error.message);
-      alert("Gagal ngirim email bro ❌");
+      alert("Gagal ngirim email bro ");
       return;
     }
 
-    alert("Cek email lo bro! Magic link sudah dikirim 🚀");
+    alert("Cek email lo bro! Magic link sudah dikirim ");
   };
 
   return (

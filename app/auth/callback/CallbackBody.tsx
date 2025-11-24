@@ -28,18 +28,18 @@ export default function CallbackBody() {
 
     if (!code) {
       setStatus("error");
-      setMessage("Kode verifikasi tidak ditemukan ❌");
+      setMessage("Kode verifikasi tidak ditemukan ");
       return;
     }
 
     const run = async () => {
       try {
-        console.log("📩 EXCHANGE START dengan code:", code);
+        console.log("EXCHANGE START dengan code:", code);
 
         const { data, error: exchangeError } =
           await supabase.auth.exchangeCodeForSession(code);
 
-        console.log("📌 SUPABASE EXCHANGE RESPONSE:", {
+        console.log(" SUPABASE EXCHANGE RESPONSE:", {
           data,
           exchangeError,
         });
@@ -47,22 +47,19 @@ export default function CallbackBody() {
         // Meskipun error, Supabase bisa tetap login via cookie (PKCE)
         const { data: userData } = await supabase.auth.getUser();
 
-        console.log("📌 COOKIE SESSION CHECK:", userData);
+        console.log("COOKIE SESSION CHECK:", userData);
 
-        // Kalau user sudah ada → login berhasil
         if (userData?.user) {
-          console.log("🎉 LOGIN BERHASIL VIA COOKIE");
+          console.log("LOGIN BERHASIL VIA COOKIE");
           return router.replace("/dashboard");
         }
 
-        // Kalau user tidak ada, dan exchange error → beneran gagal
         if (exchangeError) {
           setStatus("error");
           setMessage("Gagal verifikasi session bro 😭");
           return;
         }
 
-        // fallback → kalau tiba2 tidak error tapi user null
         setStatus("error");
         setMessage("Tidak bisa memverifikasi login 😭");
       } catch (err) {
@@ -78,7 +75,7 @@ export default function CallbackBody() {
   if (status === "loading") {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        Verifikasi magic link lo bro ⏳...
+        Verifikasi magic link lo bro ...
       </div>
     );
   }
