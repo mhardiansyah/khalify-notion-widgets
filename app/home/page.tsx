@@ -31,7 +31,7 @@ export default function HomePage() {
       {/* Top Section */}
       <div className="grid md:grid-cols-2 gap-10 items-center">
         <img
-          src="/laptop-ui.jpg"
+          src="/ImageWithFallback.png"
           className="rounded-xl shadow-lg w-full"
           alt="UI Preview"
         />
