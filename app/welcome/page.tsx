@@ -5,6 +5,7 @@ import Navbar from "@/app/components/Navbar";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabaseClient";
+import { CheckCircle2 } from "lucide-react";
 
 export default function WelcomePage() {
   const router = useRouter();
@@ -25,9 +26,10 @@ export default function WelcomePage() {
     <>
       <Navbar />
 
-      <div className="max-w-5xl mx-auto p-10 min-h-screen">
-        {/* TOP HERO SECTION (kode 1) */}
-        <div className="grid md:grid-cols-2 gap-10 items-center">
+      <div className="max-w-5xl mx-auto px-12 py-12">
+
+        {/* HERO SECTION dari kode 1 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-16">
           <img
             src="/ImageWithFallback.png"
             className="rounded-xl shadow-lg w-full"
@@ -39,17 +41,15 @@ export default function WelcomePage() {
               Free Tool
             </span>
 
-            <h1 className="text-3xl font-bold mt-4">
-              Making Instagram feed planning easier by bringing your grid view
-              to Notion
+            <h1 className="text-4xl text-gray-900 font-bold mt-5">
+              Making Instagram feed planning easier by bringing your grid view to Notion
             </h1>
 
-            <p className="text-gray-600 mt-3">
-              Just a few steps and you’ll have a beautiful Instagram-style
-              gallery that updates automatically.
+            <p className="text-gray-600 text-lg mt-4 leading-relaxed">
+              Just a few steps and you’ll have a beautiful Instagram-style gallery that updates automatically.
             </p>
 
-            {/* Get started tetap versi kode 1 */}
+            {/* CTA tetap KODE 1 */}
             <button
               onClick={() => router.push("/setup")}
               className="mt-6 bg-purple-600 text-white px-6 py-3 rounded-lg shadow hover:bg-purple-700 transition"
@@ -59,89 +59,72 @@ export default function WelcomePage() {
           </div>
         </div>
 
-        {/* Easy Setup Section (UI seperti screenshot) */}
-        <h2 className="text-xl font-semibold mt-20 mb-6">
-          Easy setups (5 mins):
-        </h2>
+        {/* 🌟 EASY SETUP SECTION dari kode 2 */}
+        <div className="mb-12">
+          <h2 className="text-2xl text-gray-900 mb-6">Easy setups (5 mins):</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              step: "1",
-              title: "Setup Notion Template",
-              desc: "Create your database in Notion",
-            },
-            {
-              step: "2",
-              title: "Connect Integration",
-              desc: "Link your Notion workspace",
-            },
-            {
-              step: "3",
-              title: "Embed Widget",
-              desc: "Add to your Notion page",
-            },
-          ].map((item) => (
-            <div
-              key={item.step}
-              className="rounded-2xl border border-gray-200 p-8 bg-white shadow-sm hover:shadow-md transition-all"
-            >
-              <div className="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center mb-5 text-lg font-semibold shadow">
-                {item.step}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { step: "1", title: "Setup Notion Template", desc: "Create your database in Notion" },
+              { step: "2", title: "Connect Integration", desc: "Link your Notion workspace" },
+              { step: "3", title: "Embed Widget", desc: "Add to your Notion page" },
+            ].map((item) => (
+              <div
+                key={item.step}
+                className="bg-white border border-gray-200 rounded-xl p-6 hover:border-purple-300 transition-colors"
+              >
+                <div className="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center mb-4">
+                  {item.step}
+                </div>
+                <h3 className="text-gray-900 font-semibold mb-2">{item.title}</h3>
+                <p className="text-sm text-gray-600">{item.desc}</p>
               </div>
-
-              <h3 className="text-gray-900 font-semibold text-lg mb-2">
-                {item.title}
-              </h3>
-
-              <p className="text-gray-600 text-sm leading-relaxed">
-                {item.desc}
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        {/* VIDEO + WHY USE THIS (tetap kode 1) */}
-        <div className="grid md:grid-cols-2 gap-6 mt-10">
-          {/* VIDEO TUTORIALS */}
-          <div className="p-6 bg-purple-50 rounded-xl border border-purple-200 shadow-sm">
-            <h3 className="font-semibold text-purple-700 mb-3 flex items-center gap-2">
-              <span className="bg-purple-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm">
-                🎬
-              </span>
-              Video Tutorials
-            </h3>
+        {/* 🌈 VIDEO + WHY USE THIS (FULL KODE 2) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
 
-            <ul className="space-y-2 text-sm text-purple-700">
-              <li className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-purple-600 rounded-full"></span>
-                Setup Guide
+          {/* VIDEO CARD */}
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
+                </svg>
+              </div>
+              <h3 className="text-gray-900 font-semibold">Video Tutorials</h3>
+            </div>
+
+            <ul className="space-y-2">
+              <li className="text-sm text-purple-600 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" /> Setup Guide
               </li>
-              <li className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-purple-600 rounded-full"></span>
-                Using Pro Features
+              <li className="text-sm text-purple-600 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" /> Using Pro Features
               </li>
             </ul>
           </div>
 
           {/* WHY USE THIS */}
-          <div className="p-6 bg-white rounded-xl border shadow-sm">
-            <h3 className="font-semibold text-black mb-3 flex items-center gap-2">
-              Why use this?
-            </h3>
+          <div className="bg-white border border-gray-200 rounded-xl p-6">
+            <h3 className="text-gray-900 font-semibold mb-4">Why use this?</h3>
 
             <ul className="space-y-3 text-sm text-gray-700">
-              <li className="flex items-center gap-2">
-                <span className="text-green-500">✔</span>
-                Plan your Instagram feed visually
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                <span>Plan your Instagram feed visually</span>
               </li>
-              <li className="flex items-center gap-2">
-                <span className="text-green-500">✔</span>
-                Sync automatically with Notion database
+
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                <span>Sync automatically with Notion database</span>
               </li>
-              <li className="flex items-center gap-2">
-                <span className="text-green-500">✔</span>
-                No coding required
+
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                <span>No coding required</span>
               </li>
             </ul>
           </div>
