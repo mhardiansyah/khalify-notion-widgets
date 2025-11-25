@@ -22,10 +22,10 @@ export default function Navbar() {
         {/* LEFT */}
         <div className="flex items-center gap-3">
           <div className="bg-purple-600 text-white font-bold w-8 h-8 flex justify-center items-center rounded-lg">
-            N
+            {userEmail ? userEmail[0].toUpperCase() : "?"}
           </div>
           <div>
-            <h1 className="font-semibold">Notion Widget</h1>
+            <h1 className="font-semibold">{userEmail ?? "Loading..."}</h1>
             <p className="text-xs text-gray-500 -mt-1">Instagram Grid Preview</p>
           </div>
         </div>
@@ -47,14 +47,14 @@ export default function Navbar() {
         </div>
 
         {/* RIGHT PROFILE */}
-        <div className="flex items-center gap-3 text-sm">
+        {/* <div className="flex items-center gap-3 text-sm">
           <div className="text-right">
             <p className="font-medium">{userEmail ?? "Loading..."}</p>
           </div>
           <div className="w-9 h-9 flex justify-center items-center bg-purple-600 text-white rounded-full">
             {userEmail ? userEmail[0].toUpperCase() : "?"}
           </div>
-        </div>
+        </div> */}
       </div>
     </nav>
   );
