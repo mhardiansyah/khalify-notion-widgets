@@ -25,7 +25,7 @@ export default function WelcomePage() {
     <>
       <Navbar />
 
-      <div className="max-w-5xl mx-auto p-10">
+      <div className="max-w-5xl mx-auto p-10 bg:white min-h-screen">
 
         {/* Top Section */}
         <div className="grid md:grid-cols-2 gap-10 items-center">
