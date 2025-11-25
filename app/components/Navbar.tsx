@@ -46,15 +46,13 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* RIGHT PROFILE */}
-        {/* <div className="flex items-center gap-3 text-sm">
-          <div className="text-right">
-            <p className="font-medium">{userEmail ?? "Loading..."}</p>
-          </div>
-          <div className="w-9 h-9 flex justify-center items-center bg-purple-600 text-white rounded-full">
-            {userEmail ? userEmail[0].toUpperCase() : "?"}
-          </div>
-        </div> */}
+        {/* RIGHT */}
+        <div className="text-xs text-gray-600 text-right leading-tight">
+          <p className="flex items-center gap-1 justify-end">
+            Made with <span className="text-red-500">❤️</span> by
+          </p>
+          <p className="font-semibold">@rainbowgrow</p>
+        </div>
       </div>
     </nav>
   );
