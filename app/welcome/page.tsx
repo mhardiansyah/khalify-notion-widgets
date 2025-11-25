@@ -32,7 +32,7 @@ export default function WelcomePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-16">
           <img
             src="/ImageWithFallback.png"
-            className="rounded-xl shadow-lg w-full"
+            className="rounded-xl  w-full"
             alt="UI Preview"
           />
 
