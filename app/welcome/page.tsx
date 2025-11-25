@@ -61,21 +61,76 @@ export default function WelcomePage() {
         <h2 className="text-xl font-semibold mt-20 mb-6">Easy setups (5 mins):</h2>
 
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="p-6 bg-white shadow rounded-xl">
-            <h3 className="font-bold mb-2 text-black">1. Setup Notion Template</h3>
+          <div className="p-6 bg-white rounded-xl border shadow-sm hover:shadow transition">
+            <h3 className="font-bold mb-2 text-black flex items-center gap-2">
+              <span className="bg-purple-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm">1</span>
+              Setup Notion Template
+            </h3>
             <p className="text-gray-600 text-sm">Create your database in Notion</p>
           </div>
 
-          <div className="p-6 bg-white shadow rounded-xl">
-            <h3 className="font-bold mb-2 text-black">2. Connect Integration</h3>
+          <div className="p-6 bg-white rounded-xl border shadow-sm hover:shadow transition">
+            <h3 className="font-bold mb-2 text-black flex items-center gap-2">
+              <span className="bg-purple-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm">2</span>
+              Connect Integration
+            </h3>
             <p className="text-gray-600 text-sm">Link your Notion workspace</p>
           </div>
 
-          <div className="p-6 bg-white shadow rounded-xl">
-            <h3 className="font-bold mb-2 text-black">3. Embed Widget</h3>
+          <div className="p-6 bg-white rounded-xl border shadow-sm hover:shadow transition">
+            <h3 className="font-bold mb-2 text-black flex items-center gap-2">
+              <span className="bg-purple-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm">3</span>
+              Embed Widget
+            </h3>
             <p className="text-gray-600 text-sm">Add to your Notion page</p>
           </div>
         </div>
+
+        {/* New Section: Video Tutorials + Why Use This */}
+        <div className="grid md:grid-cols-2 gap-6 mt-10">
+
+          {/* VIDEO TUTORIALS */}
+          <div className="p-6 bg-purple-50 rounded-xl border border-purple-200 shadow-sm">
+            <h3 className="font-semibold text-purple-700 mb-3 flex items-center gap-2">
+              <span className="bg-purple-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm">🎬</span>
+              Video Tutorials
+            </h3>
+
+            <ul className="space-y-2 text-sm text-purple-700">
+              <li className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-purple-600 rounded-full"></span>
+                Setup Guide
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-purple-600 rounded-full"></span>
+                Using Pro Features
+              </li>
+            </ul>
+          </div>
+
+          {/* WHY USE THIS */}
+          <div className="p-6 bg-white rounded-xl border shadow-sm">
+            <h3 className="font-semibold text-black mb-3 flex items-center gap-2">
+              Why use this?
+            </h3>
+
+            <ul className="space-y-3 text-sm text-gray-700">
+              <li className="flex items-center gap-2">
+                <span className="text-green-500">✔</span>
+                Plan your Instagram feed visually
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-green-500">✔</span>
+                Sync automatically with Notion database
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-green-500">✔</span>
+                No coding required
+              </li>
+            </ul>
+          </div>
+        </div>
+
       </div>
     </>
   );

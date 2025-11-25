@@ -35,7 +35,7 @@ export default function Navbar() {
           <Link href="/home" className="text-purple-600 font-medium flex items-center gap-1">
             <span>🏠</span> Welcome
           </Link>
-          <Link href="/setup" className="text-gray-700 flex items-center gap-1">
+          <Link href="../widgets/create/page.tsx" className="text-gray-700 flex items-center gap-1">
             <span>⚙️</span> Setup
           </Link>
           <Link href="/help" className="text-gray-700 flex items-center gap-1">
