@@ -40,11 +40,13 @@ export default function WelcomePage() {
             </span>
 
             <h1 className="text-3xl font-bold mt-4">
-              Making Instagram feed planning easier by bringing your grid view to Notion
+              Making Instagram feed planning easier by bringing your grid view
+              to Notion
             </h1>
 
             <p className="text-gray-600 mt-3">
-              Just a few steps and you’ll have a beautiful Instagram-style gallery that updates automatically.
+              Just a few steps and you’ll have a beautiful Instagram-style
+              gallery that updates automatically.
             </p>
 
             {/* Get started tetap versi kode 1 */}
@@ -57,38 +59,56 @@ export default function WelcomePage() {
           </div>
         </div>
 
-        {/* TITLE */}
+        {/* Easy Setup Section (UI seperti screenshot) */}
         <h2 className="text-xl font-semibold mt-20 mb-6">
           Easy setups (5 mins):
         </h2>
 
-        {/* 🔥 STEPS (diambil dari kode 2) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { step: "1", title: "Setup Notion Template", desc: "Create your database in Notion" },
-            { step: "2", title: "Connect Integration", desc: "Link your Notion workspace" },
-            { step: "3", title: "Embed Widget", desc: "Add to your Notion page" },
+            {
+              step: "1",
+              title: "Setup Notion Template",
+              desc: "Create your database in Notion",
+            },
+            {
+              step: "2",
+              title: "Connect Integration",
+              desc: "Link your Notion workspace",
+            },
+            {
+              step: "3",
+              title: "Embed Widget",
+              desc: "Add to your Notion page",
+            },
           ].map((item) => (
             <div
               key={item.step}
-              className="bg-white border border-gray-200 rounded-xl p-6 hover:border-purple-300 transition-colors"
+              className="rounded-2xl border border-gray-200 p-8 bg-white shadow-sm hover:shadow-md transition-all"
             >
-              <div className="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center mb-4">
+              <div className="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center mb-5 text-lg font-semibold shadow">
                 {item.step}
               </div>
-              <h3 className="text-gray-900 mb-2">{item.title}</h3>
-              <p className="text-sm text-gray-600">{item.desc}</p>
+
+              <h3 className="text-gray-900 font-semibold text-lg mb-2">
+                {item.title}
+              </h3>
+
+              <p className="text-gray-600 text-sm leading-relaxed">
+                {item.desc}
+              </p>
             </div>
           ))}
         </div>
 
         {/* VIDEO + WHY USE THIS (tetap kode 1) */}
         <div className="grid md:grid-cols-2 gap-6 mt-10">
-
           {/* VIDEO TUTORIALS */}
           <div className="p-6 bg-purple-50 rounded-xl border border-purple-200 shadow-sm">
             <h3 className="font-semibold text-purple-700 mb-3 flex items-center gap-2">
-              <span className="bg-purple-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm">🎬</span>
+              <span className="bg-purple-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm">
+                🎬
+              </span>
               Video Tutorials
             </h3>
 
