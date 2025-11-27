@@ -1,47 +1,48 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+  const { id } = await req.json();
+
   try {
-    const { id } = await req.json();
-
-    const token = process.env.NOTION_TOKEN; // SERVER-SIDE TOKEN ✔
-
-    if (!token) {
-      return NextResponse.json({
-        success: false,
-        error: "Server missing NOTION_TOKEN",
-      });
-    }
-
-    const res = await fetch(`https://api.notion.com/v1/databases/${id}`, {
-      method: "GET",
+    const res = await fetch("https://www.notion.so/api/v3/getPublicPageData", {
+      method: "POST",
       headers: {
-        "Authorization": `Bearer ${token}`,
-        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json;charset=UTF-8",
       },
+      body: JSON.stringify({ pageId: id }),
     });
 
     const data = await res.json();
 
-    if (data.object === "error") {
+    // PRIVATE OR INVALID
+    if (!data || data.error || data.type === "error") {
       return NextResponse.json({
         success: false,
-        error: data.message || "Invalid database ID",
+        error: "Database is private or invalid.",
       });
     }
 
+    // Ambil nama database + icon
+    const record = data?.recordMap?.block?.[id];
+
+    const title =
+      record?.value?.properties?.title?.[0]?.[0] || "Untitled Database";
+
+    const icon =
+      record?.value?.format?.page_icon ||
+      record?.value?.format?.block_icon ||
+      null;
+
     return NextResponse.json({
       success: true,
-      title: data.title?.[0]?.plain_text || "Untitled",
-      icon: data.icon?.emoji || null,
-      properties: Object.keys(data.properties || {}),
+      title,
+      icon,
+      raw: data,
     });
-
-  } catch (e: any) {
+  } catch (error) {
     return NextResponse.json({
       success: false,
-      error: e.message,
+      error: "Failed to fetch Notion data.",
     });
   }
 }
