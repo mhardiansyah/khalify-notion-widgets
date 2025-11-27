@@ -46,12 +46,21 @@ export async function POST(req: Request) {
 
     const schema = collection?.schema || {};
 
+    // -------------------------
+    // GET REAL NOTION PAGE URL
+    // -------------------------
+    const notionUrl =
+      view?.page_url ||
+      block?.id
+        ? `https://www.notion.so/${block.id.replace(/-/g, "")}`
+        : null;
+
     return NextResponse.json({
       success: true,
       title,
       icon,
       propertiesCount: Object.keys(schema).length,
-      publicUrl: `https://www.notion.so/${id}`,
+      publicUrl: notionUrl, // FIXED!!!
     });
   } catch (error) {
     return NextResponse.json({
