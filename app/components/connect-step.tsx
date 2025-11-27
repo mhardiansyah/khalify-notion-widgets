@@ -72,6 +72,8 @@ export function ConnectStep({
     setDbInfo({
       title: data.title,
       icon: data.icon,
+      propertiesCount: data.propertiesCount,
+      publicUrl: data.publicUrl, // ⬅ FIX PENTING!!!
     });
   };
 
