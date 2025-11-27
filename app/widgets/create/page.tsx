@@ -6,6 +6,37 @@ import { ConnectStep } from "@/app/components/connect-step";
 import { CustomizeStep } from "@/app/components/customize-step";
 import { FinishStep } from "@/app/components/finish-step";
 
+// ============================
+//  FLEXIBLE NOTION DB PARSER
+// ============================
+function extractFlexibleNotionId(input: string): string | null {
+  if (!input) return null;
+
+  // CASE 1 — Direct new ID (ntn_xxxxx)
+  if (input.startsWith("ntn_")) {
+    return input.trim();
+  }
+
+  // Remove URL parameters
+  const clean = input.split("?")[0];
+
+  // Extract the last path segment
+  const segments = clean.split("/");
+  const last = segments.pop() || "";
+
+  // CASE 2 — New ID inside URL (notion.so/.../ntn_xxx)
+  if (last.startsWith("ntn_")) {
+    return last.trim();
+  }
+
+  // CASE 3 — UUID Notion database ID (with or without hyphens)
+  const uuid = last.replace(/-/g, "");
+  if (uuid.length === 32) {
+    return uuid;
+  }
+
+  return null;
+}
 
 export default function CreateWidgetPageMerged() {
   const [step, setStep] = useState(1);
@@ -49,6 +80,7 @@ export default function CreateWidgetPageMerged() {
       <Navbar />
 
       <div className="w-full min-h-screen bg-white text-black p-10">
+
         {/* HEADER STEP INDICATOR */}
         <div className="flex justify-center mb-10">
           <div className="flex items-center gap-10">
@@ -80,12 +112,14 @@ export default function CreateWidgetPageMerged() {
 
         {/* CONTENT */}
         <div className="max-w-3xl mx-auto bg-gray-50 p-8 rounded-xl shadow">
-          
+
           {/* STEP 1 */}
           {step === 1 && (
             <div>
               <h1 className="text-2xl font-bold mb-4">Step 1 — Setup Notion Template</h1>
-              <p className="text-gray-600 mb-6">Buat database Notion lo dulu sebelum lanjut.</p>
+              <p className="text-gray-600 mb-6">
+                Buat database Notion lo dulu sebelum lanjut.
+              </p>
 
               <button
                 className="px-5 py-3 bg-purple-600 text-white rounded-lg"
@@ -96,7 +130,7 @@ export default function CreateWidgetPageMerged() {
             </div>
           )}
 
-          {/* STEP 2 (UI dari KODE 2) */}
+          {/* STEP 2 */}
           {step === 2 && (
             <ConnectStep
               notionUrl={notionUrl}
@@ -104,11 +138,9 @@ export default function CreateWidgetPageMerged() {
               isUrlValid={isUrlValid}
               setIsUrlValid={setIsUrlValid}
               onNext={() => {
-                // convert URL → token + db
-                const dbIdExtracted = notionUrl.split("-").pop()?.replace("/", "");
-                setDb(dbIdExtracted || null);
+                const extracted = extractFlexibleNotionId(notionUrl);
+                setDb(extracted);
 
-                // nanti token tetap user input atau auto
                 setToken(process.env.NEXT_PUBLIC_NOTION_TOKEN || null);
 
                 setStep(3);
@@ -116,7 +148,7 @@ export default function CreateWidgetPageMerged() {
             />
           )}
 
-          {/* STEP 3 (UI dari KODE 2) */}
+          {/* STEP 3 */}
           {step === 3 && (
             <CustomizeStep
               showMultimedia={showMultimedia}
@@ -130,12 +162,12 @@ export default function CreateWidgetPageMerged() {
             />
           )}
 
-          {/* STEP 4 (Gabung UI + Preview) */}
+          {/* STEP 4 */}
           {step === 4 && (
             <div className="space-y-8">
               <FinishStep
                 onPrev={() => setStep(3)}
-                embedUrl={embedUrl!}     // DITAMBAHKAN (custom)
+                embedUrl={embedUrl!}
               />
 
               {/* LIVE PREVIEW */}
@@ -148,6 +180,7 @@ export default function CreateWidgetPageMerged() {
               </div>
             </div>
           )}
+
         </div>
       </div>
     </>
