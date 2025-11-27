@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Link2,
   CheckCircle2,
   AlertCircle,
   ChevronDown,
   ChevronRight,
-  Loader2
-} from 'lucide-react';
+  Loader2,
+} from "lucide-react";
 
 interface ConnectStepProps {
   notionUrl: string;
@@ -60,10 +60,7 @@ export function ConnectStep({
       const res = await fetch("/api/notion-detect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id,
-          token: process.env.NEXT_PUBLIC_NOTION_TOKEN
-        }),
+        body: JSON.stringify({ id }), // TOKEN TIDAK DIKIRIM LAGI
       });
 
       const data = await res.json();
@@ -78,9 +75,8 @@ export function ConnectStep({
       setDbInfo({
         title: data.title,
         icon: data.icon,
-        properties: data.properties
+        properties: data.properties,
       });
-
     } catch (err: any) {
       setDetectError("Failed to connect");
       setLoadingDetect(false);
@@ -107,7 +103,6 @@ export function ConnectStep({
 
   return (
     <div className="space-y-6">
-
       {/* TITLE */}
       <div className="flex items-center gap-3 mb-2">
         <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
@@ -115,7 +110,9 @@ export function ConnectStep({
         </div>
         <div>
           <h2 className="text-2xl text-gray-900">Connect Database</h2>
-          <p className="text-sm text-gray-600">Paste your Notion DB ID to auto-connect</p>
+          <p className="text-sm text-gray-600">
+            Paste your Notion DB ID to auto-connect
+          </p>
         </div>
       </div>
 
@@ -133,11 +130,13 @@ export function ConnectStep({
             placeholder="ntn_xxxxxxxxxxxxxxxxxxxxx"
             className={`w-full px-4 py-3 bg-white border rounded-lg text-gray-900
               placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all
-              ${notionUrl === ''
-                ? 'border-gray-300 focus:ring-purple-500'
-                : isUrlValid
-                ? 'border-green-500 focus:ring-green-500'
-                : 'border-red-500 focus:ring-red-500'}`}
+              ${
+                notionUrl === ""
+                  ? "border-gray-300 focus:ring-purple-500"
+                  : isUrlValid
+                  ? "border-green-500 focus:ring-green-500"
+                  : "border-red-500 focus:ring-red-500"
+              }`}
           />
 
           {notionUrl !== "" && (
@@ -154,9 +153,7 @@ export function ConnectStep({
         </div>
 
         {detectError && (
-          <p className="text-sm text-red-600 mt-2">
-            {detectError}
-          </p>
+          <p className="text-sm text-red-600 mt-2">{detectError}</p>
         )}
       </div>
 
