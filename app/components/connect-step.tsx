@@ -149,12 +149,28 @@ export function ConnectStep({
 
       {/* Connected Database Preview */}
       {dbInfo && (
-        <div className="p-4 rounded-lg border bg-white shadow-sm space-y-2">
+        <div className="p-4 rounded-lg border bg-white shadow-sm space-y-3">
           <div className="flex items-center gap-2">
             {dbInfo.icon && <span className="text-2xl">{dbInfo.icon}</span>}
-            <h3 className="font-medium text-gray-900">{dbInfo.title}</h3>
+            <h3 className="font-medium text-gray-900 text-lg">
+              {dbInfo.title}
+            </h3>
           </div>
-          <p className="text-xs text-gray-500">Connected successfully</p>
+
+          <div className="text-sm text-gray-600 space-y-1">
+            <p>
+              <strong>Type:</strong>{" "}
+              <span className="capitalize">{dbInfo.type}</span>
+            </p>
+
+            <p>
+              <strong>Properties:</strong> {dbInfo.propertiesCount}
+            </p>
+
+            <p className="text-green-600 font-medium">
+              Connected via Public Notion API
+            </p>
+          </div>
         </div>
       )}
 
