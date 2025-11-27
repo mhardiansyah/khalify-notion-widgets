@@ -73,7 +73,7 @@ export function ConnectStep({
       title: data.title,
       icon: data.icon,
       propertiesCount: data.propertiesCount,
-      publicUrl: data.publicUrl, // ⬅ FIX PENTING!!!
+      publicUrl: data.publicUrl, 
     });
   };
 
