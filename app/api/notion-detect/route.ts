@@ -22,44 +22,34 @@ export async function POST(req: Request) {
       });
     }
 
-    // ROOT BLOCK
+    // ---- BLOCK ROOT ----
     const block = data?.recordMap?.block?.[id]?.value;
-    const pageUUID = block?.id?.replace(/-/g, "") || null;
+    const pageUUID = block?.id?.replace(/-/g, "") || id.replace(/-/g, "");
 
-    // COLLECTION & SCHEMA
-    const collectionObj: any = data?.recordMap?.collection
-      ? Object.values(data.recordMap.collection)[0]
-      : null;
-    const collection = collectionObj?.value || null;
-    const schema = collection?.schema || {};
+    const collectionViewKeys = Object.keys(data?.recordMap?.collection_view || {});
+    const viewId = collectionViewKeys.length > 0 ? collectionViewKeys[0] : null;
 
-    // VIEW FIX (PORTOLABS-STYLE)
-    const viewKey = Object.keys(data?.recordMap?.collection_view || {})[0] || null;
-    const viewObj: any = viewKey
-      ? data.recordMap.collection_view[viewKey].value
-      : null;
-
-    // ⭐ IMPORTANT: Build URL even if view is missing
+    // ---- GENERATE SAFE URL ----
+    // PRIORITY:
+    // 1. pageUUID?v=viewId
+    // 2. pageUUID only (fallback)
     let publicUrl = null;
 
-    if (pageUUID && viewKey) {
-      publicUrl = `https://www.notion.so/${pageUUID}?v=${viewKey}`;
-    } else if (pageUUID) {
-      // ⭐ fallback if DB has no view
+    if (pageUUID && viewId) {
+      publicUrl = `https://www.notion.so/${pageUUID}?v=${viewId}`;
+    } else {
+      // fallback ALWAYS WORKS
       publicUrl = `https://www.notion.so/${pageUUID}`;
     }
 
     return NextResponse.json({
       success: true,
-      title:
-        block?.properties?.title?.[0]?.[0] || "Untitled Database",
-      icon:
-        block?.format?.page_icon ||
-        block?.format?.block_icon ||
-        null,
-      propertiesCount: Object.keys(schema).length,
-      publicUrl, // ⭐ ALWAYS present now
+      title: block?.properties?.title?.[0]?.[0] || "Untitled Database",
+      icon: block?.format?.page_icon || block?.format?.block_icon || null,
+      propertiesCount: 0,
+      publicUrl,
     });
+
   } catch (error) {
     return NextResponse.json({
       success: false,
