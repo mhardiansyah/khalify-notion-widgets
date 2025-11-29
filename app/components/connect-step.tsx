@@ -1,141 +1,203 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NextResponse } from "next/server";
+import { useState } from "react";
+import {
+  Link2,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 
-const NOTION_TOKEN = process.env.NOTION_TOKEN_V2;
-
-// helper clean uuid → remove dashes
-function cleanId(id: string) {
-  return id.replace(/-/g, "");
+interface ConnectStepProps {
+  notionUrl: string;
+  setNotionUrl: (url: string) => void;
+  isUrlValid: boolean;
+  setIsUrlValid: (valid: boolean) => void;
+  onNext: () => void;
 }
 
-export async function POST(req: Request) {
-  const { id } = await req.json();
+export function ConnectStep({
+  notionUrl,
+  setNotionUrl,
+  isUrlValid,
+  setIsUrlValid,
+  onNext,
+}: ConnectStepProps) {
+  const [loadingDetect, setLoadingDetect] = useState(false);
+  const [dbInfo, setDbInfo] = useState<any>(null);
+  const [detectError, setDetectError] = useState<string | null>(null);
 
-  if (!NOTION_TOKEN) {
-    return NextResponse.json({
-      success: false,
-      error: "NOTION_TOKEN_V2 is not configured on the server.",
-    });
-  }
+  // VALIDATOR — ntn_, UUID, atau URL notion
+  const validate = (input: string) => {
+    if (!input) return false;
+    if (input.startsWith("ntn_") && input.length > 20) return true;
 
-  try {
-    // =====================================
-    // 1) RESOLVE THE ntn_ → collection_view
-    // =====================================
-    const viewRes = await fetch("https://www.notion.so/api/v3/getRecordValues", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json;charset=UTF-8",
-        Cookie: `token_v2=${NOTION_TOKEN}`,
-      },
-      body: JSON.stringify({
-        requests: [
-          {
-            id,
-            table: "collection_view",
-          },
-        ],
-      }),
-    });
+    const clean = input.replace(/-/g, "");
+    if (clean.length === 32) return true;
 
-    const viewData = await viewRes.json();
-    const viewValue = viewData?.results?.[0]?.value;
+    if (input.includes("notion.so") || input.includes("ntn.so")) return true;
 
-    if (!viewValue) {
-      return NextResponse.json({
-        success: false,
-        error: "Invalid or private database (cannot resolve collection_view).",
-      });
-    }
+    return false;
+  };
 
-    const collectionId = viewValue.collection_id;
-    const viewId = viewValue.id;
-    const viewType = viewValue.type || "unknown";
-    const viewName = viewValue.name?.[0]?.[0] || "Default View";
+  // Ekstrak ID yg bakal dikirim ke API
+  const extractId = (input: string): string | null => {
+    if (input.startsWith("ntn_")) return input.trim();
+    return input.trim();
+    // untuk URL/UUID kita kirim apa adanya,
+    // parsing lanjutnya dilakukan di API (extractIdFromUrl / isUuidLike)
+  };
 
-    // =====================================
-    // 2) FETCH DATABASE COLLECTION
-    // =====================================
-    const collectionRes = await fetch(
-      "https://www.notion.so/api/v3/getRecordValues",
-      {
+  const detectDb = async (id: string) => {
+    setLoadingDetect(true);
+    setDbInfo(null);
+    setDetectError(null);
+
+    try {
+      const res = await fetch("/api/notion-detect", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json;charset=UTF-8",
-          Cookie: `token_v2=${NOTION_TOKEN}`,
-        },
-        body: JSON.stringify({
-          requests: [
-            {
-              id: collectionId,
-              table: "collection",
-            },
-          ],
-        }),
-      }
-    );
-
-    const colData = await collectionRes.json();
-    const col = colData?.results?.[0]?.value;
-
-    if (!col) {
-      return NextResponse.json({
-        success: false,
-        error: "Invalid or private database (cannot resolve collection).",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
       });
+
+      const data = await res.json();
+      setLoadingDetect(false);
+
+      if (!data.success) {
+        setDetectError(data.error || "Failed to connect.");
+        return;
+      }
+
+      setDbInfo({
+        title: data.title,
+        icon: data.icon,
+        propertiesCount: data.propertiesCount,
+        publicUrl: data.publicUrl,
+      });
+    } catch (err) {
+      console.error(err);
+      setLoadingDetect(false);
+      setDetectError("Failed to connect.");
+    }
+  };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.trim();
+    setNotionUrl(raw);
+
+    const ok = validate(raw);
+    setIsUrlValid(ok);
+
+    if (!ok) {
+      setDbInfo(null);
+      setDetectError(null);
+      return;
     }
 
-    // title + icon
-    const title = col.name?.[0]?.[0] || "Untitled Database";
-    const icon =
-      col.icon?.emoji ||
-      col.icon?.file_url ||
-      col.cover_url ||
-      null;
+    const id = extractId(raw);
+    if (id) detectDb(id);
+  };
 
-    const schema = col.schema || {};
+  return (
+    <div className="space-y-6">
+      {/* HEADER */}
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+          <Link2 className="w-5 h-5 text-purple-600" />
+        </div>
+        <div>
+          <h2 className="text-2xl text-gray-900">Connect Database</h2>
+          <p className="text-sm text-gray-600">
+            Paste your Notion DB ID — auto-detect will run instantly
+          </p>
+        </div>
+      </div>
 
-    // =====================================
-    // 3) DETECT IMAGE FIELD + TEXT FIELD + STATUS FIELD
-    // =====================================
-    let imageField: null = null;
-    let titleField: null = null;
-    let statusField: null = null;
+      {/* INPUT */}
+      <div>
+        <label className="block text-sm text-gray-700 mb-2">
+          Notion Database ID
+        </label>
 
-    Object.entries(schema).forEach(([propId, prop]: any) => {
-      if (!titleField && prop.type === "title") titleField = prop.name;
-      if (!imageField && prop.type === "file") imageField = prop.name;
-      if (!statusField && prop.type === "status") statusField = prop.name;
-    });
+        <div className="relative">
+          <input
+            type="text"
+            value={notionUrl}
+            onChange={handleUrlChange}
+            placeholder="ntn_xxxxxxxxxxxxxxxxxxxxx"
+            className={`w-full px-4 py-3 bg-white border rounded-lg text-gray-900
+              placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all
+              ${
+                notionUrl === ""
+                  ? "border-gray-300 focus:ring-purple-500"
+                  : isUrlValid
+                  ? "border-green-500 focus:ring-green-500"
+                  : "border-red-500 focus:ring-red-500"
+              }`}
+          />
 
-    // =====================================
-    // 4) REAL DATABASE URL (SAME AS NOTION)
-    // =====================================
-    const cleanPageId = cleanId(collectionId);
-    const publicUrl = `https://www.notion.so/${cleanPageId}?v=${cleanId(viewId)}`;
+          {notionUrl && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              {loadingDetect ? (
+                <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
+              ) : isUrlValid ? (
+                <CheckCircle2 className="w-5 h-5 text-green-500" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-red-500" />
+              )}
+            </div>
+          )}
+        </div>
 
-    // FINAL RESPONSE
-    return NextResponse.json({
-      success: true,
-      title,
-      icon,
-      dbId: collectionId,
-      viewId,
-      viewType,
-      viewName,
-      schemaCount: Object.keys(schema).length,
-      publicUrl,
-      fields: {
-        titleField,
-        imageField,
-        statusField,
-      },
-    });
-  } catch (err) {
-    console.error("[NOTION DETECT ERROR]", err);
-    return NextResponse.json({
-      success: false,
-      error: "Failed to request Notion API.",
-    });
-  }
+        {detectError && (
+          <p className="text-sm text-red-600 mt-2">{detectError}</p>
+        )}
+      </div>
+
+      {/* PREVIEW DB */}
+      {dbInfo && (
+        <div className="p-4 rounded-lg border bg-white shadow-sm space-y-3">
+          <div className="flex items-center gap-2">
+            {dbInfo.icon && <span className="text-2xl">{dbInfo.icon}</span>}
+            <h3 className="font-medium text-gray-900 text-lg">
+              {dbInfo.title}
+            </h3>
+          </div>
+
+          <div className="text-sm text-gray-600 space-y-1">
+            <p>
+              <strong>Properties:</strong> {dbInfo.propertiesCount}
+            </p>
+
+            {dbInfo.publicUrl && (
+              <p>
+                <strong>Database URL:</strong>
+                <br />
+                <a
+                  href={dbInfo.publicUrl}
+                  className="text-blue-600 underline break-all"
+                  target="_blank"
+                >
+                  {dbInfo.publicUrl}
+                </a>
+              </p>
+            )}
+
+            <p className="text-green-600 font-medium">
+              Connected via Notion token_v2 (server-side)
+            </p>
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={onNext}
+        disabled={!dbInfo}
+        className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 
+        text-white rounded-lg transition-colors disabled:opacity-50
+        disabled:cursor-not-allowed"
+      >
+        Continue to Customize
+      </button>
+    </div>
+  );
 }
