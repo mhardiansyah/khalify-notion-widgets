@@ -1,19 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 
-export const runtime = "nodejs"; // biar bisa pake node fetch + env
-
-// Cek UUID 32 char (tanpa dash)
+// Helper: cek UUID 32 char (tanpa dash)
 function isUuidLike(str: string) {
   const clean = str.replace(/-/g, "");
   return /^[0-9a-fA-F]{32}$/.test(clean);
 }
 
-// Ambil 32 hex terakhir dari Notion URL
+// Helper: ambil 32 hex terakhir dari Notion URL
 function extractIdFromUrl(input: string): string | null {
   try {
     const url = new URL(input.startsWith("http") ? input : `https://${input}`);
-    const path = url.pathname; // /khasify-Backend-2a7ad4... atau /2a5ad4...
+    const path = url.pathname; // /slug-2a5ad4... atau /2a5ad4...
     const slug = path.split("/").filter(Boolean).pop() || "";
     const match = slug.replace(/-/g, "").match(/[0-9a-fA-F]{32}$/);
     return match ? match[0] : null;
@@ -33,40 +31,47 @@ export async function POST(req: Request) {
   }
 
   const token = process.env.NOTION_TOKEN_V2;
+
   if (!token) {
-    // Kalau .env belum diisi
     return NextResponse.json({
       success: false,
       error: "NOTION_TOKEN_V2 is not configured on the server.",
     });
   }
 
+  // Header standar buat semua request ke internal API Notion
+  const baseHeaders: HeadersInit = {
+    "Content-Type": "application/json;charset=UTF-8",
+    // cookie penting buat akses private DB
+    Cookie: `token_v2=${token}`,
+  };
+
   try {
     // =========================
-    // CASE 1: NEW PUBLIC DB ID (ntn_...)
-    // DB private tapi bisa diakses via token_v2
+    // CASE 1: NEW PUBLIC ID ntn_
     // =========================
     if (id.startsWith("ntn_")) {
-      const res = await fetch("https://www.notion.so/api/v3/getRecordValues", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json;charset=UTF-8",
-          // kunci: token_v2 dikirim via cookie
-          cookie: `token_v2=${token};`,
-        },
-        body: JSON.stringify({
-          requests: [
-            {
-              id, // langsung pakai ntn_... sebagai collection id
-              table: "collection",
-            },
-          ],
-        }),
-      });
+      // Banyak tool pakai ntn_ sebagai ID collection,
+      // jadi kita coba table "collection" dulu.
+      const res = await fetch(
+        "https://www.notion.so/api/v3/getRecordValues",
+        {
+          method: "POST",
+          headers: baseHeaders,
+          body: JSON.stringify({
+            requests: [
+              {
+                id,
+                table: "collection",
+              },
+            ],
+          }),
+        }
+      );
 
       const data = await res.json();
 
-      const collection: any = data?.results?.[0]?.value || null;
+      const collection: any = (data as any)?.results?.[0]?.value || null;
 
       if (!collection) {
         return NextResponse.json({
@@ -75,13 +80,14 @@ export async function POST(req: Request) {
         });
       }
 
-      const title =
+      // Notion style: name = [[ "Text" ]]
+      const title: string =
         collection?.name?.[0]?.[0] || "Untitled Database";
 
       const schema = collection?.schema || {};
       const propertiesCount = Object.keys(schema).length;
 
-      // internal UUID asli → "2a5ad4026b83..."
+      // internal UUID asli → 2a5ad4026b83...
       const internalId: string | null = collection?.id || null;
       const cleanInternalId = internalId
         ? internalId.replace(/-/g, "")
@@ -94,15 +100,14 @@ export async function POST(req: Request) {
       return NextResponse.json({
         success: true,
         title,
-        icon: null, // collection jarang punya icon sendiri, aman null
+        icon: null, // collection biasanya ga punya page_icon
         propertiesCount,
         publicUrl,
       });
     }
 
     // =========================
-    // CASE 2: URL / UUID PUBLIC
-    // (tanpa token, pakai getPublicPageData)
+    // CASE 2: URL / UUID biasa
     // =========================
     let pageId: string | null = null;
 
@@ -119,13 +124,12 @@ export async function POST(req: Request) {
       });
     }
 
+    // Call getPublicPageData dengan pageId (UUID 32 char)
     const res = await fetch(
       "https://www.notion.so/api/v3/getPublicPageData",
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json;charset=UTF-8",
-        },
+        headers: baseHeaders,
         body: JSON.stringify({ pageId }),
       }
     );
@@ -135,29 +139,32 @@ export async function POST(req: Request) {
     if (!data || (data as any).error) {
       return NextResponse.json({
         success: false,
-        error:
-          "Database is private or invalid. Make sure it is shared publicly.",
+        error: "Database is private or invalid.",
       });
     }
 
-    const blockMap = (data as any)?.recordMap?.block || {};
-    const block =
+    const recordMap: any = (data as any).recordMap || {};
+    const blockMap: any = recordMap.block || {};
+
+    // block utama (root)
+    const blockEntry =
       blockMap[pageId] ||
       blockMap[pageId.replace(/-/g, "")] ||
       Object.values(blockMap)[0];
 
-    const blockValue: any = (block as any)?.value || block;
+    const blockValue: any = (blockEntry as any)?.value || blockEntry;
 
-    const title =
+    const title: string =
       blockValue?.properties?.title?.[0]?.[0] || "Untitled Database";
 
-    const icon =
+    const icon: string | null =
       blockValue?.format?.page_icon ||
       blockValue?.format?.block_icon ||
       null;
 
-    const collectionObj = (data as any)?.recordMap?.collection
-      ? (Object.values((data as any).recordMap.collection)[0] as any)
+    // Ambil collection pertama (kalau ada)
+    const collectionObj: any = recordMap.collection
+      ? (Object.values(recordMap.collection)[0] as any)
       : null;
 
     const collection = collectionObj?.value || null;
