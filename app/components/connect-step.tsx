@@ -29,36 +29,18 @@ export function ConnectStep({
   const [detectError, setDetectError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // VALIDATOR — accept ntn_, UUID, URL
+  // VALIDATOR basic — ntn_, UUID, URL
   const validate = (input: string) => {
     if (!input) return false;
     if (input.startsWith("ntn_") && input.length > 20) return true;
-
     const clean = input.replace(/-/g, "");
-    if (clean.length === 32) return true;
-
+    if (/^[0-9a-fA-F]{32}$/.test(clean)) return true;
     if (input.includes("notion.so") || input.includes("ntn.so")) return true;
     return false;
   };
 
-  // Ambil DB ID atau UUID dari input
-  const extractId = (input: string): string | null => {
-    if (!input) return null;
-
-    // udah langsung ntn_
-    if (input.startsWith("ntn_")) return input.trim();
-
-    // dari URL → ambil bagian terakhir
-    const part = input.split("?")[0].split("/").pop() || "";
-
-    if (part.startsWith("ntn_")) return part.trim();
-
-    const clean = part.replace(/-/g, "");
-    return clean.length === 32 ? clean : null;
-  };
-
-  // AUTO DETECT — call API /api/notion-detect
-  const detectDb = async (id: string) => {
+  // Call backend detect
+  const detectDb = async (rawId: string) => {
     setLoadingDetect(true);
     setDbInfo(null);
     setDetectError(null);
@@ -67,7 +49,7 @@ export function ConnectStep({
       const res = await fetch("/api/notion-detect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id: rawId }),
       });
 
       const data = await res.json();
@@ -82,7 +64,7 @@ export function ConnectStep({
         title: data.title,
         icon: data.icon,
         propertiesCount: data.propertiesCount,
-        publicUrl: data.publicUrl, // ← ini yang dipakai di UI
+        publicUrl: data.publicUrl,
       });
     } catch (err) {
       console.error(err);
@@ -91,7 +73,6 @@ export function ConnectStep({
     }
   };
 
-  // EVENT — input berubah
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.trim();
     setNotionUrl(raw);
@@ -105,12 +86,11 @@ export function ConnectStep({
       return;
     }
 
-    const id = extractId(raw);
-    if (id) detectDb(id);
+    detectDb(raw);
   };
 
-  // Copy DB ID
   const handleCopy = () => {
+    if (!notionUrl) return;
     navigator.clipboard.writeText(notionUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
@@ -142,7 +122,7 @@ export function ConnectStep({
             type="text"
             value={notionUrl}
             onChange={handleUrlChange}
-            placeholder="ntn_xxxxxxxxxxxxxxxxxxxxx"
+            placeholder="ntn_xxxxxxxxxxxxxxxxxxxxx / Notion URL"
             className={`w-full px-4 py-3 bg-white border rounded-lg text-gray-900 
               placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all
               ${
@@ -223,7 +203,7 @@ export function ConnectStep({
         </div>
       )}
 
-      {/* BUTTON NEXT */}
+      {/* NEXT BUTTON */}
       <button
         onClick={onNext}
         disabled={!dbInfo}
