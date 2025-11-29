@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 
-// Helper: cek UUID 32 char (tanpa dash)
+export const runtime = "nodejs"; // biar bisa pake node fetch + env
+
+// Cek UUID 32 char (tanpa dash)
 function isUuidLike(str: string) {
   const clean = str.replace(/-/g, "");
   return /^[0-9a-fA-F]{32}$/.test(clean);
 }
 
-// Helper: ambil 32 hex terakhir dari Notion URL
+// Ambil 32 hex terakhir dari Notion URL
 function extractIdFromUrl(input: string): string | null {
   try {
     const url = new URL(input.startsWith("http") ? input : `https://${input}`);
@@ -26,33 +28,41 @@ export async function POST(req: Request) {
   if (!id) {
     return NextResponse.json({
       success: false,
-      error: "Missing database ID",
+      error: "Missing database ID.",
+    });
+  }
+
+  const token = process.env.NOTION_TOKEN_V2;
+  if (!token) {
+    // Kalau .env belum diisi
+    return NextResponse.json({
+      success: false,
+      error: "NOTION_TOKEN_V2 is not configured on the server.",
     });
   }
 
   try {
     // =========================
-    // CASE 1: NEW PUBLIC ID ntn_
+    // CASE 1: NEW PUBLIC DB ID (ntn_...)
+    // DB private tapi bisa diakses via token_v2
     // =========================
     if (id.startsWith("ntn_")) {
-      // pakai getRecordValues → table: "collection"
-      const res = await fetch(
-        "https://www.notion.so/api/v3/getRecordValues",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json;charset=UTF-8",
-          },
-          body: JSON.stringify({
-            requests: [
-              {
-                id,
-                table: "collection",
-              },
-            ],
-          }),
-        }
-      );
+      const res = await fetch("https://www.notion.so/api/v3/getRecordValues", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json;charset=UTF-8",
+          // kunci: token_v2 dikirim via cookie
+          cookie: `token_v2=${token};`,
+        },
+        body: JSON.stringify({
+          requests: [
+            {
+              id, // langsung pakai ntn_... sebagai collection id
+              table: "collection",
+            },
+          ],
+        }),
+      });
 
       const data = await res.json();
 
@@ -65,14 +75,13 @@ export async function POST(req: Request) {
         });
       }
 
-      // title di collection.name (Notion style: [[ "Text" ]])
       const title =
         collection?.name?.[0]?.[0] || "Untitled Database";
 
       const schema = collection?.schema || {};
       const propertiesCount = Object.keys(schema).length;
 
-      // internal UUID asli → ini yang jadi "2a5ad4026b83..."
+      // internal UUID asli → "2a5ad4026b83..."
       const internalId: string | null = collection?.id || null;
       const cleanInternalId = internalId
         ? internalId.replace(/-/g, "")
@@ -85,14 +94,15 @@ export async function POST(req: Request) {
       return NextResponse.json({
         success: true,
         title,
-        icon: null, // collection biasanya nggak punya page_icon; aman dibuat null
+        icon: null, // collection jarang punya icon sendiri, aman null
         propertiesCount,
         publicUrl,
       });
     }
 
     // =========================
-    // CASE 2: URL / UUID biasa
+    // CASE 2: URL / UUID PUBLIC
+    // (tanpa token, pakai getPublicPageData)
     // =========================
     let pageId: string | null = null;
 
@@ -109,7 +119,6 @@ export async function POST(req: Request) {
       });
     }
 
-    // Call getPublicPageData dengan pageId (UUID 32 char)
     const res = await fetch(
       "https://www.notion.so/api/v3/getPublicPageData",
       {
@@ -126,11 +135,11 @@ export async function POST(req: Request) {
     if (!data || (data as any).error) {
       return NextResponse.json({
         success: false,
-        error: "Database is private or invalid.",
+        error:
+          "Database is private or invalid. Make sure it is shared publicly.",
       });
     }
 
-    // block utama (root page)
     const blockMap = (data as any)?.recordMap?.block || {};
     const block =
       blockMap[pageId] ||
@@ -147,18 +156,14 @@ export async function POST(req: Request) {
       blockValue?.format?.block_icon ||
       null;
 
-    // Ambil collection pertama (kalau ada)
     const collectionObj = (data as any)?.recordMap?.collection
-      ? (Object.values(
-          (data as any).recordMap.collection
-        )[0] as any)
+      ? (Object.values((data as any).recordMap.collection)[0] as any)
       : null;
 
     const collection = collectionObj?.value || null;
     const schema = collection?.schema || {};
     const propertiesCount = Object.keys(schema).length;
 
-    // URL publik: pageId yang kita pakai barusan
     const publicUrl = `https://www.notion.so/${pageId}`;
 
     return NextResponse.json({

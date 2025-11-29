@@ -5,8 +5,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  Copy,
-  Check,
 } from "lucide-react";
 
 interface ConnectStepProps {
@@ -27,20 +25,29 @@ export function ConnectStep({
   const [loadingDetect, setLoadingDetect] = useState(false);
   const [dbInfo, setDbInfo] = useState<any>(null);
   const [detectError, setDetectError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
-  // VALIDATOR basic — ntn_, UUID, URL
+  // VALIDATOR — ntn_, UUID, atau URL notion
   const validate = (input: string) => {
     if (!input) return false;
     if (input.startsWith("ntn_") && input.length > 20) return true;
+
     const clean = input.replace(/-/g, "");
-    if (/^[0-9a-fA-F]{32}$/.test(clean)) return true;
+    if (clean.length === 32) return true;
+
     if (input.includes("notion.so") || input.includes("ntn.so")) return true;
+
     return false;
   };
 
-  // Call backend detect
-  const detectDb = async (rawId: string) => {
+  // Ekstrak ID yg bakal dikirim ke API
+  const extractId = (input: string): string | null => {
+    if (input.startsWith("ntn_")) return input.trim();
+    return input.trim();
+    // untuk URL/UUID kita kirim apa adanya,
+    // parsing lanjutnya dilakukan di API (extractIdFromUrl / isUuidLike)
+  };
+
+  const detectDb = async (id: string) => {
     setLoadingDetect(true);
     setDbInfo(null);
     setDetectError(null);
@@ -49,14 +56,14 @@ export function ConnectStep({
       const res = await fetch("/api/notion-detect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: rawId }),
+        body: JSON.stringify({ id }),
       });
 
       const data = await res.json();
       setLoadingDetect(false);
 
       if (!data.success) {
-        setDetectError(data.error || "Failed to connect");
+        setDetectError(data.error || "Failed to connect.");
         return;
       }
 
@@ -69,7 +76,7 @@ export function ConnectStep({
     } catch (err) {
       console.error(err);
       setLoadingDetect(false);
-      setDetectError("Failed to connect");
+      setDetectError("Failed to connect.");
     }
   };
 
@@ -86,14 +93,8 @@ export function ConnectStep({
       return;
     }
 
-    detectDb(raw);
-  };
-
-  const handleCopy = () => {
-    if (!notionUrl) return;
-    navigator.clipboard.writeText(notionUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    const id = extractId(raw);
+    if (id) detectDb(id);
   };
 
   return (
@@ -117,13 +118,13 @@ export function ConnectStep({
           Notion Database ID
         </label>
 
-        <div className="relative flex items-center">
+        <div className="relative">
           <input
             type="text"
             value={notionUrl}
             onChange={handleUrlChange}
-            placeholder="ntn_xxxxxxxxxxxxxxxxxxxxx / Notion URL"
-            className={`w-full px-4 py-3 bg-white border rounded-lg text-gray-900 
+            placeholder="ntn_xxxxxxxxxxxxxxxxxxxxx"
+            className={`w-full px-4 py-3 bg-white border rounded-lg text-gray-900
               placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all
               ${
                 notionUrl === ""
@@ -134,9 +135,8 @@ export function ConnectStep({
               }`}
           />
 
-          {/* STATUS ICON */}
           {notionUrl && (
-            <div className="absolute right-10 top-1/2 -translate-y-1/2">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
               {loadingDetect ? (
                 <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
               ) : isUrlValid ? (
@@ -146,19 +146,6 @@ export function ConnectStep({
               )}
             </div>
           )}
-
-          {/* COPY BUTTON */}
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700"
-          >
-            {copied ? (
-              <Check className="w-4 h-4 text-green-600" />
-            ) : (
-              <Copy className="w-4 h-4" />
-            )}
-          </button>
         </div>
 
         {detectError && (
@@ -166,7 +153,7 @@ export function ConnectStep({
         )}
       </div>
 
-      {/* DATABASE PREVIEW */}
+      {/* PREVIEW DB */}
       {dbInfo && (
         <div className="p-4 rounded-lg border bg-white shadow-sm space-y-3">
           <div className="flex items-center gap-2">
@@ -189,7 +176,6 @@ export function ConnectStep({
                   href={dbInfo.publicUrl}
                   className="text-blue-600 underline break-all"
                   target="_blank"
-                  rel="noreferrer"
                 >
                   {dbInfo.publicUrl}
                 </a>
@@ -197,13 +183,13 @@ export function ConnectStep({
             )}
 
             <p className="text-green-600 font-medium">
-              Connected via Public Notion API
+              Connected via Notion token_v2 (server-side)
             </p>
           </div>
         </div>
       )}
 
-      {/* NEXT BUTTON */}
+      {/* NEXT */}
       <button
         onClick={onNext}
         disabled={!dbInfo}
