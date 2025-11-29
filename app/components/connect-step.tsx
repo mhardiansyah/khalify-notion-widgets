@@ -33,22 +33,31 @@ export function ConnectStep({
   const validate = (input: string) => {
     if (!input) return false;
     if (input.startsWith("ntn_") && input.length > 20) return true;
+
     const clean = input.replace(/-/g, "");
     if (clean.length === 32) return true;
+
     if (input.includes("notion.so") || input.includes("ntn.so")) return true;
     return false;
   };
 
-  // Extract DB ID
+  // Ambil DB ID atau UUID dari input
   const extractId = (input: string): string | null => {
+    if (!input) return null;
+
+    // udah langsung ntn_
     if (input.startsWith("ntn_")) return input.trim();
-    const part = input.split("/").pop() || "";
+
+    // dari URL → ambil bagian terakhir
+    const part = input.split("?")[0].split("/").pop() || "";
+
     if (part.startsWith("ntn_")) return part.trim();
+
     const clean = part.replace(/-/g, "");
     return clean.length === 32 ? clean : null;
   };
 
-  // AUTO DETECT — call API
+  // AUTO DETECT — call API /api/notion-detect
   const detectDb = async (id: string) => {
     setLoadingDetect(true);
     setDbInfo(null);
@@ -65,24 +74,24 @@ export function ConnectStep({
       setLoadingDetect(false);
 
       if (!data.success) {
-        setDetectError(data.error);
+        setDetectError(data.error || "Failed to connect");
         return;
       }
 
-      // Set DB info
       setDbInfo({
         title: data.title,
         icon: data.icon,
         propertiesCount: data.propertiesCount,
-        publicUrl: data.publicUrl,
+        publicUrl: data.publicUrl, // ← ini yang dipakai di UI
       });
     } catch (err) {
+      console.error(err);
       setLoadingDetect(false);
       setDetectError("Failed to connect");
     }
   };
 
-  // EVENT — Input change
+  // EVENT — input berubah
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.trim();
     setNotionUrl(raw);
@@ -100,7 +109,7 @@ export function ConnectStep({
     if (id) detectDb(id);
   };
 
-  // Copy to clipboard
+  // Copy DB ID
   const handleCopy = () => {
     navigator.clipboard.writeText(notionUrl);
     setCopied(true);
@@ -109,7 +118,6 @@ export function ConnectStep({
 
   return (
     <div className="space-y-6">
-      
       {/* HEADER */}
       <div className="flex items-center gap-3 mb-2">
         <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
@@ -161,10 +169,15 @@ export function ConnectStep({
 
           {/* COPY BUTTON */}
           <button
+            type="button"
             onClick={handleCopy}
             className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700"
           >
-            {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+            {copied ? (
+              <Check className="w-4 h-4 text-green-600" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
           </button>
         </div>
 
@@ -175,10 +188,12 @@ export function ConnectStep({
 
       {/* DATABASE PREVIEW */}
       {dbInfo && (
-        <div className="p-4 rounded-lg border bg-white shadow-sm space-y-3 animate-fadeIn">
+        <div className="p-4 rounded-lg border bg-white shadow-sm space-y-3">
           <div className="flex items-center gap-2">
             {dbInfo.icon && <span className="text-2xl">{dbInfo.icon}</span>}
-            <h3 className="font-medium text-gray-900 text-lg">{dbInfo.title}</h3>
+            <h3 className="font-medium text-gray-900 text-lg">
+              {dbInfo.title}
+            </h3>
           </div>
 
           <div className="text-sm text-gray-600 space-y-1">
@@ -194,6 +209,7 @@ export function ConnectStep({
                   href={dbInfo.publicUrl}
                   className="text-blue-600 underline break-all"
                   target="_blank"
+                  rel="noreferrer"
                 >
                   {dbInfo.publicUrl}
                 </a>

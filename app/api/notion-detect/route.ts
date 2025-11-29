@@ -4,7 +4,15 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   const { id } = await req.json();
 
+  if (!id) {
+    return NextResponse.json(
+      { success: false, error: "Missing Notion ID" },
+      { status: 400 }
+    );
+  }
+
   try {
+    // Panggil internal API Notion
     const res = await fetch("https://www.notion.so/api/v3/getPublicPageData", {
       method: "POST",
       headers: {
@@ -15,42 +23,82 @@ export async function POST(req: Request) {
 
     const data = await res.json();
 
-    if (!data || data.error) {
+    if (!data || data.error || !data.recordMap) {
       return NextResponse.json({
         success: false,
         error: "Database is private or invalid.",
       });
     }
 
-    // ---- BLOCK ROOT ----
-    const block = data?.recordMap?.block?.[id]?.value;
-    const pageUUID = block?.id?.replace(/-/g, "") || id.replace(/-/g, "");
+    const recordMap: any = data.recordMap || {};
 
-    const collectionViewKeys = Object.keys(data?.recordMap?.collection_view || {});
-    const viewId = collectionViewKeys.length > 0 ? collectionViewKeys[0] : null;
+    // -----------------------------
+    // 1. CARI ROOT PAGE / PAGE VIEW
+    // -----------------------------
+    const blockMap: any = recordMap.block || {};
+    const allBlocks: any[] = Object.values(blockMap);
 
-    // ---- GENERATE SAFE URL ----
-    // PRIORITY:
-    // 1. pageUUID?v=viewId
-    // 2. pageUUID only (fallback)
-    let publicUrl = null;
+    // cari block yang type-nya "collection_view_page" dulu
+    const pageBlockWrapper: any =
+      allBlocks.find(
+        (b: any) => b.value?.type === "collection_view_page"
+      ) ||
+      allBlocks.find((b: any) => b.value?.type === "page") ||
+      allBlocks[0];
 
-    if (pageUUID && viewId) {
-      publicUrl = `https://www.notion.so/${pageUUID}?v=${viewId}`;
-    } else {
-      // fallback ALWAYS WORKS
-      publicUrl = `https://www.notion.so/${pageUUID}`;
+    const pageBlock = pageBlockWrapper?.value;
+
+    // Title & icon
+    const title =
+      pageBlock?.properties?.title?.[0]?.[0] || "Untitled Database";
+
+    const icon =
+      pageBlock?.format?.page_icon ||
+      pageBlock?.format?.block_icon ||
+      null;
+
+    // --------------------------------
+    // 2. COLLECTION & SCHEMA (OPTIONAL)
+    // --------------------------------
+    const collectionMap: any = recordMap.collection || {};
+    const collectionObj: any =
+      Object.values(collectionMap)[0] || null;
+    const collection = collectionObj?.value || null;
+    const schema = collection?.schema || {};
+
+    // --------------------------------
+    // 3. VIEW ID (UNTUK ?v= DI URL)
+    // --------------------------------
+    const collectionViewMap: any = recordMap.collection_view || {};
+    const viewIds = Object.keys(collectionViewMap);
+    const firstViewId: string | null = viewIds[0] || null;
+
+    // --------------------------------
+    // 4. GENERATE PUBLIC URL YANG BENAR
+    // --------------------------------
+    const pageUuid: string | null = pageBlock?.id
+      ? pageBlock.id.replace(/-/g, "")
+      : null;
+
+    let publicUrl: string | null = null;
+
+    if (pageUuid && firstViewId) {
+      // format: /pageUUID?v=viewUUID  → sama persis dengan Notion
+      publicUrl = `https://www.notion.so/${pageUuid}?v=${firstViewId}`;
+    } else if (pageUuid) {
+      publicUrl = `https://www.notion.so/${pageUuid}`;
     }
 
     return NextResponse.json({
       success: true,
-      title: block?.properties?.title?.[0]?.[0] || "Untitled Database",
-      icon: block?.format?.page_icon || block?.format?.block_icon || null,
-      propertiesCount: 0,
+      title,
+      icon,
+      propertiesCount: Object.keys(schema).length,
       publicUrl,
     });
-
   } catch (error) {
+    console.error("notion-detect error:", error);
+
     return NextResponse.json({
       success: false,
       error: "Failed to fetch Notion data.",
