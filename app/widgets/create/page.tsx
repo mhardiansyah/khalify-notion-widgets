@@ -111,27 +111,46 @@ export default function CreateWidgetPageMerged() {
 
           {/* STEP 3 */}
           {step === 3 && (
-            <div className="grid grid-cols-2 gap-8">
-              {/* LEFT — Live Preview */}
-              <LivePreviewBox token={token} db={db} step={step} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              {/* LEFT — Summary + Create */}
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm h-fit">
+                <h2 className="text-xl font-bold mb-4">Review & Generate</h2>
 
-              {/* RIGHT — Customize */}
-              <CustomizeStep
-                showMultimedia={showMultimedia}
-                setShowMultimedia={setShowMultimedia}
-                showTitle={showTitle}
-                setShowTitle={setShowTitle}
-                gridColumns={gridColumns}
-                setGridColumns={setGridColumns}
-                onPrev={() => setStep(2)}
-                onNext={handleGenerateWidget}
-              />
+                <div className="bg-gray-50 border p-4 rounded-lg mb-4">
+                  <p className="text-sm text-gray-500">Database ID</p>
+                  <p className="text-gray-900 break-all">{db}</p>
+                </div>
+
+                <button
+                  onClick={handleGenerateWidget}
+                  className="w-full mt-3 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
+                >
+                  Create Widget
+                </button>
+
+                <button
+                  onClick={() => setStep(2)}
+                  className="mt-4 w-full px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Back
+                </button>
+              </div>
+
+              {/* RIGHT — LIVE PREVIEW */}
+              <LivePreviewBox token={token} db={db} />
             </div>
           )}
 
           {/* STEP 4 */}
           {step === 4 && (
-            <FinishStep onPrev={() => setStep(3)} embedUrl={embedUrl!} showMultimedia={showMultimedia} showTitle={showTitle} gridColumns={gridColumns} dbUrl={db!} />
+            <FinishStep
+              onPrev={() => setStep(3)}
+              embedUrl={embedUrl!}
+              showMultimedia={showMultimedia}
+              showTitle={showTitle}
+              gridColumns={gridColumns}
+              dbUrl={db!}
+            />
           )}
         </div>
       </div>
