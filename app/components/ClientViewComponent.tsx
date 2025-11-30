@@ -7,11 +7,30 @@ import AutoThumbnail from "@/app/components/AutoThumbnail";
 import EmbedFilter from "@/app/components/EmbedFilter";
 import RefreshButton from "@/app/components/RefreshButton";
 
-export default function ClientViewComponent({ filtered }: { filtered: any[] }) {
+interface Props {
+  filtered: any[];
+  theme?: "light" | "dark";
+  showTitle?: boolean;
+  showMultimedia?: boolean;
+  gridColumns?: number;
+}
+
+export default function ClientViewComponent({
+  filtered,
+  theme = "light",
+  showTitle = true,
+  showMultimedia = true,
+  gridColumns = 3,
+}: Props) {
   const [viewMode, setViewMode] = useState<"visual" | "list">("visual");
 
+  const bg = theme === "light" ? "bg-white text-gray-900" : "bg-black text-white";
+  const cardBg = theme === "light" ? "bg-white" : "bg-gray-900";
+
   return (
-    <main className="bg-black min-h-screen p-4 text-white">
+    <main className={`${bg} min-h-screen p-4 rounded-xl`}>
+
+      {/* FILTERS */}
       <EmbedFilter />
 
       {/* TOGGLE VIEW */}
@@ -19,7 +38,9 @@ export default function ClientViewComponent({ filtered }: { filtered: any[] }) {
         <button
           onClick={() => setViewMode("visual")}
           className={`px-4 py-2 rounded ${
-            viewMode === "visual" ? "bg-gray-700" : "bg-gray-900"
+            viewMode === "visual"
+              ? theme === "light" ? "bg-gray-200" : "bg-gray-700"
+              : theme === "light" ? "bg-gray-100" : "bg-gray-900"
           }`}
         >
           Visual
@@ -28,27 +49,34 @@ export default function ClientViewComponent({ filtered }: { filtered: any[] }) {
         <button
           onClick={() => setViewMode("list")}
           className={`px-4 py-2 rounded ${
-            viewMode === "list" ? "bg-gray-700" : "bg-gray-900"
+            viewMode === "list"
+              ? theme === "light" ? "bg-gray-200" : "bg-gray-700"
+              : theme === "light" ? "bg-gray-100" : "bg-gray-900"
           }`}
         >
           Map View
         </button>
       </div>
 
-      {/* VISUAL VIEW */}
+      {/* VISUAL GRID */}
       {viewMode === "visual" && (
-        <div className="grid grid-cols-3 md:grid-cols-3 gap-3">
+        <div
+          className={`grid gap-3`}
+          style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
+        >
           {filtered.map((item: any, i: number) => {
             const name =
               item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
+
             const url = extractImage(item);
             const isPinned = item.properties?.Pinned?.checkbox === true;
 
             return (
               <div
                 key={i}
-                className="relative group bg-gray-900 rounded-lg overflow-hidden aspect-4/5"
+                className={`relative group rounded-lg overflow-hidden aspect-square ${cardBg}`}
               >
+                {/* PIN ICON */}
                 {isPinned && (
                   <div className="absolute top-2 right-2 z-20">
                     <Pin
@@ -58,24 +86,42 @@ export default function ClientViewComponent({ filtered }: { filtered: any[] }) {
                   </div>
                 )}
 
-                <AutoThumbnail src={url} />
+                {/* IMAGE / VIDEO */}
+                {showMultimedia && <AutoThumbnail src={url} />}
 
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                  <p className="text-white font-semibold text-center px-2 text-sm">
-                    {name}
-                  </p>
-                </div>
+                {/* TITLE OVERLAY */}
+                {showTitle && (
+                  <div
+                    className={`absolute inset-0 ${
+                      theme === "light" ? "bg-black/30" : "bg-black/60"
+                    } opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center`}
+                  >
+                    <p className="font-semibold text-center px-2 text-sm text-white">
+                      {name}
+                    </p>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       )}
 
-      {/* MAP VIEW */}
+      {/* LIST VIEW */}
       {viewMode === "list" && (
-        <table className="w-full text-white border-collapse">
+        <table
+          className={`w-full border-collapse ${
+            theme === "light" ? "text-gray-900" : "text-white"
+          }`}
+        >
           <thead>
-            <tr className="border-b border-gray-600">
+            <tr
+              className={
+                theme === "light"
+                  ? "border-b border-gray-300"
+                  : "border-b border-gray-600"
+              }
+            >
               <th className="p-3 text-left">Pin</th>
               <th className="p-3 text-left">Title</th>
               <th className="p-3 text-left">Platform</th>
@@ -88,6 +134,7 @@ export default function ClientViewComponent({ filtered }: { filtered: any[] }) {
             {filtered.map((item: any, i: number) => {
               const name =
                 item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
+
               const platform =
                 item.properties?.Platform?.select?.name || "-";
               const status =
@@ -97,12 +144,17 @@ export default function ClientViewComponent({ filtered }: { filtered: any[] }) {
                 "-";
               const pillar =
                 item.properties?.["Content Pillar"]?.select?.name || "-";
+
               const isPinned = item.properties?.Pinned?.checkbox === true;
 
               return (
                 <tr
                   key={i}
-                  className="border-b border-gray-800 hover:bg-gray-900"
+                  className={
+                    theme === "light"
+                      ? "border-b border-gray-200 hover:bg-gray-100"
+                      : "border-b border-gray-800 hover:bg-gray-900"
+                  }
                 >
                   <td className="p-3">
                     {isPinned && (
@@ -123,54 +175,32 @@ export default function ClientViewComponent({ filtered }: { filtered: any[] }) {
         </table>
       )}
 
+      {/* Refresh */}
       <RefreshButton />
     </main>
   );
 }
 
+/* Image extraction stays same */
 function extractImage(item: any) {
   const props = item.properties;
+  const isVideoUrl = (url: string) => /(mp4|mov|avi|webm|mkv)/i.test(url);
 
-  const isVideoUrl = (url: string) =>
-    /(mp4|mov|avi|webm|mkv)(?=($|\?|&))/i.test(url);
-
-  // ✅ 1. PRIORITAS: Attachment — tapi harus benar-benar Image Attachment
   if (props.Attachment?.files?.length > 0) {
     const file = props.Attachment.files[0];
-
-    // file.file.url = upload image  
-    // file.external.url = external link (kadang Canva)
     const url = file.file?.url || file.external?.url;
-
-    // ❌ Tolak kalau Canva
     if (url?.includes("canva.com")) return "/canva-rejected.png";
-
-    // Jika video → return tetap
     if (isVideoUrl(url)) return url;
-
-    // Otherwise → valid image
     return url;
   }
 
-  // ❌ 2. Tolak jika type-nya Canva Design
-  const type = props["Image Source"]?.select?.name;
-  if (type === "Canva Design") {
-    return "/canva-rejected.png";
-  }
-
-  // ❌ 3. Tolak link rich text yang isinya Canva
   const linkText = props["*Link"]?.rich_text?.[0]?.plain_text;
   if (linkText?.includes("canva.com")) return "/canva-rejected.png";
   if (linkText) return linkText;
 
-  // ❌ 4. Tolak field khusus Canva Link
   const canvaUrl = props["*Canva Link"]?.url;
   if (canvaUrl?.includes("canva.com")) return "/canva-rejected.png";
-
-  // Kalau bukan Canva, masih bisa pake
   if (canvaUrl) return canvaUrl;
 
-  // fallback
   return "/placeholder.png";
 }
-

@@ -131,7 +131,7 @@ export default function CreateWidgetPageMerged() {
 
           {/* STEP 4 */}
           {step === 4 && (
-            <FinishStep onPrev={() => setStep(3)} embedUrl={embedUrl!} />
+            <FinishStep onPrev={() => setStep(3)} embedUrl={embedUrl!} showMultimedia={showMultimedia} showTitle={showTitle} gridColumns={gridColumns} dbUrl={db!} />
           )}
         </div>
       </div>
