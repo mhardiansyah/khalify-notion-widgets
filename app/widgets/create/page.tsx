@@ -5,6 +5,7 @@ import Navbar from "@/app/components/Navbar";
 import { ConnectStep } from "@/app/components/connect-step";
 import { CustomizeStep } from "@/app/components/customize-step";
 import { FinishStep } from "@/app/components/finish-step";
+import LivePreviewBox from "@/app/components/LivePreviewBox";
 
 export default function CreateWidgetPageMerged() {
   const [step, setStep] = useState(1);
@@ -51,7 +52,6 @@ export default function CreateWidgetPageMerged() {
       <Navbar />
 
       <div className="w-full min-h-screen bg-white text-black p-10">
-
         {/* Step Header */}
         <div className="flex justify-center mb-10">
           <div className="flex items-center gap-10">
@@ -63,7 +63,11 @@ export default function CreateWidgetPageMerged() {
                 >
                   {id}
                 </div>
-                <span className={`${step === id ? "text-purple-600" : "text-gray-600"}`}>
+                <span
+                  className={`${
+                    step === id ? "text-purple-600" : "text-gray-600"
+                  }`}
+                >
                   {["Setup", "Connect", "Customize", "Finish"][id - 1]}
                 </span>
               </div>
@@ -72,11 +76,12 @@ export default function CreateWidgetPageMerged() {
         </div>
 
         <div className="max-w-3xl mx-auto bg-gray-50 p-8 rounded-xl shadow">
-
           {/* STEP 1 */}
           {step === 1 && (
             <div>
-              <h1 className="text-2xl font-bold mb-4">Step 1 — Setup Template</h1>
+              <h1 className="text-2xl font-bold mb-4">
+                Step 1 — Setup Template
+              </h1>
               <button
                 className="px-5 py-3 bg-purple-600 text-white rounded-lg"
                 onClick={() => setStep(2)}
@@ -96,9 +101,9 @@ export default function CreateWidgetPageMerged() {
               }}
               isUrlValid={isUrlValid}
               setIsUrlValid={setIsUrlValid}
-              onSelectDb={(dbId) => setDb(dbId)}    // <-- SAVE DB ID
+              onSelectDb={(dbId) => setDb(dbId)} // <-- SAVE DB ID
               onNext={() => {
-                setToken(notionUrl);              // <-- SAVE USER TOKEN
+                setToken(notionUrl); // <-- SAVE USER TOKEN
                 setStep(3);
               }}
             />
@@ -106,23 +111,28 @@ export default function CreateWidgetPageMerged() {
 
           {/* STEP 3 */}
           {step === 3 && (
-            <CustomizeStep
-              showMultimedia={showMultimedia}
-              setShowMultimedia={setShowMultimedia}
-              showTitle={showTitle}
-              setShowTitle={setShowTitle}
-              gridColumns={gridColumns}
-              setGridColumns={setGridColumns}
-              onPrev={() => setStep(2)}
-              onNext={handleGenerateWidget}
-            />
+            <div className="grid grid-cols-2 gap-8">
+              {/* LEFT — Live Preview */}
+              <LivePreviewBox token={token} db={db} step={step} />
+
+              {/* RIGHT — Customize */}
+              <CustomizeStep
+                showMultimedia={showMultimedia}
+                setShowMultimedia={setShowMultimedia}
+                showTitle={showTitle}
+                setShowTitle={setShowTitle}
+                gridColumns={gridColumns}
+                setGridColumns={setGridColumns}
+                onPrev={() => setStep(2)}
+                onNext={handleGenerateWidget}
+              />
+            </div>
           )}
 
           {/* STEP 4 */}
           {step === 4 && (
             <FinishStep onPrev={() => setStep(3)} embedUrl={embedUrl!} />
           )}
-
         </div>
       </div>
     </>
