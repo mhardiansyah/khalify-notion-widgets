@@ -8,6 +8,7 @@ interface ConnectStepProps {
   isUrlValid: boolean;
   setIsUrlValid: (valid: boolean) => void;
   onNext: () => void;
+  onSelectDb: (dbId: string) => void;  // <-- ADD THIS
 }
 
 export function ConnectStep({
@@ -16,7 +17,9 @@ export function ConnectStep({
   isUrlValid,
   setIsUrlValid,
   onNext,
+  onSelectDb
 }: ConnectStepProps) {
+
   const [loadingDetect, setLoadingDetect] = useState(false);
   const [databases, setDatabases] = useState<any[]>([]);
   const [detectError, setDetectError] = useState<string | null>(null);
@@ -27,7 +30,7 @@ export function ConnectStep({
     return input.startsWith("ntn_") && input.length > 20;
   };
 
-  /** KIRIM TOKEN ke backend → fetch all databases */
+  /** FETCH DATABASE LIST FROM BACKEND */
   const detectDb = async (token: string) => {
     setLoadingDetect(true);
     setDetectError(null);
@@ -35,7 +38,7 @@ export function ConnectStep({
     setSelectedDb(null);
 
     try {
-      const res = await fetch("/api/notion-detect", {
+      const res = await fetch("/api/notion-list", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),
@@ -44,7 +47,7 @@ export function ConnectStep({
       const data = await res.json();
       setLoadingDetect(false);
 
-      if (!data.databases) {
+      if (!data.databases || data.databases.length === 0) {
         setDetectError("No databases found or token invalid.");
         return;
       }
@@ -57,7 +60,7 @@ export function ConnectStep({
     }
   };
 
-  /** HANDLE INPUT CHANGE */
+  /** INPUT HANDLER */
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.trim();
     setNotionUrl(raw);
@@ -76,18 +79,19 @@ export function ConnectStep({
 
   return (
     <div className="space-y-6">
+
       {/* HEADER */}
       <div className="flex items-center gap-3 mb-2">
         <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
           <Link2 className="w-5 h-5 text-purple-600" />
         </div>
         <div>
-          <h2 className="text-2xl text-gray-900">Connect to Notion</h2>
-          <p className="text-sm text-gray-600">Paste your Notion integration token</p>
+          <h2 className="text-2xl">Connect to Notion</h2>
+          <p className="text-sm text-gray-600">Paste your Notion Integration token</p>
         </div>
       </div>
 
-      {/* INPUT TOKEN */}
+      {/* TOKEN INPUT */}
       <div>
         <label className="block text-sm text-gray-700 mb-2">Notion Token</label>
 
@@ -97,15 +101,7 @@ export function ConnectStep({
             value={notionUrl}
             onChange={handleUrlChange}
             placeholder="ntn_xxxxxxxxxxxxx"
-            className={`w-full px-4 py-3 bg-white border rounded-lg text-gray-900
-              placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all
-              ${
-                notionUrl === ""
-                  ? "border-gray-300 focus:ring-purple-500"
-                  : isUrlValid
-                  ? "border-green-500 focus:ring-green-500"
-                  : "border-red-500 focus:ring-red-500"
-              }`}
+            className={`w-full px-4 py-3 border rounded-lg`}
           />
 
           {/* STATUS ICON */}
@@ -125,27 +121,30 @@ export function ConnectStep({
         {detectError && <p className="text-sm text-red-600 mt-2">{detectError}</p>}
       </div>
 
-      {/* LIST DATABASES */}
+      {/* DATABASE LIST */}
       {databases.length > 0 && (
         <div className="space-y-3">
-          <p className="text-sm text-gray-700 font-medium">Select Database</p>
+          <p className="text-sm font-medium text-gray-900">Select Database</p>
 
           {databases.map((db) => (
             <div
               key={db.id}
-              onClick={() => setSelectedDb(db)}
-              className={`p-4 border rounded-lg cursor-pointer transition 
+              onClick={() => {
+                setSelectedDb(db);
+                onSelectDb(db.id);   // <-- SEND DB ID TO PARENT
+              }}
+              className={`p-4 border rounded-lg cursor-pointer transition
                 ${
                   selectedDb?.id === db.id
-                    ? "border-purple-500 bg-purple-50"
+                    ? "border-purple-600 bg-purple-50"
                     : "border-gray-300 hover:border-purple-400"
                 }`}
             >
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{db.icon?.emoji || "📁"}</span>
                 <div>
-                  <p className="text-gray-900 font-medium">{db.name}</p>
-                  <p className="text-gray-600 text-sm">{db.id}</p>
+                  <p className="font-medium">{db.name}</p>
+                  <p className="text-xs text-gray-500">{db.id}</p>
                 </div>
               </div>
             </div>
@@ -153,15 +152,13 @@ export function ConnectStep({
         </div>
       )}
 
-      {/* NEXT BUTTON */}
+      {/* NEXT */}
       <button
         onClick={onNext}
         disabled={!selectedDb}
-        className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 
-        text-white rounded-lg transition-colors disabled:opacity-50
-        disabled:cursor-not-allowed"
+        className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50"
       >
-        Continue to Customize
+        Continue →
       </button>
     </div>
   );

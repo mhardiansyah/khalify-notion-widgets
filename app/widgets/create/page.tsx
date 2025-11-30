@@ -6,61 +6,15 @@ import { ConnectStep } from "@/app/components/connect-step";
 import { CustomizeStep } from "@/app/components/customize-step";
 import { FinishStep } from "@/app/components/finish-step";
 
-// ============================
-//  FLEXIBLE ID VALIDATOR
-// ============================
-function validateNotionInput(input: string): boolean {
-  if (!input) return false;
-
-  // CASE 1 — direct new Notion ID (ntn_xxxxx)
-  if (input.startsWith("ntn_") && input.length > 20) {
-    return true;
-  }
-
-  // CASE 2 — UUID 32 chars
-  const clean = input.replace(/-/g, "");
-  if (clean.length === 32) {
-    return true;
-  }
-
-  // CASE 3 — URLs Still allowed (optional)
-  if (input.includes("notion.so") || input.includes("ntn.so")) {
-    return true;
-  }
-
-  return false;
-}
-
-// ============================
-//  FLEXIBLE PARSER
-// ============================
-function extractFlexibleNotionId(input: string): string | null {
-  if (!input) return null;
-
-  if (input.startsWith("ntn_")) return input.trim();
-
-  const clean = input.split("?")[0];
-  const segments = clean.split("/");
-  const last = segments.pop() || "";
-
-  if (last.startsWith("ntn_")) return last.trim();
-
-  const uuid = last.replace(/-/g, "");
-  if (uuid.length === 32) return uuid;
-
-  return null;
-}
-
 export default function CreateWidgetPageMerged() {
   const [step, setStep] = useState(1);
 
-  // Logic asli
   const [token, setToken] = useState<string | null>(null);
   const [db, setDb] = useState<string | null>(null);
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(false);
 
-  // UI state
   const [notionUrl, setNotionUrl] = useState("");
   const [isUrlValid, setIsUrlValid] = useState(false);
 
@@ -68,8 +22,12 @@ export default function CreateWidgetPageMerged() {
   const [showTitle, setShowTitle] = useState(true);
   const [gridColumns, setGridColumns] = useState(3);
 
+  /** GENERATE WIDGET */
   const handleGenerateWidget = async () => {
-    if (!token || !db) return;
+    if (!token || !db) {
+      console.log("TOKEN/DB MISSING:", token, db);
+      return;
+    }
 
     setLoading(true);
 
@@ -94,46 +52,31 @@ export default function CreateWidgetPageMerged() {
 
       <div className="w-full min-h-screen bg-white text-black p-10">
 
-        {/* HEADER */}
+        {/* Step Header */}
         <div className="flex justify-center mb-10">
           <div className="flex items-center gap-10">
-            {[
-              { id: 1, label: "Setup Template" },
-              { id: 2, label: "Connect" },
-              { id: 3, label: "Customize" },
-              { id: 4, label: "Finish" },
-            ].map((s) => (
-              <div key={s.id} className="flex items-center gap-2">
+            {[1, 2, 3, 4].map((id) => (
+              <div key={id} className="flex items-center gap-2">
                 <div
                   className={`w-8 h-8 flex items-center justify-center rounded-full text-white 
-                    ${step === s.id ? "bg-purple-600" : "bg-gray-300"}
-                  `}
+                    ${step === id ? "bg-purple-600" : "bg-gray-300"}`}
                 >
-                  {s.id}
+                  {id}
                 </div>
-                <span
-                  className={`font-medium ${
-                    step === s.id ? "text-purple-600" : "text-gray-600"
-                  }`}
-                >
-                  {s.label}
+                <span className={`${step === id ? "text-purple-600" : "text-gray-600"}`}>
+                  {["Setup", "Connect", "Customize", "Finish"][id - 1]}
                 </span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* CONTENT */}
         <div className="max-w-3xl mx-auto bg-gray-50 p-8 rounded-xl shadow">
 
           {/* STEP 1 */}
           {step === 1 && (
             <div>
-              <h1 className="text-2xl font-bold mb-4">Step 1 — Setup Notion Template</h1>
-              <p className="text-gray-600 mb-6">
-                Buat database Notion lo dulu sebelum lanjut.
-              </p>
-
+              <h1 className="text-2xl font-bold mb-4">Step 1 — Setup Template</h1>
               <button
                 className="px-5 py-3 bg-purple-600 text-white rounded-lg"
                 onClick={() => setStep(2)}
@@ -149,16 +92,13 @@ export default function CreateWidgetPageMerged() {
               notionUrl={notionUrl}
               setNotionUrl={(val) => {
                 setNotionUrl(val);
-                setIsUrlValid(validateNotionInput(val));
+                setIsUrlValid(val.startsWith("ntn_"));
               }}
               isUrlValid={isUrlValid}
               setIsUrlValid={setIsUrlValid}
+              onSelectDb={(dbId) => setDb(dbId)}    // <-- SAVE DB ID
               onNext={() => {
-                const extracted = extractFlexibleNotionId(notionUrl);
-                setDb(extracted);
-
-                setToken(process.env.NEXT_PUBLIC_NOTION_TOKEN || null);
-
+                setToken(notionUrl);              // <-- SAVE USER TOKEN
                 setStep(3);
               }}
             />
@@ -180,21 +120,7 @@ export default function CreateWidgetPageMerged() {
 
           {/* STEP 4 */}
           {step === 4 && (
-            <div className="space-y-8">
-              <FinishStep
-                onPrev={() => setStep(3)}
-                embedUrl={embedUrl!}
-              />
-
-              {/* LIVE PREVIEW */}
-              <div>
-                <h3 className="text-xl font-semibold mb-3">Live Preview</h3>
-                <iframe
-                  src={embedUrl!}
-                  className="w-full h-[500px] rounded-lg border"
-                />
-              </div>
-            </div>
+            <FinishStep onPrev={() => setStep(3)} embedUrl={embedUrl!} />
           )}
 
         </div>
