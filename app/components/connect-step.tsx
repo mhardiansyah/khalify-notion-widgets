@@ -38,7 +38,7 @@ export function ConnectStep({
     setSelectedDb(null);
 
     try {
-      const res = await fetch("/api/notion-list", {
+      const res = await fetch("/api/notion-detect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),
