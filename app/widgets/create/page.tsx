@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Navbar from "@/app/components/Navbar";
 import { ConnectStep } from "@/app/components/connect-step";
-import LivePreviewBox from "@/app/components/LivePreviewBox";
 import FinishStep from "@/app/components/finish-step";
 
 export default function CreateWidgetPageMerged() {
@@ -18,23 +17,32 @@ export default function CreateWidgetPageMerged() {
   const [notionUrl, setNotionUrl] = useState("");
   const [isUrlValid, setIsUrlValid] = useState(false);
 
-  /** GENERATE WIDGET */
+  /** GENERATE WIDGET – sekarang dipanggil dari STEP 2 */
   const handleGenerateWidget = async () => {
-    if (!token || !db) return;
+    if (!db || !isUrlValid || !notionUrl) return;
 
     setLoading(true);
+    setToken(notionUrl);
 
-    const res = await fetch("/api/embed", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, db }),
-    });
+    try {
+      const res = await fetch("/api/embed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: notionUrl, db }),
+      });
 
-    const data = await res.json();
-    setLoading(false);
+      const data = await res.json();
+      setLoading(false);
 
-    if (data.success) {
-      setEmbedUrl(data.embedUrl);
+      if (data.success && data.embedUrl) {
+        setEmbedUrl(data.embedUrl);
+        setStep(3); // pindah ke step 3 setelah widget berhasil dibuat
+      } else {
+        console.error("Failed to create widget:", data);
+      }
+    } catch (err) {
+      setLoading(false);
+      console.error("Error creating widget:", err);
     }
   };
 
@@ -43,7 +51,6 @@ export default function CreateWidgetPageMerged() {
       <Navbar />
 
       <div className="w-full min-h-screen bg-white text-black p-10">
-
         {/* STEP HEADER */}
         <div className="flex justify-center mb-10">
           <div className="flex items-center gap-10">
@@ -56,7 +63,9 @@ export default function CreateWidgetPageMerged() {
                   {id}
                 </div>
                 <span
-                  className={`${step === id ? "text-purple-600" : "text-gray-600"}`}
+                  className={`${
+                    step === id ? "text-purple-600" : "text-gray-600"
+                  }`}
                 >
                   {["Setup", "Connect", "Finish"][id - 1]}
                 </span>
@@ -66,13 +75,14 @@ export default function CreateWidgetPageMerged() {
         </div>
 
         <div className="max-w-5xl mx-auto bg-gray-50 p-8 rounded-xl shadow">
-
           {/* STEP 1 */}
           {step === 1 && (
             <div className="text-center">
-              <h1 className="text-2xl font-bold mb-4">Step 1 — Setup Template</h1>
+              <h1 className="text-2xl font-bold mb-4">
+                Step 1 — Setup Template
+              </h1>
               <button
-                className="px-6 py-3 bg-purple-600 text-white rounded-lg"
+                className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                 onClick={() => setStep(2)}
               >
                 Continue →
@@ -91,25 +101,20 @@ export default function CreateWidgetPageMerged() {
               isUrlValid={isUrlValid}
               setIsUrlValid={setIsUrlValid}
               onSelectDb={(dbId) => setDb(dbId)}
-              onNext={() => {
-                setToken(notionUrl);
-                setStep(3);
-              }}
+              onCreateWidget={handleGenerateWidget}
+              loading={loading}
             />
           )}
 
-          {/* STEP 3 — FINISH */}
-          {step === 3 && (
+          {/* STEP 3 — FINISH / RESULT */}
+          {step === 3 && db && (
             <FinishStep
-              db={db!}
+              db={db}
               embedUrl={embedUrl}
-              loading={loading}
-              onGenerate={handleGenerateWidget}
               onBack={() => setStep(2)}
               token={token}
             />
           )}
-
         </div>
       </div>
     </>

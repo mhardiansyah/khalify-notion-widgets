@@ -7,8 +7,9 @@ interface ConnectStepProps {
   setNotionUrl: (url: string) => void;
   isUrlValid: boolean;
   setIsUrlValid: (valid: boolean) => void;
-  onNext: () => void;
-  onSelectDb: (dbId: string) => void;  // <-- ADD THIS
+  onSelectDb: (dbId: string) => void;
+  onCreateWidget: () => void;
+  loading: boolean;
 }
 
 export function ConnectStep({
@@ -16,10 +17,10 @@ export function ConnectStep({
   setNotionUrl,
   isUrlValid,
   setIsUrlValid,
-  onNext,
-  onSelectDb
+  onSelectDb,
+  onCreateWidget,
+  loading,
 }: ConnectStepProps) {
-
   const [loadingDetect, setLoadingDetect] = useState(false);
   const [databases, setDatabases] = useState<any[]>([]);
   const [detectError, setDetectError] = useState<string | null>(null);
@@ -53,7 +54,6 @@ export function ConnectStep({
       }
 
       setDatabases(data.databases);
-
     } catch (err) {
       setLoadingDetect(false);
       setDetectError("Failed to fetch databases.");
@@ -77,9 +77,13 @@ export function ConnectStep({
     detectDb(raw);
   };
 
+  const handleCreateWidgetClick = () => {
+    if (!selectedDb || !isUrlValid || loading) return;
+    onCreateWidget();
+  };
+
   return (
     <div className="space-y-6">
-
       {/* HEADER */}
       <div className="flex items-center gap-3 mb-2">
         <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
@@ -87,7 +91,9 @@ export function ConnectStep({
         </div>
         <div>
           <h2 className="text-2xl">Connect to Notion</h2>
-          <p className="text-sm text-gray-600">Paste your Notion Integration token</p>
+          <p className="text-sm text-gray-600">
+            Paste your Notion Integration token
+          </p>
         </div>
       </div>
 
@@ -118,7 +124,9 @@ export function ConnectStep({
           )}
         </div>
 
-        {detectError && <p className="text-sm text-red-600 mt-2">{detectError}</p>}
+        {detectError && (
+          <p className="text-sm text-red-600 mt-2">{detectError}</p>
+        )}
       </div>
 
       {/* DATABASE LIST */}
@@ -131,7 +139,7 @@ export function ConnectStep({
               key={db.id}
               onClick={() => {
                 setSelectedDb(db);
-                onSelectDb(db.id);   // <-- SEND DB ID TO PARENT
+                onSelectDb(db.id);
               }}
               className={`p-4 border rounded-lg cursor-pointer transition
                 ${
@@ -152,13 +160,13 @@ export function ConnectStep({
         </div>
       )}
 
-      {/* NEXT */}
+      {/* CREATE WIDGET BUTTON (Step 2) */}
       <button
-        onClick={onNext}
-        disabled={!selectedDb}
-        className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50"
+        onClick={handleCreateWidgetClick}
+        disabled={!selectedDb || !isUrlValid || loading}
+        className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50 transition"
       >
-        Continue →
+        {loading ? "Creating..." : "Create Widget"}
       </button>
     </div>
   );
