@@ -2,8 +2,6 @@
 import { getToken } from "@/app/api/embed/route";
 import ClientViewComponent from "@/app/components/ClientViewComponent";
 import { queryDatabase } from "@/app/lib/notion-server";
-
-// ⭐ Tambahan
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
@@ -29,33 +27,31 @@ export default async function EmbedPage(props: any) {
 
     const data = await queryDatabase(token, db);
 
-    let filtered = data;
-
-    filtered = filtered.filter(
+    let filtered = data.filter(
       (item: any) => item.properties?.Hide?.checkbox !== true
     );
 
     if (statusFilter) {
-      filtered = filtered.filter((item: any) => {
+      filtered = filtered.filter((i: any) => {
         const val =
-          item.properties?.Status?.status?.name ||
-          item.properties?.Status?.select?.name ||
-          item.properties?.Status?.multi_select?.[0]?.name;
+          i.properties?.Status?.status?.name ||
+          i.properties?.Status?.select?.name ||
+          i.properties?.Status?.multi_select?.[0]?.name;
 
         return val?.toLowerCase() === statusFilter.toLowerCase();
       });
     }
 
     if (platformFilter) {
-      filtered = filtered.filter((item: any) => {
-        const val = item.properties?.Platform?.select?.name;
+      filtered = filtered.filter((i: any) => {
+        const val = i.properties?.Platform?.select?.name;
         return val?.toLowerCase() === platformFilter.toLowerCase();
       });
     }
 
     if (pillarFilter) {
-      filtered = filtered.filter((item: any) => {
-        const val = item.properties?.["Content Pillar"]?.select?.name;
+      filtered = filtered.filter((i: any) => {
+        const val = i.properties?.["Content Pillar"]?.select?.name;
         return val?.toLowerCase() === pillarFilter.toLowerCase();
       });
     }
@@ -67,17 +63,15 @@ export default async function EmbedPage(props: any) {
       filtered = filtered.filter((i: any) => !i.properties?.Pinned?.checkbox);
     }
 
-    // Sorting pinned-first
     filtered = filtered.sort((a: any, b: any) => {
       const A = a.properties?.Pinned?.checkbox ? 1 : 0;
       const B = b.properties?.Pinned?.checkbox ? 1 : 0;
       return B - A;
     });
 
-    // 🔥🔥🔥 EXTRA BLOCK → FETCH PROFILE FROM SUPABASE
+    // ⭐ GET PROFILE OWNER
     const supabase = createServerComponentClient({ cookies });
 
-    // ambil user_id dari widget
     const { data: widget } = await supabase
       .from("widgets")
       .select("user_id")
@@ -88,14 +82,13 @@ export default async function EmbedPage(props: any) {
       return <p style={{ color: "red" }}>Widget not found.</p>;
     }
 
-    // ambil profile berdasarkan user_id
+    // ⭐ GET PROFILE DATA
     const { data: profile } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", widget.user_id)
       .single();
 
-    // Normalize profile → harus undefined, bukan null ❗
     const normalizedProfile = profile
       ? {
           name: profile.name,
@@ -106,14 +99,7 @@ export default async function EmbedPage(props: any) {
         }
       : undefined;
 
-    // 🔥 RETURN WITH PROFILE
-    return (
-      <ClientViewComponent
-        filtered={filtered}
-        profile={normalizedProfile}
-      />
-    );
-
+    return <ClientViewComponent filtered={filtered} profile={normalizedProfile} />;
   } catch (err: any) {
     return <p style={{ color: "red" }}>{err.message}</p>;
   }
