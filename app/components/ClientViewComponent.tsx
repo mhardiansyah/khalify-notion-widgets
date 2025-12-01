@@ -34,12 +34,8 @@ export default function ClientViewComponent({
   gridColumns = 4,
 }: Props) {
   const [viewMode, setViewMode] = useState<"visual" | "map">("visual");
-
-  // 🔥 Update: kalau ga ada profile, hide bio & highlight
-  const [showBio, setShowBio] = useState(!!profile);
-  const [showHighlight, setShowHighlight] = useState(
-    !!profile?.highlights?.length
-  );
+  const [showBio, setShowBio] = useState(true);
+  const [showHighlight, setShowHighlight] = useState(true);
 
   const bg =
     theme === "light" ? "bg-white text-gray-900" : "bg-black text-white";
@@ -113,14 +109,12 @@ export default function ClientViewComponent({
               active={showBio}
               onClick={() => setShowBio((prev) => !prev)}
               theme={theme}
-              disabled={!profile}
             />
             <ToggleChip
               label="Show highlight"
               active={showHighlight}
               onClick={() => setShowHighlight((prev) => !prev)}
               theme={theme}
-              disabled={!profile?.highlights?.length}
             />
           </div>
         </div>
@@ -134,14 +128,14 @@ export default function ClientViewComponent({
       {/* CONTENT AREA */}
       <div className="p-5 space-y-6">
         {/* BIO SECTION */}
-        {showBio && profile && <BioSection profile={profile} theme={theme} />}
+        {showBio && profile && (
+          <BioSection profile={profile} theme={theme} />
+        )}
 
         {/* HIGHLIGHT SECTION */}
-        {showHighlight &&
-          profile?.highlights &&
-          profile.highlights.length > 0 && (
-            <HighlightSection highlights={profile.highlights} theme={theme} />
-          )}
+        {showHighlight && profile?.highlights && profile.highlights.length > 0 && (
+          <HighlightSection highlights={profile.highlights} theme={theme} />
+        )}
 
         {/* MAIN CONTENT */}
         {viewMode === "visual" ? (
@@ -152,11 +146,7 @@ export default function ClientViewComponent({
             cardBg={cardBg}
           />
         ) : (
-          <MapViewList
-            filtered={filtered}
-            theme={theme}
-            borderColor={subtleBorder}
-          />
+          <MapViewList filtered={filtered} theme={theme} borderColor={subtleBorder} />
         )}
       </div>
     </main>
@@ -165,13 +155,7 @@ export default function ClientViewComponent({
 
 /* ---------------- BIO SECTION ---------------- */
 
-function BioSection({
-  profile,
-  theme,
-}: {
-  profile: Profile;
-  theme: "light" | "dark";
-}) {
+function BioSection({ profile, theme }: { profile: Profile; theme: "light" | "dark" }) {
   const border =
     theme === "light" ? "border-gray-200 bg-white" : "border-gray-800 bg-gray-900";
 
@@ -188,19 +172,18 @@ function BioSection({
             className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border border-gray-200"
           />
         ) : (
-          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-lg">
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-lg">
             {profile.name?.[0]?.toUpperCase() || "?"}
           </div>
         )}
       </div>
 
-      {/* Bio text */}
+      {/* Text */}
       <div className="flex-1 flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-base md:text-lg font-semibold">
             {profile.name || "Unnamed Creator"}
           </h2>
-
           {profile.username && (
             <span className="text-xs text-gray-500">
               {profile.username.startsWith("@")
@@ -209,6 +192,7 @@ function BioSection({
             </span>
           )}
 
+          {/* fake badge ala highlight / verified */}
           <span className="inline-flex items-center text-[10px] px-2 py-1 rounded-full bg-purple-100 text-purple-700 font-medium">
             Creator Highlight
           </span>
@@ -219,6 +203,16 @@ function BioSection({
             {profile.bio}
           </p>
         )}
+
+        {/* Stats dummy (optional, bisa di-wire dari data real nanti) */}
+        <div className="mt-1 flex items-center gap-4 text-[11px] text-gray-500">
+          <span>
+            <strong className="text-gray-900 dark:text-gray-100">24</strong> posts
+          </span>
+          <span>
+            <strong className="text-gray-900 dark:text-gray-100">6</strong> highlights
+          </span>
+        </div>
       </div>
     </section>
   );
@@ -242,13 +236,18 @@ function HighlightSection({
         <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
           Highlights
         </p>
-        <span className="text-[11px] text-gray-400">{highlights.length} saved</span>
+        <span className="text-[11px] text-gray-400">
+          {highlights.length} saved
+        </span>
       </div>
 
       <div className="flex gap-3 overflow-x-auto no-scrollbar">
         {highlights.map((h, i) => (
-          <div key={i} className="flex flex-col items-center gap-1 min-w-[75px]">
-            <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-300 bg-gray-100">
+          <div
+            key={i}
+            className="flex flex-col items-center gap-1 min-w-[70px]"
+          >
+            <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 bg-gray-100">
               {h.image ? (
                 <img
                   src={h.image}
@@ -288,9 +287,7 @@ function VisualGrid({
     <section>
       <div
         className={`grid gap-4`}
-        style={{
-          gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`,
-        }}
+        style={{ gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))` }}
       >
         {filtered.map((item: any, i: number) => {
           const name =
@@ -307,6 +304,7 @@ function VisualGrid({
                 transition-all duration-300 aspect-[4/5] ${cardBg}
               `}
             >
+              {/* PIN ICON */}
               {isPinned && (
                 <div className="absolute top-3 right-3 z-30">
                   <Pin
@@ -316,14 +314,14 @@ function VisualGrid({
                 </div>
               )}
 
+              {/* IMAGE / VIDEO */}
               <AutoThumbnail src={url} />
 
+              {/* HOVER TITLE */}
               <div
                 className={`absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 
                   transition-all duration-300 bg-gradient-to-t 
-                  ${
-                    theme === "light" ? "from-black/80" : "from-black/60"
-                  } to-transparent`}
+                  ${theme === "light" ? "from-black/70" : "from-black/80"} to-transparent`}
               >
                 <p className="text-white text-xs font-medium line-clamp-2">
                   {name}
@@ -375,10 +373,12 @@ function MapViewList({
             key={i}
             className={`flex items-center gap-3 border ${borderColor} rounded-xl p-3 text-sm ${rowBgHover} transition`}
           >
+            {/* Thumbnail */}
             <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-200 shrink-0">
               <AutoThumbnail src={url} />
             </div>
 
+            {/* Text column */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 {isPinned && (
@@ -409,27 +409,23 @@ function MapViewList({
   );
 }
 
-/* ---------------- CHIP COMPONENT ---------------- */
+/* ---------------- SMALL CHIP TOGGLE ---------------- */
 
 function ToggleChip({
   label,
   active,
   onClick,
   theme,
-  disabled,
 }: {
   label: string;
   active: boolean;
   onClick: () => void;
   theme: "light" | "dark";
-  disabled?: boolean;
 }) {
   return (
     <button
-      disabled={disabled}
       onClick={onClick}
-      className={`
-        inline-flex items-center gap-1 px-3 py-1 rounded-full border text-[11px] transition
+      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border text-[11px] transition
         ${
           active
             ? "bg-purple-600 border-purple-600 text-white"
@@ -437,7 +433,6 @@ function ToggleChip({
             ? "bg-white border-gray-300 text-gray-700"
             : "bg-black border-gray-700 text-gray-300"
         }
-        ${disabled ? "opacity-40 cursor-not-allowed" : ""}
       `}
     >
       <span
@@ -450,7 +445,7 @@ function ToggleChip({
   );
 }
 
-/* ---------------- IMAGE EXTRACTOR ---------------- */
+/* ---------------- IMAGE EXTRACTOR (SAMA) ---------------- */
 
 function extractImage(item: any) {
   const props = item.properties;
