@@ -2,6 +2,8 @@
 import { getToken } from "@/app/api/embed/route";
 import ClientViewComponent from "@/app/components/ClientViewComponent";
 import { queryDatabase } from "@/app/lib/notion-server";
+
+// ⭐ Tambahan
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
@@ -22,18 +24,17 @@ export default async function EmbedPage(props: any) {
 
     if (!db) return <p style={{ color: "red" }}>Database ID not valid.</p>;
 
-    // 1️⃣ Ambil Notion token berdasarkan widget ID
     const token = await getToken(id);
     if (!token) return <p style={{ color: "red" }}>Token not valid.</p>;
 
-    // 2️⃣ Query Notion database
     const data = await queryDatabase(token, db);
 
-    let filtered = data.filter(
+    let filtered = data;
+
+    filtered = filtered.filter(
       (item: any) => item.properties?.Hide?.checkbox !== true
     );
 
-    // 3️⃣ Filtering
     if (statusFilter) {
       filtered = filtered.filter((item: any) => {
         const val =
@@ -66,19 +67,17 @@ export default async function EmbedPage(props: any) {
       filtered = filtered.filter((i: any) => !i.properties?.Pinned?.checkbox);
     }
 
+    // Sorting pinned-first
     filtered = filtered.sort((a: any, b: any) => {
       const A = a.properties?.Pinned?.checkbox ? 1 : 0;
       const B = b.properties?.Pinned?.checkbox ? 1 : 0;
       return B - A;
     });
 
-    // -------------------------------------
-    // 4️⃣ FETCH PROFILE CREATOR DARI SUPABASE
-    // -------------------------------------
-
+    // 🔥🔥🔥 EXTRA BLOCK → FETCH PROFILE FROM SUPABASE
     const supabase = createServerComponentClient({ cookies });
 
-    // Ambil user_id dari tabel widgets
+    // ambil user_id dari widget
     const { data: widget } = await supabase
       .from("widgets")
       .select("user_id")
@@ -89,14 +88,14 @@ export default async function EmbedPage(props: any) {
       return <p style={{ color: "red" }}>Widget not found.</p>;
     }
 
-    // Ambil profile user
+    // ambil profile berdasarkan user_id
     const { data: profile } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", widget.user_id)
       .single();
 
-    // Pastikan highlights berbentuk array minimal
+    // Normalize profile → harus undefined, bukan null ❗
     const normalizedProfile = profile
       ? {
           name: profile.name,
@@ -107,11 +106,11 @@ export default async function EmbedPage(props: any) {
         }
       : undefined;
 
-
+    // 🔥 RETURN WITH PROFILE
     return (
       <ClientViewComponent
         filtered={filtered}
-        profile={normalizedProfile}   // <<–– MASUK KE SINI
+        profile={normalizedProfile}
       />
     );
 
