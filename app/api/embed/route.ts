@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
@@ -13,21 +12,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing token/db" }, { status: 400 });
     }
 
-    // Ambil cookie Supabase (NO await)
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
-
-    // Ambil user dari Supabase Auth
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const userId = user?.id ?? null;
-
-    // Buat widget ID
     const id = randomUUID().slice(0, 6);
 
-    // Insert ke database
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get("sb-access-token")?.value;
+
+    let userId: string | null = null;
+
+    if (accessToken) {
+      try {
+        const payload = JSON.parse(
+          Buffer.from(accessToken.split(".")[1], "base64").toString()
+        );
+        userId = payload.sub;
+      } catch (err) {
+        console.error("JWT decode error:", err);
+      }
+    }
+
     const { error } = await supabaseAdmin.from("widgets").insert({
       id,
       token,
@@ -57,7 +59,6 @@ export async function POST(req: Request) {
   }
 }
 
-// GET TOKEN (SAFE)
 export async function getToken(id: string) {
   const { data, error } = await supabaseAdmin
     .from("widgets")
