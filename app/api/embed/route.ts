@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
@@ -13,30 +12,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing token/db" }, { status: 400 });
     }
 
-    // Create Supabase client (auto handles cookies in Vercel)
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
-
-    // 🔥 Ambil user lewat Supabase (bukan decode JWT manual)
-    const {
-      data: { user },
-      error: authErr,
-    } = await supabase.auth.getUser();
-
-    if (authErr) console.error("AUTH ERROR:", authErr);
-
-    const userId = user?.id ?? null;
-    console.log("USER ID:", userId);
-
-    // Buat widget id
     const id = randomUUID().slice(0, 6);
 
-    // Insert ke Supabase
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get("sb-access-token")?.value;
+
+    let userId: string | null = null;
+
+    if (accessToken) {
+      try {
+        const payload = JSON.parse(
+          Buffer.from(accessToken.split(".")[1], "base64").toString()
+        );
+        userId = payload.sub;
+      } catch (err) {
+        console.error("JWT decode error:", err);
+      }
+    }
+
     const { error } = await supabaseAdmin.from("widgets").insert({
       id,
       token,
       db,
-      user_id: userId, // ⭐ sekarang pasti masuk
+      user_id: userId,
       created_at: Date.now(),
     });
 
@@ -61,7 +59,6 @@ export async function POST(req: Request) {
   }
 }
 
-// GET TOKEN
 export async function getToken(id: string) {
   const { data, error } = await supabaseAdmin
     .from("widgets")
