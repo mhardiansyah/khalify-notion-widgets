@@ -14,38 +14,35 @@ export async function POST(req: Request) {
 
     const id = randomUUID().slice(0, 6);
 
-    // ⚡ Ambil cookie dari Supabase Auth (TIDAK pakai await)
+    // ❗ TIDAK BOLEH pakai await
     const cookieStore = await cookies();
     const accessToken = cookieStore.get("sb-access-token")?.value;
 
-    // Default userId = null
     let userId: string | null = null;
 
-    // ⚡ Decode JWT Supabase untuk ambil user ID
     if (accessToken) {
       try {
         const payload = JSON.parse(
           Buffer.from(accessToken.split(".")[1], "base64").toString()
         );
-        userId = payload.sub; // USER ID VALID
+        userId = payload.sub; // VALID
       } catch (err) {
         console.error("JWT decode error:", err);
       }
     }
 
-    // ⚡ Insert ke widgets table
     const { error } = await supabaseAdmin.from("widgets").insert({
       id,
       token,
       db,
-      user_id: userId, // pasti terisi
+      user_id: userId,
       created_at: Date.now(),
     });
 
     if (error) {
       console.error("INSERT ERROR:", error);
       return NextResponse.json(
-        { error: "Failed to store token" },
+        { error: "Failed to store widget" },
         { status: 500 }
       );
     }
@@ -64,7 +61,6 @@ export async function POST(req: Request) {
   }
 }
 
-// GET TOKEN
 export async function getToken(id: string) {
   const { data, error } = await supabaseAdmin
     .from("widgets")
