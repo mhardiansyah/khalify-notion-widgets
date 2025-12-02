@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
 import { cookies } from "next/headers";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 export async function POST(req: Request) {
   try {
@@ -19,14 +19,15 @@ export async function POST(req: Request) {
     // Generate widget ID (6 chars)
     const id = randomUUID().slice(0, 6);
 
-    // IMPORTANT FIX → cookies must be a function in API routes
-    const supabase = createServerComponentClient({
-      cookies: () => cookies(),
-    });
+    // CORRECT USAGE FOR API ROUTES
+    const supabase = createRouteHandlerClient({ cookies });
 
-    const { data: authUser, error: authErr } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabase.auth.getUser();
 
-    if (authErr || !authUser?.user) {
+    if (authErr || !user) {
       console.error("AUTH ERROR:", authErr);
       return NextResponse.json(
         { error: "Not authenticated" },
@@ -34,14 +35,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const userId = authUser.user.id;
-
     // Insert widget
     const { error: insertErr } = await supabaseAdmin.from("widgets").insert({
       id,
       token,
       db,
-      user_id: userId,
+      user_id: user.id,
       created_at: Date.now(),
     });
 
