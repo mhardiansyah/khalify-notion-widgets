@@ -14,16 +14,32 @@ export async function POST(req: Request) {
 
     const id = randomUUID().slice(0, 6);
 
-    // 🟣 Ambil user_id dari cookie (SESSION)
-    // Tidak pakai createRouteHandlerClient
     const cookieStore = cookies();
-    const userId = (await cookieStore).get("sb-user")?.value || null;
 
+    // ⭐ Ambil JWT Supabase
+    const accessToken = (await cookieStore).get("sb-access-token")?.value;
+
+    // ⭐ Default userId = null
+    let userId: string | null = null;
+
+    // ⭐ Kalau token ada → decode untuk ambil userId
+    if (accessToken) {
+      try {
+        const payload = JSON.parse(
+          Buffer.from(accessToken.split(".")[1], "base64").toString()
+        );
+        userId = payload.sub; // <-- USER ID VALID
+      } catch (e) {
+        console.error("JWT decode error:", e);
+      }
+    }
+
+    // Insert widget
     const { error } = await supabaseAdmin.from("widgets").insert({
       id,
       token,
       db,
-      user_id: userId,  // 🟣 STORE USER ID
+      user_id: userId, // <-- DISINI SUDAH USER ID VALID
       created_at: Date.now(),
     });
 
@@ -48,7 +64,7 @@ export async function POST(req: Request) {
   }
 }
 
-// SAME AS BEFORE — safe
+// GET TOKEN (SAFE)
 export async function getToken(id: string) {
   const { data, error } = await supabaseAdmin
     .from("widgets")
