@@ -14,37 +14,36 @@ export async function POST(req: Request) {
 
     const id = randomUUID().slice(0, 6);
 
-    const cookieStore = cookies();
+    // ⚡ Ambil cookie dari Supabase Auth (TIDAK pakai await)
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get("sb-access-token")?.value;
 
-    // ⭐ Ambil JWT Supabase
-    const accessToken = (await cookieStore).get("sb-access-token")?.value;
-
-    // ⭐ Default userId = null
+    // Default userId = null
     let userId: string | null = null;
 
-    // ⭐ Kalau token ada → decode untuk ambil userId
+    // ⚡ Decode JWT Supabase untuk ambil user ID
     if (accessToken) {
       try {
         const payload = JSON.parse(
           Buffer.from(accessToken.split(".")[1], "base64").toString()
         );
-        userId = payload.sub; // <-- USER ID VALID
-      } catch (e) {
-        console.error("JWT decode error:", e);
+        userId = payload.sub; // USER ID VALID
+      } catch (err) {
+        console.error("JWT decode error:", err);
       }
     }
 
-    // Insert widget
+    // ⚡ Insert ke widgets table
     const { error } = await supabaseAdmin.from("widgets").insert({
       id,
       token,
       db,
-      user_id: userId, // <-- DISINI SUDAH USER ID VALID
+      user_id: userId, // pasti terisi
       created_at: Date.now(),
     });
 
     if (error) {
-      console.error(error);
+      console.error("INSERT ERROR:", error);
       return NextResponse.json(
         { error: "Failed to store token" },
         { status: 500 }
@@ -55,8 +54,9 @@ export async function POST(req: Request) {
     const embedUrl = `${baseUrl}/embed/${id}?db=${db}`;
 
     return NextResponse.json({ success: true, embedUrl });
+
   } catch (err: any) {
-    console.log("API ERROR:", err);
+    console.error("SERVER ERROR:", err);
     return NextResponse.json(
       { error: "Server error", detail: err.message },
       { status: 500 }
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
   }
 }
 
-// GET TOKEN (SAFE)
+// GET TOKEN
 export async function getToken(id: string) {
   const { data, error } = await supabaseAdmin
     .from("widgets")
