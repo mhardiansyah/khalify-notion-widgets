@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         const payload = JSON.parse(
           Buffer.from(accessToken.split(".")[1], "base64").toString()
         );
-        userId = payload.sub; // VALID
+        userId = payload.sub;
       } catch (err) {
         console.error("JWT decode error:", err);
       }
@@ -51,7 +51,6 @@ export async function POST(req: Request) {
     const embedUrl = `${baseUrl}/embed/${id}?db=${db}`;
 
     return NextResponse.json({ success: true, embedUrl });
-
   } catch (err: any) {
     console.error("SERVER ERROR:", err);
     return NextResponse.json(
