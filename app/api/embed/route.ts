@@ -16,10 +16,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate widget ID (6 chars)
     const id = randomUUID().slice(0, 6);
 
-    // CORRECT USAGE FOR API ROUTES
+    // THE REAL FIX: cookies: cookies  (NOT function, NOT object)
     const supabase = createRouteHandlerClient({ cookies });
 
     const {
@@ -35,7 +34,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Insert widget
+    // Insert row
     const { error: insertErr } = await supabaseAdmin.from("widgets").insert({
       id,
       token,
@@ -55,24 +54,18 @@ export async function POST(req: Request) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL!;
     const embedUrl = `${baseUrl}/embed/${id}?db=${db}`;
 
-    return NextResponse.json({
-      success: true,
-      embedUrl,
-    });
+    return NextResponse.json({ success: true, embedUrl });
 
   } catch (err: any) {
     console.error("SERVER ERROR:", err);
     return NextResponse.json(
-      {
-        error: "Internal server error",
-        detail: err.message,
-      },
+      { error: "Internal server error", detail: err.message },
       { status: 500 }
     );
   }
 }
 
-// GET TOKEN (unchanged)
+// unchanged
 export async function getToken(id: string) {
   const { data, error } = await supabaseAdmin
     .from("widgets")
