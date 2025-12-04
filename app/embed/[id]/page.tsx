@@ -1,53 +1,34 @@
+/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { getToken } from "@/app/api/embed/route";
 import ClientViewComponent from "@/app/components/ClientViewComponent";
 import { queryDatabase } from "@/app/lib/notion-server";
-import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
+
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default async function EmbedPage(props: any) {
   try {
     const params = await props.params;
     const search = await props.searchParams;
 
-    const id = params.id; // WIDGET ID
-    const db = search?.db; // Notion DB ID
+    const id = params.id;
+    const db = search?.db;
 
-    if (!db) {
-      return <p style={{ color: "red" }}>Database ID missing.</p>;
-    }
+    if (!db) return <p style={{ color: "red" }}>Database ID missing.</p>;
 
-    // =======================================
-    // 1️⃣ GET NOTION TOKEN FROM SUPABASE
-    // =======================================
+    // 1️⃣ TOKEN
     const token = await getToken(id);
-    if (!token) {
-      return <p style={{ color: "red" }}>Invalid or expired widget.</p>;
-    }
+    if (!token) return <p style={{ color: "red" }}>Invalid widget.</p>;
 
-    // =======================================
-    // 2️⃣ QUERY NOTION DATABASE
-    // =======================================
-    let notionData: any[] = [];
-
-    try {
-      notionData = await queryDatabase(token, db);
-    } catch (err) {
-      console.error("Notion API failed:", err);
-      return (
-        <p style={{ color: "red" }}>
-          Failed to fetch data from Notion. Check your integration token.
-        </p>
-      );
-    }
-
-    // Hide = true → exclude
+    // 2️⃣ NOTION
+    let notionData = await queryDatabase(token, db);
     let filtered = notionData.filter(
       (i: any) => i.properties?.Hide?.checkbox !== true
     );
 
-    // =======================================
-    // 3️⃣ FILTERS
-    // =======================================
+    // FILTERS (same)
     const decode = (v: string) =>
       decodeURIComponent(v).replace(/\+/g, " ");
 
@@ -57,11 +38,11 @@ export default async function EmbedPage(props: any) {
     const pinned = search?.pinned;
 
     if (status) {
-      filtered = filtered.filter((item: any) => {
+      filtered = filtered.filter((i: any) => {
         const v =
-          item.properties?.Status?.status?.name ||
-          item.properties?.Status?.select?.name ||
-          item.properties?.Status?.multi_select?.[0]?.name;
+          i.properties?.Status?.status?.name ||
+          i.properties?.Status?.select?.name ||
+          i.properties?.Status?.multi_select?.[0]?.name;
 
         return v?.toLowerCase() === status.toLowerCase();
       });
@@ -84,37 +65,31 @@ export default async function EmbedPage(props: any) {
     }
 
     if (pinned === "true") {
-      filtered = filtered.filter(
-        (i: any) => i.properties?.Pinned?.checkbox
-      );
+      filtered = filtered.filter((i: any) => i.properties?.Pinned?.checkbox);
     }
-
     if (pinned === "false") {
-      filtered = filtered.filter(
-        (i: any) => !i.properties?.Pinned?.checkbox
-      );
+      filtered = filtered.filter((i: any) => !i.properties?.Pinned?.checkbox);
     }
 
-    // Sort pinned first
-    filtered = filtered.sort((a, b) => {
+    filtered = filtered.sort((a: any, b: any) => {
       const A = a.properties?.Pinned?.checkbox ? 1 : 0;
       const B = b.properties?.Pinned?.checkbox ? 1 : 0;
       return B - A;
     });
 
-    // ========================================
-    // 4️⃣ GET PROFILE FROM SUPABASE (THE FIX)
-    // ========================================
-    const { data: widget } = await supabaseAdmin
+    // 3️⃣ LOAD PROFILE (FIX!!!)
+    const supabase = createServerComponentClient({ cookies });
+
+    const { data: widget } = await supabase
       .from("widgets")
       .select("user_id")
       .eq("id", id)
       .maybeSingle();
 
-    let profile = undefined;
+    let profile = null;
 
     if (widget?.user_id) {
-      const { data: p } = await supabaseAdmin
+      const { data: p } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", widget.user_id)
@@ -131,17 +106,9 @@ export default async function EmbedPage(props: any) {
       }
     }
 
-    // ========================================
-    // 5️⃣ RENDER CLIENT COMPONENT
-    // ========================================
-    return (
-      <ClientViewComponent
-        filtered={filtered}
-        profile={profile}
-      />
-    );
+    return <ClientViewComponent filtered={filtered} profile={profile} />;
   } catch (err: any) {
-    console.error("EMBED PAGE ERROR:", err);
+    console.error("ERROR:", err);
     return <p style={{ color: "red" }}>{err.message}</p>;
   }
 }
