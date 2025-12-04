@@ -9,15 +9,15 @@ export default async function EmbedPage(props: any) {
     const params = await props.params;
     const search = await props.searchParams;
 
-    const id = params.id; // widget id
-    const db = search?.db; // notion database id
+    const id = params.id; // WIDGET ID
+    const db = search?.db; // Notion DB ID
 
     if (!db) {
       return <p style={{ color: "red" }}>Database ID missing.</p>;
     }
 
     // =======================================
-    // 1️⃣ GET NOTION TOKEN FOR THIS WIDGET
+    // 1️⃣ GET NOTION TOKEN FROM SUPABASE
     // =======================================
     const token = await getToken(id);
     if (!token) {
@@ -32,7 +32,7 @@ export default async function EmbedPage(props: any) {
     try {
       notionData = await queryDatabase(token, db);
     } catch (err) {
-      console.error("❌ Notion API error:", err);
+      console.error("Notion API failed:", err);
       return (
         <p style={{ color: "red" }}>
           Failed to fetch data from Notion. Check your integration token.
@@ -40,13 +40,13 @@ export default async function EmbedPage(props: any) {
       );
     }
 
-    // Filter hidden items
+    // Hide = true → exclude
     let filtered = notionData.filter(
       (i: any) => i.properties?.Hide?.checkbox !== true
     );
 
     // =======================================
-    // 3️⃣ FILTER (status, platform, pillar, pinned)
+    // 3️⃣ FILTERS
     // =======================================
     const decode = (v: string) =>
       decodeURIComponent(v).replace(/\+/g, " ");
@@ -83,43 +83,44 @@ export default async function EmbedPage(props: any) {
       );
     }
 
-    if (pinned === "true")
+    if (pinned === "true") {
       filtered = filtered.filter(
         (i: any) => i.properties?.Pinned?.checkbox
       );
+    }
 
-    if (pinned === "false")
+    if (pinned === "false") {
       filtered = filtered.filter(
         (i: any) => !i.properties?.Pinned?.checkbox
       );
+    }
 
-    // Pinned-first sorting
+    // Sort pinned first
     filtered = filtered.sort((a, b) => {
       const A = a.properties?.Pinned?.checkbox ? 1 : 0;
       const B = b.properties?.Pinned?.checkbox ? 1 : 0;
       return B - A;
     });
 
-    const { data: widget, error: widgetErr } = await supabaseAdmin
+    // ========================================
+    // 4️⃣ GET PROFILE FROM SUPABASE (THE FIX)
+    // ========================================
+    const { data: widget } = await supabaseAdmin
       .from("widgets")
       .select("user_id")
       .eq("id", id)
       .maybeSingle();
 
-    if (widgetErr) {
-      console.error("❌ Widget lookup error:", widgetErr);
-    }
-
     let profile = undefined;
 
     if (widget?.user_id) {
-      const { data: p, error: profileErr } = await supabaseAdmin
+      const { data: p } = await supabaseAdmin
         .from("profiles")
         .select("*")
         .eq("id", widget.user_id)
         .maybeSingle();
 
-      if (!profileErr && p) {
+      if (p) {
         profile = {
           name: p.name,
           username: p.username,
@@ -130,9 +131,9 @@ export default async function EmbedPage(props: any) {
       }
     }
 
-    // =======================================
-    // 5️⃣ RENDER FINAL UI
-    // =======================================
+    // ========================================
+    // 5️⃣ RENDER CLIENT COMPONENT
+    // ========================================
     return (
       <ClientViewComponent
         filtered={filtered}
@@ -141,7 +142,6 @@ export default async function EmbedPage(props: any) {
     );
   } catch (err: any) {
     console.error("EMBED PAGE ERROR:", err);
-
     return <p style={{ color: "red" }}>{err.message}</p>;
   }
 }
