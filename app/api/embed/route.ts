@@ -4,16 +4,15 @@ import { randomUUID } from "crypto";
 import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
 import { cookies } from "next/headers";
 
-// =============================
-// POST → CREATE NEW WIDGET
-// =============================
 export async function POST(req: Request) {
   try {
-    const body = await req.json().catch(() => null);
-
-    if (!body) {
+    // ==== SAFE PARSE BODY ====
+    let body: any = null;
+    try {
+      body = await req.json();
+    } catch {
       return NextResponse.json(
-        { error: "Invalid JSON body" },
+        { error: "Invalid JSON body" }, 
         { status: 400 }
       );
     }
@@ -22,73 +21,62 @@ export async function POST(req: Request) {
 
     if (!token || !db) {
       return NextResponse.json(
-        { error: "Missing token/db" },
+        { error: "Missing token or db" },
         { status: 400 }
       );
     }
 
-    // Generate widget ID
-    const id = randomUUID().slice(0, 6);
-
-    // ================================
-    // GET USER_ID FROM AUTH COOKIE
-    // ================================
+    // ==== GET USER ID ====
     const cookieStore = await cookies();
     const accessToken = cookieStore.get("sb-access-token")?.value;
 
     let userId: string | null = null;
-
     if (accessToken) {
       try {
         const payload = JSON.parse(
           Buffer.from(accessToken.split(".")[1], "base64").toString()
         );
         userId = payload.sub;
-      } catch (err) {
-        console.error("JWT decode error:", err);
+      } catch (e) {
+        console.error("JWT decode failed:", e);
       }
     }
 
-    // ================================
-    // INSERT WIDGET RECORD
-    // ================================
+    const id = randomUUID().slice(0, 6);
+
+    // ==== INSERT WIDGET ====
     const { error } = await supabaseAdmin.from("widgets").insert({
       id,
       token,
       db,
       user_id: userId,
-      created_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),  // PASTI KOMPATIBEL
     });
 
     if (error) {
-      console.error("INSERT ERROR:", error);
+      console.error("WIDGET INSERT ERROR:", error);
       return NextResponse.json(
         { error: "Failed to store widget", detail: error.message },
         { status: 500 }
       );
     }
 
-    // ================================
-    // RETURN EMBED URL
-    // ================================
+    // ==== BASE URL ====
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-
     if (!baseUrl) {
-      console.error("❌ Missing NEXT_PUBLIC_BASE_URL");
       return NextResponse.json(
-        { error: "Server misconfiguration: Missing BASE_URL" },
+        { error: "Missing NEXT_PUBLIC_BASE_URL in env" },
         { status: 500 }
       );
     }
 
-    const embedUrl = `${baseUrl}/embed/${id}?db=${db}`;
-
     return NextResponse.json({
       success: true,
+      embedUrl: `${baseUrl}/embed/${id}?db=${db}`,
       id,
       db,
-      embedUrl,
     });
+
   } catch (err: any) {
     console.error("SERVER ERROR:", err);
     return NextResponse.json(
@@ -98,20 +86,12 @@ export async function POST(req: Request) {
   }
 }
 
-// =============================
-// GET TOKEN BY WIDGET ID
-// =============================
 export async function getToken(id: string) {
-  const { data, error } = await supabaseAdmin
+  const { data } = await supabaseAdmin
     .from("widgets")
     .select("token")
     .eq("id", id)
     .maybeSingle();
-
-  if (error) {
-    console.error("getToken error:", error);
-    return null;
-  }
 
   return data?.token ?? null;
 }
