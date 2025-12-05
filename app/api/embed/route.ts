@@ -4,7 +4,7 @@ import { randomUUID } from "crypto";
 import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
 import { cookies } from "next/headers";
 
-// FIX SEBENARNYA!!!
+// Wajib untuk route handlers
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 export async function POST(req: Request) {
@@ -20,12 +20,12 @@ export async function POST(req: Request) {
 
     const id = randomUUID().slice(0, 6);
 
-    // FIX PALING KRITIS ⚠️
-    // HARUS begini untuk Route Handler:
+    // ✅ FIX PENTING: cookies harus dibungkus menjadi function sesuai docs
     const supabase = createRouteHandlerClient({
-      cookies,
+      cookies: () => cookies(),
     });
 
+    // 🔥 Ambil user via Supabase session di server
     const {
       data: { user },
       error: userErr,
@@ -35,7 +35,9 @@ export async function POST(req: Request) {
 
     const userId = user?.id ?? null;
 
-    // SIMPAN WIDGET
+    // =========================================
+    // SIMPAN WIDGET KE DATABASE
+    // =========================================
     const { error } = await supabaseAdmin.from("widgets").insert({
       id,
       db,
@@ -52,6 +54,7 @@ export async function POST(req: Request) {
       );
     }
 
+    // URL embed final
     const embedUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/embed/${id}?db=${db}`;
 
     return NextResponse.json({ success: true, embedUrl });
@@ -63,6 +66,10 @@ export async function POST(req: Request) {
     );
   }
 }
+
+// =========================================
+// HELPER BUAT AMBIL TOKEN DARI DB
+// =========================================
 
 export async function getToken(id: string) {
   const { data } = await supabaseAdmin
