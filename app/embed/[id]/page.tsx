@@ -119,9 +119,7 @@ export default async function EmbedPage(props: any) {
 
     console.log("PROFILE FINAL:", profile);
 
-    // =======================================
-    // 4️⃣ RENDER UI
-    // =======================================
+
     return <ClientViewComponent filtered={filtered} profile={profile} />;
 
   } catch (err: any) {

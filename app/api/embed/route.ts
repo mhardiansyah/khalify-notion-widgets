@@ -4,6 +4,9 @@ import { randomUUID } from "crypto";
 import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
 import { cookies } from "next/headers";
 
+// ⭐ FIX: import resmi Supabase server client
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+
 export async function POST(req: Request) {
   try {
     const { token, db } = await req.json();
@@ -17,26 +20,24 @@ export async function POST(req: Request) {
 
     const id = randomUUID().slice(0, 6);
 
-    // Get logged in user_id from cookie
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get("sb-access-token")?.value;
+    // ⭐ FIX UTAMA → AMBIL USER PAKAI CARA RESMI
+    const supabase = createRouteHandlerClient({ cookies });
 
-    let userId: string | null = null;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (accessToken) {
-      const payload = JSON.parse(
-        Buffer.from(accessToken.split(".")[1], "base64").toString()
-      );
-      userId = payload.sub;
-    }
+    const userId = user?.id ?? null;
 
-    // INSERT widget
+    console.log("USER ID DETECTED SERVER:", userId);
+
+    // SIMPAN WIDGET (dengan user_id yang benar)
     const { error } = await supabaseAdmin.from("widgets").insert({
       id,
       db,
       token,
       user_id: userId,
-      created_at: Date.now(),
+      created_at: new Date().toISOString(),
     });
 
     if (error) {
@@ -51,6 +52,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, embedUrl });
   } catch (err: any) {
+    console.error("SERVER ERROR:", err);
     return NextResponse.json(
       { error: "Server error", detail: err.message },
       { status: 500 }
