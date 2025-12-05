@@ -4,7 +4,6 @@
 import { getToken } from "@/app/api/embed/route";
 import ClientViewComponent from "@/app/components/ClientViewComponent";
 import { queryDatabase } from "@/app/lib/notion-server";
-
 import { supabaseAdmin } from "@/app/lib/supabaseAdmin"; // 🔥 WAJIB ADMIN
 
 export default async function EmbedPage(props: any) {
@@ -12,8 +11,8 @@ export default async function EmbedPage(props: any) {
     const params = await props.params;
     const search = await props.searchParams;
 
-    const id = params.id; // widget id
-    const db = search?.db; // notion database id
+    const id = params.id; // widget ID (contoh: abc123)
+    const db = search?.db; // Notion database ID
 
     if (!db) {
       return <p style={{ color: "red" }}>Database ID missing.</p>;
@@ -36,7 +35,7 @@ export default async function EmbedPage(props: any) {
       (i: any) => i.properties?.Hide?.checkbox !== true
     );
 
-    // FILTER HANDLER
+    // FILTERS
     const decode = (v: string) =>
       decodeURIComponent(v).replace(/\+/g, " ");
 
@@ -79,24 +78,24 @@ export default async function EmbedPage(props: any) {
       filtered = filtered.filter((i: any) => !i.properties?.Pinned?.checkbox);
     }
 
-    // Sort pinned first
     filtered = filtered.sort((a: any, b: any) => {
       const A = a.properties?.Pinned?.checkbox ? 1 : 0;
       const B = b.properties?.Pinned?.checkbox ? 1 : 0;
       return B - A;
     });
 
-    // =====================================================
-    // 3️⃣ LOAD PROFILE USING ADMIN CLIENT (FIX UTAMA!!!)
-    // =====================================================
+    // =======================================
+    // 3️⃣ LOAD PROFILE USING ADMIN CLIENT
+    // =======================================
     const { data: widget } = await supabaseAdmin
       .from("widgets")
       .select("user_id")
       .eq("id", id)
       .maybeSingle();
 
+    console.log("WIDGET RECORD:", widget);
+
     let profile = null;
-    console.log("WIDGET:", widget);
 
     if (widget?.user_id) {
       const { data: p } = await supabaseAdmin
@@ -104,6 +103,8 @@ export default async function EmbedPage(props: any) {
         .select("*")
         .eq("id", widget.user_id)
         .maybeSingle();
+
+      console.log("PROFILE RECORD:", p);
 
       if (p) {
         profile = {
@@ -116,7 +117,7 @@ export default async function EmbedPage(props: any) {
       }
     }
 
-    console.log("PROFILE LOADED:", profile);
+    console.log("PROFILE FINAL:", profile);
 
     // =======================================
     // 4️⃣ RENDER UI
