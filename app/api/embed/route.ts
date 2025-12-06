@@ -10,22 +10,35 @@ export async function POST(req: Request) {
     const { token, db } = await req.json();
 
     if (!token || !db) {
-      return NextResponse.json({ error: "Missing token/db" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing token/db" },
+        { status: 400 }
+      );
     }
 
-    // ✅ Gunakan Supabase Auth resmi untuk ambil logged-in user
+    // ================================
+    // 1️⃣ Ambil user dari cookies (Supabase)
+    // ================================
     const supabase = createRouteHandlerClient({ cookies });
+
     const {
       data: { user },
+      error: userErr,
     } = await supabase.auth.getUser();
 
-    console.log("SERVER USER:", user);
+    console.log("🔵 [SERVER] USER RESULT:", user);
+    console.log("🔴 [SERVER] USER ERROR:", userErr);
 
     const userId = user?.id ?? null;
 
+    // ================================
+    // 2️⃣ Generate widget ID
+    // ================================
     const id = randomUUID().slice(0, 6);
 
-    // Insert widget
+    // ================================
+    // 3️⃣ Insert ke DB via admin client
+    // ================================
     const { error } = await supabaseAdmin.from("widgets").insert({
       id,
       db,
@@ -35,7 +48,7 @@ export async function POST(req: Request) {
     });
 
     if (error) {
-      console.error("INSERT ERROR:", error);
+      console.error("❌ INSERT ERROR:", error);
       return NextResponse.json(
         {
           error: "Failed to store widget",
@@ -45,10 +58,19 @@ export async function POST(req: Request) {
       );
     }
 
+    // ================================
+    // 4️⃣ Return embed URL
+    // ================================
     const embedUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/embed/${id}?db=${db}`;
-    return NextResponse.json({ success: true, embedUrl });
+
+    return NextResponse.json({
+      success: true,
+      embedUrl,
+      userId, // debug
+    });
+
   } catch (err: any) {
-    console.error("SERVER ERROR:", err);
+    console.error("🔥 SERVER ERROR:", err);
     return NextResponse.json(
       { error: "Server error", detail: err.message },
       { status: 500 }

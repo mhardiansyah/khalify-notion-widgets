@@ -21,7 +21,7 @@ export default function CreateWidgetPageMerged() {
 
   const router = useRouter();
 
-  // 🚨 Ensure logged in
+  // 🔐 Pastikan user logged in
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) router.replace("/login");
@@ -34,20 +34,14 @@ export default function CreateWidgetPageMerged() {
     setLoading(true);
     setToken(notionUrl);
 
-    // ✅ FIX PALING PENTING — view session struct-nya benar
-    const { data: { session } } = await supabase.auth.getSession();
-    const accessToken = session?.access_token || null;
-
-    console.log("CLIENT ACCESS TOKEN:", accessToken);
-
     try {
       const res = await fetch("/api/embed", {
         method: "POST",
+        credentials: "include", // ⬅️ SUPER PENTING! Biar cookie terkirim
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           token: notionUrl,
           db,
-          accessToken, // send valid token
         }),
       });
 
@@ -71,7 +65,6 @@ export default function CreateWidgetPageMerged() {
       <Navbar />
 
       <div className="w-full min-h-screen bg-white text-black p-10">
-
         {/* Step Indicator */}
         <div className="flex justify-center mb-10">
           <div className="flex items-center gap-10">
