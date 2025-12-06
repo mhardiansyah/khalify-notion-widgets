@@ -1,11 +1,9 @@
 export const dynamic = "force-dynamic";
-export const runtime = "edge";
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
 import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
 import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
@@ -21,39 +19,32 @@ export async function POST(req: Request) {
       );
     }
 
-    // ================================
-    // 1️⃣ Ambil user dari cookies (Supabase)
-    // ================================
+    // Ambil user dari Supabase session (via cookie)
     const supabase = createRouteHandlerClient({ cookies });
-
     const {
       data: { user },
       error: userErr,
     } = await supabase.auth.getUser();
 
-    console.log("🔵 [SERVER] USER RESULT:", user);
-    console.log("🔴 [SERVER] USER ERROR:", userErr);
+    console.log("SERVER USER:", user);
+    console.log("USER ERROR:", userErr);
 
     const userId = user?.id ?? null;
 
-    // ================================
-    // 2️⃣ Generate widget ID
-    // ================================
-    const id = randomUUID().slice(0, 6);
+    // Generate ID aman non-Node
+    const id = Math.random().toString(36).substring(2, 8);
 
-    // ================================
-    // 3️⃣ Insert ke DB via admin client
-    // ================================
+    // Insert widget
     const { error } = await supabaseAdmin.from("widgets").insert({
       id,
       db,
       token,
       user_id: userId,
-      created_at: Date.now(),
+      created_at: Date.now()
     });
 
     if (error) {
-      console.error("❌ INSERT ERROR:", error);
+      console.error("INSERT ERROR:", error);
       return NextResponse.json(
         {
           error: "Failed to store widget",
@@ -63,19 +54,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // ================================
-    // 4️⃣ Return embed URL
-    // ================================
     const embedUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/embed/${id}?db=${db}`;
 
     return NextResponse.json({
       success: true,
       embedUrl,
-      userId, // debug
+      userId, // Debug
     });
-
   } catch (err: any) {
-    console.error("🔥 SERVER ERROR:", err);
+    console.error("SERVER ERROR:", err);
     return NextResponse.json(
       { error: "Server error", detail: err.message },
       { status: 500 }
