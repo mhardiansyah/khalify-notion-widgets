@@ -1,3 +1,8 @@
+export const dynamic = "force-dynamic";
+export const runtime = "edge";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
