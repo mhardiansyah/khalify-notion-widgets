@@ -3,24 +3,29 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
 import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
 
 export async function POST(req: Request) {
   try {
     const { token, db } = await req.json();
-
     if (!token || !db) {
-      return NextResponse.json(
-        { error: "Missing token/db" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing token/db" }, { status: 400 });
     }
 
-    // 🔥 FIX FOR NEXT.JS 16
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => cookieStore, // <- WAJIB FUNCTION
-    });
+    // ✅ FIX: cookies() must be awaited in Next.js 16 !!!
+    const cookieStore = await cookies();
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
 
     const {
       data: { user },
@@ -35,11 +40,8 @@ export async function POST(req: Request) {
       db,
       token,
       user_id: userId,
-      created_at: Date.now(), // FIX timestamp
+      created_at: new Date().toISOString(),
     });
-
-    console.log("SUPABASE USER:", user);
-    console.log("INSERT ERROR:", error);
 
     if (error) {
       return NextResponse.json(
@@ -49,8 +51,8 @@ export async function POST(req: Request) {
     }
 
     const embedUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/embed/${id}?db=${db}`;
-    return NextResponse.json({ success: true, embedUrl });
 
+    return NextResponse.json({ success: true, embedUrl });
   } catch (err: any) {
     return NextResponse.json(
       { error: "Server error", detail: err.message },
