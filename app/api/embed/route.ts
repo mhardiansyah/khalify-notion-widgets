@@ -1,6 +1,5 @@
 export const runtime = "nodejs";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
 import { cookies } from "next/headers";
@@ -17,14 +16,14 @@ export async function POST(req: Request) {
       );
     }
 
-    ///
+    const supabase = createRouteHandlerClient({ cookies: cookies() });
 
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const userId = user?.id ?? null;
 
-    // Generate random ID
     const id = Math.random().toString(36).substring(2, 8);
 
     const { error } = await supabaseAdmin.from("widgets").insert({
@@ -32,7 +31,7 @@ export async function POST(req: Request) {
       db,
       token,
       user_id: userId,
-      created_at: Date.now(),
+      created_at: new Date().toISOString(), 
     });
 
     if (error) {
@@ -43,6 +42,9 @@ export async function POST(req: Request) {
     }
 
     const embedUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/embed/${id}?db=${db}`;
+    console.log("SUPABASE USER:", user);
+console.log("INSERT ERROR:", error);
+
 
     return NextResponse.json({ success: true, embedUrl });
   } catch (err: any) {
