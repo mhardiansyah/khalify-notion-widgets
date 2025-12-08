@@ -16,7 +16,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const supabase = createRouteHandlerClient({ cookies: cookies() });
+    // ✅ FIX: Next.js expects cookies (function), NOT cookies()
+    const supabase = createRouteHandlerClient({
+      cookies,
+    });
 
     const {
       data: { user },
@@ -24,15 +27,21 @@ export async function POST(req: Request) {
 
     const userId = user?.id ?? null;
 
+    // Generate 6-char random ID
     const id = Math.random().toString(36).substring(2, 8);
 
+    // Insert into Supabase
     const { error } = await supabaseAdmin.from("widgets").insert({
       id,
       db,
       token,
       user_id: userId,
-      created_at: new Date().toISOString(), 
+      created_at: Date.now(), // ✅
     });
+
+    // Debug Log
+    console.log("SUPABASE USER:", user);
+    console.log("INSERT ERROR:", error);
 
     if (error) {
       return NextResponse.json(
@@ -41,12 +50,11 @@ export async function POST(req: Request) {
       );
     }
 
+    // Generate embed URL
     const embedUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/embed/${id}?db=${db}`;
-    console.log("SUPABASE USER:", user);
-console.log("INSERT ERROR:", error);
-
 
     return NextResponse.json({ success: true, embedUrl });
+
   } catch (err: any) {
     return NextResponse.json(
       { error: "Server error", detail: err.message },
