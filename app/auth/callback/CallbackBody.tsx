@@ -10,17 +10,12 @@ export default function CallbackBody() {
   useEffect(() => {
     const finish = async () => {
       try {
-        const rawUrl = window.location.href;
+        const url = window.location.href;
 
-        console.log("CALLBACK URL:", rawUrl);
-        console.log("COOKIE:", document.cookie);
+        console.log("CALLBACK URL:", url);
 
-        // BUANG HASH (#pkce)
-        const cleanUrl = rawUrl.split("#")[0];
-
-        console.log("CLEAN URL SENT TO SUPABASE:", cleanUrl);
-
-        const { data, error } = await supabase.auth.exchangeCodeForSession(cleanUrl);
+        // Tukar auth code → Supabase session
+        const { data, error } = await supabase.auth.exchangeCodeForSession(url);
 
         if (error) {
           console.error("Exchange error:", error);
@@ -29,6 +24,8 @@ export default function CallbackBody() {
         }
 
         console.log("SESSION CREATED:", data);
+
+        // Cookie sb-access-token terpasang otomatis
         router.replace("/welcome");
       } catch (err) {
         console.error("Callback error:", err);
