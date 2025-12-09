@@ -15,10 +15,11 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        // ⭐ WAJIB: pake hash -> SEMUA BROWSER bakal reopen di TAB YANG SAMA
+        emailRedirectTo: `${location.origin}/auth/callback#pkce`,
       },
     });
 
