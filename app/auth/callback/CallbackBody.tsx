@@ -25,7 +25,6 @@ export default function CallbackBody() {
 
         console.log("SESSION CREATED:", data);
 
-        // Cookie sb-access-token terpasang otomatis
         router.replace("/welcome");
       } catch (err) {
         console.error("Callback error:", err);
