@@ -9,16 +9,20 @@ export default function CallbackBody() {
 
   useEffect(() => {
     const finish = async () => {
-      // Supabase otomatis handle PKCE di URL
-      const { data } = await supabase.auth.getUser();
+      // WAJIB!! tukar code PKCE menjadi session cookie
+      const { data, error } = await supabase.auth.exchangeCodeForSession(
+        window.location.href
+      );
 
-      if (data.user) {
-        console.log("LOGIN SUCCESS:", data.user);
-        router.replace("/welcome");
-      } else {
-        console.log("NOT LOGGED IN");
+      if (error) {
+        console.error("LOGIN ERROR:", error);
         router.replace("/login");
+        return;
       }
+
+      console.log("SESSION CREATED:", data);
+
+      router.replace("/welcome"); // atau ke /accounts
     };
 
     finish();
