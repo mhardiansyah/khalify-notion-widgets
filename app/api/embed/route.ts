@@ -16,15 +16,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // ⬇️ WAJIB: ambil cookie store
-    const cookieStore = cookies();
+    // ⬅️ FIX UTAMA: cukup passing cookies (BUKAN cookies())
+    const supabase = createRouteHandlerClient({ cookies });
 
-    // ⬇️ WAJIB: create client untuk route handler
-    const supabase = createRouteHandlerClient({
-      cookies: () => cookieStore,
-    });
-
-    // ⬇️ INI BARU WORK
+    // ⬅️ UPDATED: panggil getUser
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -38,7 +33,7 @@ export async function POST(req: Request) {
       db,
       token,
       user_id: user?.id ?? null,
-      created_at: new Date().toISOString(),
+      created_at: Date.now(),
     });
 
     if (error) {
@@ -52,6 +47,7 @@ export async function POST(req: Request) {
       success: true,
       embedUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/embed/${id}?db=${db}`,
     });
+
   } catch (err: any) {
     console.error("SERVER ERROR:", err.message);
     return NextResponse.json(
