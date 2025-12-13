@@ -28,7 +28,6 @@ export default function WelcomePage() {
 
       <div className="max-w-5xl mx-auto px-12 py-12">
 
-        {/* HERO SECTION (kode 1) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-16">
           <img
             src="/ImageWithFallback.png"

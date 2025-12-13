@@ -11,7 +11,6 @@ export default function AccountsPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // PROFILE DATA
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
@@ -23,39 +22,17 @@ export default function AccountsPage() {
   useEffect(() => {
     const loadUser = async () => {
       const { data } = await supabase.auth.getUser();
+      if (!data.user) return router.replace("/login");
 
-      if (!data.user) {
-        router.replace("/login");
-        return;
-      }
-
-      const userId = data.user.id;
       setUser(data.user);
 
-      // LOAD PROFILE
       const { data: profile } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", userId)
+        .eq("id", data.user.id)
         .maybeSingle();
 
-      if (!profile) {
-        // auto create
-        await supabase.from("profiles").insert({
-          id: userId,
-          name: "",
-          username: "",
-          bio: "",
-          avatar_url: "",
-          highlights: [],
-        });
-
-        setName("");
-        setUsername("");
-        setBio("");
-        setAvatarUrl("");
-        setHighlights([]);
-      } else {
+      if (profile) {
         setName(profile.name || "");
         setUsername(profile.username || "");
         setBio(profile.bio || "");
@@ -69,10 +46,8 @@ export default function AccountsPage() {
     loadUser();
   }, []);
 
-  // SAVE PROFILE
   const handleSave = async () => {
     if (!user) return;
-
     setLoading(true);
 
     await supabase.from("profiles").upsert({
@@ -87,20 +62,17 @@ export default function AccountsPage() {
     setLoading(false);
   };
 
-  // HIGHLIGHT HANDLERS
-  const addHighlight = () => {
+  const addHighlight = () =>
     setHighlights([...highlights, { title: "", image: "" }]);
-  };
 
-  const updateHighlight = (index: number, field: string, value: string) => {
+  const updateHighlight = (i: number, f: string, v: string) => {
     const copy = [...highlights];
-    copy[index][field] = value;
+    copy[i][f] = v;
     setHighlights(copy);
   };
 
-  const removeHighlight = (index: number) => {
-    setHighlights(highlights.filter((_, i) => i !== index));
-  };
+  const removeHighlight = (i: number) =>
+    setHighlights(highlights.filter((_, idx) => idx !== i));
 
   if (loading) return <div className="p-10">Loading...</div>;
 
@@ -108,113 +80,124 @@ export default function AccountsPage() {
     <>
       <Navbar />
 
-      <div className="max-w-3xl mx-auto p-10 space-y-8">
-        <h1 className="text-2xl font-bold">Your Account</h1>
-
-        {/* AVATAR */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Avatar URL</label>
-          <input
-            value={avatarUrl}
-            onChange={(e) => setAvatarUrl(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg"
-            placeholder="https://example.com/avatar.jpg"
-          />
-
-          {avatarUrl && (
-            <img
-              src={avatarUrl}
-              className="w-20 h-20 rounded-full mt-2 object-cover"
-            />
-          )}
+      <div className="max-w-6xl mx-auto p-8 space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold">Account Details</h1>
+          <p className="text-gray-500">Manage your profile</p>
         </div>
 
-        {/* NAME */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Name</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg"
-          />
+        {/* GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* LEFT */}
+          <div className="md:col-span-2 space-y-6">
+            {/* PERSONAL INFO */}
+            <div className="bg-white border rounded-2xl p-6 shadow-sm">
+              <h2 className="font-semibold mb-4">Personal Information</h2>
+
+              <div className="flex items-center gap-4 mb-6">
+                <img
+                  src={avatarUrl || "/avatar-placeholder.png"}
+                  className="w-20 h-20 rounded-full object-cover border"
+                />
+                <input
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  placeholder="Avatar URL"
+                  className="flex-1 px-4 py-2 border rounded-lg"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Name"
+                  className="px-4 py-2 border rounded-lg"
+                />
+                <input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="@username"
+                  className="px-4 py-2 border rounded-lg"
+                />
+              </div>
+            </div>
+
+            {/* HIGHLIGHTS */}
+            <div className="bg-white border rounded-2xl p-6 shadow-sm">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="font-semibold">Highlights</h2>
+                <button
+                  onClick={addHighlight}
+                  className="flex items-center gap-1 text-sm px-3 py-1 bg-purple-600 text-white rounded-lg"
+                >
+                  <Plus size={16} /> Add
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {highlights.map((h, i) => (
+                  <div
+                    key={i}
+                    className="relative border rounded-xl p-4 bg-gray-50"
+                  >
+                    <button
+                      onClick={() => removeHighlight(i)}
+                      className="absolute right-3 top-3 text-red-500"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <input
+                        value={h.title}
+                        onChange={(e) =>
+                          updateHighlight(i, "title", e.target.value)
+                        }
+                        placeholder="Title"
+                        className="px-3 py-2 border rounded-lg"
+                      />
+                      <input
+                        value={h.image}
+                        onChange={(e) =>
+                          updateHighlight(i, "image", e.target.value)
+                        }
+                        placeholder="Image URL"
+                        className="px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT */}
+          <div className="space-y-6">
+            <div className="bg-white border rounded-2xl p-6 shadow-sm">
+              <h2 className="font-semibold mb-2">Account Stats</h2>
+              <p className="text-sm text-gray-500">
+                Placeholder (nanti bisa isi widgets, license, dll)
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* USERNAME */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Username</label>
-          <input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg"
-            placeholder="@yourname"
-          />
-        </div>
-
-        {/* BIO */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Bio</label>
+        {/* BIO – FULL WIDTH */}
+        <div className="bg-white border rounded-2xl p-6 shadow-sm">
+          <h2 className="font-semibold mb-2">Bio</h2>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
+            rows={4}
+            placeholder="Tell something about you…"
             className="w-full px-4 py-2 border rounded-lg"
-            rows={3}
           />
-        </div>
-
-        {/* HIGHLIGHTS */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium">Highlights</label>
-            <button
-              onClick={addHighlight}
-              className="px-3 py-1 bg-purple-600 text-white rounded-lg text-sm flex items-center gap-1"
-            >
-              <Plus size={16} /> Add
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {highlights.map((h, i) => (
-              <div key={i} className="p-4 border rounded-lg bg-gray-50 relative">
-                <button
-                  onClick={() => removeHighlight(i)}
-                  className="absolute right-3 top-3 text-red-500"
-                >
-                  <Trash2 size={18} />
-                </button>
-
-                <div className="space-y-2">
-                  <input
-                    value={h.title}
-                    onChange={(e) => updateHighlight(i, "title", e.target.value)}
-                    className="w-full px-4 py-2 border rounded-lg"
-                    placeholder="Highlight title"
-                  />
-
-                  <input
-                    value={h.image}
-                    onChange={(e) =>
-                      updateHighlight(i, "image", e.target.value)
-                    }
-                    className="w-full px-4 py-2 border rounded-lg"
-                    placeholder="Image URL"
-                  />
-
-                  {h.image && (
-                    <img
-                      src={h.image}
-                      className="w-16 h-16 rounded-full object-cover mt-2"
-                    />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
         <button
           onClick={handleSave}
-          className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+          className="w-full py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition"
         >
           Save Profile
         </button>
