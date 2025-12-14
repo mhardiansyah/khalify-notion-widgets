@@ -23,7 +23,7 @@ type Profile = {
 };
 
 interface Props {
-  filtered: any[];
+  filtered?: any[]; // 🔥 OPTIONAL
   profile?: Profile | null;
   initialTheme?: "light" | "dark";
   gridColumns?: number;
@@ -32,7 +32,7 @@ interface Props {
 /* ================= MAIN ================= */
 
 export default function ClientViewComponent({
-  filtered,
+  filtered = [], // 🔥 DEFAULT VALUE (CRITICAL FIX)
   profile,
   initialTheme = "light",
   gridColumns = 4,
@@ -49,8 +49,6 @@ export default function ClientViewComponent({
   const bg =
     theme === "light" ? "bg-white text-gray-900" : "bg-black text-white";
   const cardBg = theme === "light" ? "bg-white" : "bg-gray-900";
-  const subtleBorder =
-    theme === "light" ? "border-gray-200" : "border-gray-800";
 
   return (
     <main className={`${bg} min-h-screen w-full flex flex-col transition-colors`}>
@@ -138,16 +136,15 @@ export default function ClientViewComponent({
         )}
 
         {showHighlight &&
-          profile?.highlights &&
-          profile.highlights.length > 0 && (
-            <HighlightSection highlights={profile.highlights} theme={theme} />
+          Array.isArray(profile?.highlights) &&
+          profile!.highlights!.length > 0 && (
+            <HighlightSection highlights={profile!.highlights!} theme={theme} />
           )}
 
         {viewMode === "visual" ? (
           <VisualGrid
             filtered={filtered}
             gridColumns={gridColumns}
-            theme={theme}
             cardBg={cardBg}
           />
         ) : (
@@ -181,7 +178,7 @@ function ThemeToggle({
   );
 }
 
-/* ================= SMALL CHIPS ================= */
+/* ================= SMALL CHIP ================= */
 
 function ToggleChip({ label, active, onClick, theme }: any) {
   return (
@@ -222,51 +219,28 @@ function BioSection({ profile, theme }: any) {
   );
 }
 
+/* ================= HIGHLIGHT ================= */
+
 function HighlightSection({
   highlights,
   theme,
 }: {
-  highlights: { title: string; image?: string }[];
+  highlights: Highlight[];
   theme: "light" | "dark";
 }) {
   return (
     <section
-      className={`w-full border rounded-2xl p-4 ${
+      className={`border rounded-2xl p-4 ${
         theme === "light"
           ? "bg-gray-50 border-gray-200"
           : "bg-gray-900 border-gray-800"
       }`}
     >
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
-          Highlights
-        </p>
-        <span className="text-[11px] text-gray-400">
-          {highlights.length} saved
-        </span>
-      </div>
-
-      <div className="flex gap-3 overflow-x-auto no-scrollbar">
+      <div className="flex gap-3 overflow-x-auto">
         {highlights.map((h, i) => (
-          <div
-            key={i}
-            className="flex flex-col items-center gap-1 min-w-[72px]"
-          >
-            <div className="w-14 h-14 rounded-full overflow-hidden border bg-gray-200">
-              {h.image ? (
-                <img
-                  src={h.image}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">
-                  +
-                </div>
-              )}
-            </div>
-            <p className="text-[11px] line-clamp-2 text-center text-gray-600">
-              {h.title || "Untitled"}
-            </p>
+          <div key={i} className="min-w-[72px] text-center">
+            <div className="w-14 h-14 rounded-full bg-gray-300 mx-auto mb-1" />
+            <p className="text-[11px]">{h.title}</p>
           </div>
         ))}
       </div>
@@ -274,36 +248,36 @@ function HighlightSection({
   );
 }
 
-
 /* ================= VISUAL GRID ================= */
 
-function VisualGrid({ filtered, gridColumns, theme, cardBg }: any) {
+function VisualGrid({ filtered, gridColumns, cardBg }: any) {
   return (
     <div
       className="grid gap-4"
       style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
     >
-      {filtered.map((item: any, i: number) => {
-        const name =
-          item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
-        const image = extractImage(item);
-        const pinned = item.properties?.Pinned?.checkbox;
+      {Array.isArray(filtered) &&
+        filtered.map((item: any, i: number) => {
+          const name =
+            item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
+          const image = extractImage(item);
+          const pinned = item.properties?.Pinned?.checkbox;
 
-        return (
-          <div
-            key={i}
-            className={`relative group rounded-xl overflow-hidden aspect-[4/5] ${cardBg}`}
-          >
-            {pinned && (
-              <Pin className="absolute top-3 right-3 text-yellow-400" />
-            )}
-            <AutoThumbnail src={image} />
-            <div className="absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 bg-gradient-to-t from-black/70 to-transparent">
-              <p className="text-white text-xs">{name}</p>
+          return (
+            <div
+              key={i}
+              className={`relative group rounded-xl overflow-hidden aspect-[4/5] ${cardBg}`}
+            >
+              {pinned && (
+                <Pin className="absolute top-3 right-3 text-yellow-400" />
+              )}
+              <AutoThumbnail src={image} />
+              <div className="absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 bg-gradient-to-t from-black/70 to-transparent">
+                <p className="text-white text-xs">{name}</p>
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
     </div>
   );
 }
@@ -315,28 +289,29 @@ function MapViewGrid({ filtered }: any) {
 
   return (
     <div className="grid grid-cols-3 gap-px bg-gray-300">
-      {filtered.map((item: any, i: number) => {
-        const name =
-          item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
-        const pillar =
-          item.properties?.["Content Pillar"]?.select?.name || "";
-        const pinned = item.properties?.Pinned?.checkbox;
+      {Array.isArray(filtered) &&
+        filtered.map((item: any, i: number) => {
+          const name =
+            item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
+          const pillar =
+            item.properties?.["Content Pillar"]?.select?.name || "";
+          const pinned = item.properties?.Pinned?.checkbox;
 
-        return (
-          <div
-            key={i}
-            className={`relative group aspect-square flex items-center justify-center ${colors[i % colors.length]}`}
-          >
-            {pinned && <Pin className="absolute top-3 right-3 text-white" />}
-            <h3 className="relative z-10 text-white text-sm text-center px-4">
-              {name}
-            </h3>
-            <div className="absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 bg-gradient-to-t from-black/70 to-transparent">
-              <p className="text-white text-[11px] uppercase">{pillar}</p>
+          return (
+            <div
+              key={i}
+              className={`relative group aspect-square flex items-center justify-center ${
+                colors[i % colors.length]
+              }`}
+            >
+              {pinned && <Pin className="absolute top-3 right-3 text-white" />}
+              <h3 className="text-white text-sm text-center px-4">{name}</h3>
+              <div className="absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 bg-gradient-to-t from-black/70 to-transparent">
+                <p className="text-white text-[11px] uppercase">{pillar}</p>
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
     </div>
   );
 }
