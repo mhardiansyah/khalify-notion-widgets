@@ -68,6 +68,7 @@ export default function ClientViewComponent({
         }`}
       >
         <div className="flex items-center justify-between gap-4">
+          {/* LEFT */}
           <div>
             <h1 className="text-base font-semibold tracking-tight">
               Creator Gallery
@@ -77,25 +78,33 @@ export default function ClientViewComponent({
             </p>
           </div>
 
-          <button
-            onClick={() =>
-              setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
-            }
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium
-    transition shadow-sm ring-1 mr-5
-    ${
-      currentTheme === "dark"
-        ? "bg-gray-800 text-white ring-gray-600 hover:bg-gray-700"
-        : "bg-gray-100 text-gray-900 ring-gray-300 hover:bg-gray-200"
-    }
-  `}
-          >
-            <span className="text-sm">
-              {currentTheme === "dark" ? "🌙" : "☀️"}
-            </span>
-            <span>{currentTheme === "dark" ? "Dark mode" : "Light mode"}</span>
-          </button>
+          {/* RIGHT */}
+          <div className="flex items-center gap-3">
+            {/* 🌙☀️ THEME TOGGLE */}
+            <button
+              onClick={() =>
+                setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
+              }
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium
+        transition shadow-sm ring-1
+        ${
+          currentTheme === "dark"
+            ? "bg-gray-800 text-white ring-gray-600 hover:bg-gray-700"
+            : "bg-gray-100 text-gray-900 ring-gray-300 hover:bg-gray-200"
+        }
+      `}
+            >
+              <span className="text-sm">
+                {currentTheme === "dark" ? "🌙" : "☀️"}
+              </span>
+              <span className="hidden sm:inline">
+                {currentTheme === "dark" ? "Dark" : "Light"}
+              </span>
+            </button>
+
+            {/* 🔄 REFRESH */}
             <RefreshButton />
+          </div>
         </div>
 
         {/* ================= CONTROLS ================= */}
