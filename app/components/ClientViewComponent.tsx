@@ -32,13 +32,12 @@ export default function ClientViewComponent({
   filtered,
   profile,
   theme = "light",
-  gridColumns = 4,
+  gridColumns = 3,
 }: Props) {
   const [viewMode, setViewMode] = useState<"visual" | "map">("visual");
   const [showBio, setShowBio] = useState(true);
   const [showHighlight, setShowHighlight] = useState(true);
 
-  // 🔥 Debug log supaya tahu apakah profile masuk
   useEffect(() => {
     console.log("PROFILE RECEIVED:", profile);
   }, [profile]);
