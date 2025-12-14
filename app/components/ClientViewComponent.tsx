@@ -40,8 +40,7 @@ export default function ClientViewComponent({
   const [viewMode, setViewMode] = useState<"visual" | "map">("visual");
   const [showBio, setShowBio] = useState(true);
   const [showHighlight, setShowHighlight] = useState(true);
-  const [currentTheme, setCurrentTheme] =
-    useState<"light" | "dark">(theme);
+  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">(theme);
 
   /* sync kalau theme dari server berubah */
   useEffect(() => {
@@ -51,17 +50,12 @@ export default function ClientViewComponent({
   /* ================= THEME STYLES ================= */
 
   const bg =
-    currentTheme === "light"
-      ? "bg-white text-gray-900"
-      : "bg-black text-white";
+    currentTheme === "light" ? "bg-white text-gray-900" : "bg-black text-white";
 
-  const cardBg =
-    currentTheme === "light" ? "bg-white" : "bg-gray-900";
+  const cardBg = currentTheme === "light" ? "bg-white" : "bg-gray-900";
 
   const subtleBorder =
-    currentTheme === "light"
-      ? "border-gray-200"
-      : "border-gray-800";
+    currentTheme === "light" ? "border-gray-200" : "border-gray-800";
 
   return (
     <main className={`${bg} min-h-screen w-full flex flex-col`}>
@@ -83,25 +77,24 @@ export default function ClientViewComponent({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* 🌙☀️ THEME TOGGLE */}
-            <button
-              onClick={() =>
-                setCurrentTheme((t) =>
-                  t === "light" ? "dark" : "light"
-                )
-              }
-              className={`px-3 py-1.5 rounded-full text-xs border transition ${
-                currentTheme === "dark"
-                  ? "bg-gray-800 text-white border-gray-700"
-                  : "bg-white text-gray-700 border-gray-300"
-              }`}
-            >
-              {currentTheme === "dark" ? "🌙 Dark" : "☀️ Light"}
-            </button>
-
-            <RefreshButton />
-          </div>
+          <button
+            onClick={() =>
+              setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
+            }
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium
+    transition shadow-sm ring-1
+    ${
+      currentTheme === "dark"
+        ? "bg-gray-800 text-white ring-gray-600 hover:bg-gray-700"
+        : "bg-gray-100 text-gray-900 ring-gray-300 hover:bg-gray-200"
+    }
+  `}
+          >
+            <span className="text-sm">
+              {currentTheme === "dark" ? "🌙" : "☀️"}
+            </span>
+            <span>{currentTheme === "dark" ? "Dark mode" : "Light mode"}</span>
+          </button>
         </div>
 
         {/* ================= CONTROLS ================= */}
@@ -205,9 +198,7 @@ function BioSection({
       <div>
         <h2 className="font-semibold">{profile.name}</h2>
         {profile.bio && (
-          <p className="text-xs text-gray-500 mt-1">
-            {profile.bio}
-          </p>
+          <p className="text-xs text-gray-500 mt-1">{profile.bio}</p>
         )}
       </div>
     </section>
@@ -255,8 +246,7 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg }: any) {
     >
       {filtered.map((item: any, i: number) => {
         const name =
-          item.properties?.Name?.title?.[0]?.plain_text ||
-          "Untitled";
+          item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
         const image = extractImage(item);
         const pinned = item.properties?.Pinned?.checkbox;
 
@@ -273,9 +263,7 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg }: any) {
 
             <div
               className={`absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 transition bg-gradient-to-t ${
-                theme === "light"
-                  ? "from-black/70"
-                  : "from-black/80"
+                theme === "light" ? "from-black/70" : "from-black/80"
               } to-transparent`}
             >
               <p className="text-white text-xs">{name}</p>
@@ -290,21 +278,14 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg }: any) {
 /* ================= MAP VIEW ================= */
 
 function MapViewGrid({ filtered }: any) {
-  const colors = [
-    "bg-[#A3A18C]",
-    "bg-[#CFC6A8]",
-    "bg-[#9FA29A]",
-  ];
+  const colors = ["bg-[#A3A18C]", "bg-[#CFC6A8]", "bg-[#9FA29A]"];
 
   return (
     <div className="grid grid-cols-3 gap-px bg-gray-200">
       {filtered.map((item: any, i: number) => {
         const name =
-          item.properties?.Name?.title?.[0]?.plain_text ||
-          "Untitled";
-        const pillar =
-          item.properties?.["Content Pillar"]?.select?.name ||
-          "";
+          item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
+        const pillar = item.properties?.["Content Pillar"]?.select?.name || "";
         const pinned = item.properties?.Pinned?.checkbox;
 
         return (
@@ -314,16 +295,10 @@ function MapViewGrid({ filtered }: any) {
               colors[i % colors.length]
             }`}
           >
-            {pinned && (
-              <Pin className="absolute top-3 right-3 text-white" />
-            )}
-            <h3 className="text-white text-sm text-center px-4">
-              {name}
-            </h3>
+            {pinned && <Pin className="absolute top-3 right-3 text-white" />}
+            <h3 className="text-white text-sm text-center px-4">{name}</h3>
             <div className="absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 bg-gradient-to-t from-black/70 to-transparent">
-              <p className="text-white text-[11px] uppercase">
-                {pillar}
-              </p>
+              <p className="text-white text-[11px] uppercase">{pillar}</p>
             </div>
           </div>
         );
