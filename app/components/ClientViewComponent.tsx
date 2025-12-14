@@ -6,6 +6,7 @@ import { Pin } from "lucide-react";
 import AutoThumbnail from "@/app/components/AutoThumbnail";
 import EmbedFilter from "@/app/components/EmbedFilter";
 import RefreshButton from "@/app/components/RefreshButton";
+import { section } from "framer-motion/client";
 
 type Highlight = {
   title: string;
@@ -22,7 +23,7 @@ type Profile = {
 
 interface Props {
   filtered: any[];
-  profile?: Profile | null;  // 🔥 perbaikan penting
+  profile?: Profile | null; // 🔥 perbaikan penting
   theme?: "light" | "dark";
   gridColumns?: number;
 }
@@ -102,13 +103,13 @@ export default function ClientViewComponent({
             <ToggleChip
               label="Show bio"
               active={showBio}
-              onClick={() => setShowBio(prev => !prev)}
+              onClick={() => setShowBio((prev) => !prev)}
               theme={theme}
             />
             <ToggleChip
               label="Show highlight"
               active={showHighlight}
-              onClick={() => setShowHighlight(prev => !prev)}
+              onClick={() => setShowHighlight((prev) => !prev)}
               theme={theme}
             />
           </div>
@@ -121,7 +122,6 @@ export default function ClientViewComponent({
 
       {/* CONTENT AREA */}
       <div className="p-5 space-y-6">
-
         {/* BIO SECTION */}
         {showBio && profile && (profile.bio || profile.name) && (
           <BioSection profile={profile} theme={theme} />
@@ -131,10 +131,7 @@ export default function ClientViewComponent({
         {showHighlight &&
           profile?.highlights &&
           profile.highlights.length > 0 && (
-            <HighlightSection
-              highlights={profile.highlights}
-              theme={theme}
-            />
+            <HighlightSection highlights={profile.highlights} theme={theme} />
           )}
 
         {viewMode === "visual" ? (
@@ -145,11 +142,7 @@ export default function ClientViewComponent({
             cardBg={cardBg}
           />
         ) : (
-          <MapViewList
-            filtered={filtered}
-            theme={theme}
-            borderColor={subtleBorder}
-          />
+          <MapViewGrid filtered={filtered} />
         )}
       </div>
     </main>
@@ -166,7 +159,9 @@ function BioSection({
   theme: "light" | "dark";
 }) {
   const border =
-    theme === "light" ? "border-gray-200 bg-white" : "border-gray-800 bg-gray-900";
+    theme === "light"
+      ? "border-gray-200 bg-white"
+      : "border-gray-800 bg-gray-900";
 
   return (
     <section
@@ -239,7 +234,10 @@ function HighlightSection({
 
       <div className="flex gap-3 overflow-x-auto no-scrollbar">
         {highlights.map((h, i) => (
-          <div key={i} className="flex flex-col items-center gap-1 min-w-[70px]">
+          <div
+            key={i}
+            className="flex flex-col items-center gap-1 min-w-[70px]"
+          >
             <div className="w-14 h-14 rounded-full overflow-hidden border bg-gray-100">
               {h.image ? (
                 <img src={h.image} className="w-full h-full object-cover" />
@@ -292,9 +290,7 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg }: any) {
 
               <div
                 className={`absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 transition bg-gradient-to-t ${
-                  theme === "light"
-                    ? "from-black/70"
-                    : "from-black/80"
+                  theme === "light" ? "from-black/70" : "from-black/80"
                 } to-transparent`}
               >
                 <p className="text-white text-xs">{name}</p>
@@ -307,47 +303,51 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg }: any) {
   );
 }
 
-function MapViewList({ filtered, theme, borderColor }: any) {
+function MapViewGrid({ filtered }: any) {
+  const colors = [
+    "bg-[#A3A18C]",
+    "bg-[#CFC6A8]",
+    "bg-[#9FA29A]",
+    "bg-[#B8B8B8]",
+    "bg-[#4B4F3E]",
+    "bg-[#AEB7B6]",
+    "bg-[#A3A18C]",
+  ];
+
   return (
-    <section className="space-y-2">
+    <section
+      className="grid  gap-px bg-gray-200"
+      style={{
+        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+      }}
+    >
       {filtered.map((item: any, i: number) => {
         const name =
           item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
-        const platform =
-          item.properties?.Platform?.select?.name || "-";
-        const status =
-          item.properties?.Status?.status?.name ||
-          item.properties?.Status?.select?.name ||
-          "-";
-        const pillar =
-          item.properties?.["Content Pillar"]?.select?.name || "-";
+
+        const pillar = item.properties?.["Content Pillar"]?.select?.name || "";
 
         const isPinned = item.properties?.Pinned?.checkbox;
-        const thumb = extractImage(item);
+
+        const bgColor = colors[i % colors.length];
 
         return (
           <div
             key={i}
-            className={`flex items-center gap-3 border ${borderColor} rounded-xl p-3`}
+            className={`relative aspect-square ${bgColor} flex flex-col items-center justify-center text-center p-6`}
           >
-            <div className="w-14 h-14 rounded-md overflow-hidden bg-gray-200">
-              <AutoThumbnail src={thumb} />
-            </div>
+            {isPinned && (
+              <Pin className="absolute top-3 right-3 w-4 h-4 text-white opacity-80" />
+            )}
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                {isPinned && (
-                  <Pin className="w-4 h-4 text-yellow-400" fill="yellow" />
-                )}
-                <p className="font-medium truncate">{name}</p>
-              </div>
-
-              <div className="text-[11px] flex gap-2 text-gray-500">
-                <span>{platform}</span>
-                <span>{status}</span>
-                <span>{pillar}</span>
-              </div>
-            </div>
+            <h3 className="text-white font-medium text-sm leading-snug max-w-[90%]">
+              {name}
+            </h3>
+            {pillar && (
+              <p className="mt-2 text-[11px] text-white/70 uppercase tracking-wide">
+                {pillar}
+              </p>
+            )}
           </div>
         );
       })}
