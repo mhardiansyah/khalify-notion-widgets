@@ -82,7 +82,7 @@ export default function ClientViewComponent({
               setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
             }
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium
-    transition shadow-sm ring-1 mr-20
+    transition shadow-sm ring-1 mr-40
     ${
       currentTheme === "dark"
         ? "bg-gray-800 text-white ring-gray-600 hover:bg-gray-700"
