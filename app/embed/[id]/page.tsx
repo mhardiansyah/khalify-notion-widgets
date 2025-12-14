@@ -222,6 +222,59 @@ function BioSection({ profile, theme }: any) {
   );
 }
 
+function HighlightSection({
+  highlights,
+  theme,
+}: {
+  highlights: { title: string; image?: string }[];
+  theme: "light" | "dark";
+}) {
+  return (
+    <section
+      className={`w-full border rounded-2xl p-4 ${
+        theme === "light"
+          ? "bg-gray-50 border-gray-200"
+          : "bg-gray-900 border-gray-800"
+      }`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
+          Highlights
+        </p>
+        <span className="text-[11px] text-gray-400">
+          {highlights.length} saved
+        </span>
+      </div>
+
+      <div className="flex gap-3 overflow-x-auto no-scrollbar">
+        {highlights.map((h, i) => (
+          <div
+            key={i}
+            className="flex flex-col items-center gap-1 min-w-[72px]"
+          >
+            <div className="w-14 h-14 rounded-full overflow-hidden border bg-gray-200">
+              {h.image ? (
+                <img
+                  src={h.image}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">
+                  +
+                </div>
+              )}
+            </div>
+            <p className="text-[11px] line-clamp-2 text-center text-gray-600">
+              {h.title || "Untitled"}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+
 /* ================= VISUAL GRID ================= */
 
 function VisualGrid({ filtered, gridColumns, theme, cardBg }: any) {
