@@ -341,7 +341,8 @@ function MapViewGrid({ filtered }: any) {
             )}
 
             {/* TITLE (always visible) */}
-            <h3 className="relative z-10 text-white font-medium text-sm leading-snug max-w-[90%] transition-opacity group-hover:opacity-0">
+            <h3 className="relative z-10 text-white font-medium text-sm leading-snug max-w-[90%]">
+
               {name}
             </h3>
 
