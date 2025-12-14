@@ -341,15 +341,15 @@ function MapViewGrid({ filtered }: any) {
             )}
 
             {/* TITLE (always visible) */}
-            <h3 className="relative z-10 text-white font-medium text-sm leading-snug max-w-[90%]">
+            <h3 className="relative z-10 text-white font-semibold text-2xl leading-snug max-w-[90%]">
 
               {name}
             </h3>
 
             {/* HOVER OVERLAY (same pattern as VisualGrid) */}
             <div className="absolute inset-0 flex items-end p-4 opacity-0 group-hover:opacity-100 transition bg-gradient-to-t from-black/70 to-transparent">
-              <p className="text-white text-[11px] uppercase tracking-wide">
-                {pillar}
+              <p className="text-white text-[15px] uppercase tracking-wide">
+               Content Pillar: {pillar}
               </p>
             </div>
           </div>
