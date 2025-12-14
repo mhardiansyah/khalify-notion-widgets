@@ -95,6 +95,7 @@ export default function ClientViewComponent({
             </span>
             <span>{currentTheme === "dark" ? "Dark mode" : "Light mode"}</span>
           </button>
+            <RefreshButton />
         </div>
 
         {/* ================= CONTROLS ================= */}
