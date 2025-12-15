@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { api } from "@/app/lib/axios";
 
 export default function AuthEmbedClient() {
   const router = useRouter();
@@ -18,23 +19,11 @@ export default function AuthEmbedClient() {
 
     const verify = async () => {
       try {
-        const res = await fetch(
-          "https://khalify-be.vercel.app/auth/verify-token",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({ token, email }),
-          }
-        );
 
-        const data = await res.json();
 
-        if (!res.ok) {
-          throw new Error(data.message || "Token invalid");
-        }
+        await api.post("/auth/verify-token", { token, email });
+
+
 
         // bersihin email setelah sukses
         localStorage.removeItem("login_email");
@@ -42,6 +31,7 @@ export default function AuthEmbedClient() {
         router.replace("/welcome");
       } catch (err) {
         router.replace("/auth/login");
+        console.error("Error verifying token:", err);
       }
     };
 

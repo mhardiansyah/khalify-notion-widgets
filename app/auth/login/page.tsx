@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "@/app/lib/axios";
 import { useState } from "react";
 
 export default function LoginPage() {
@@ -15,28 +16,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(
-        "https://khalify-be.vercel.app/auth/magic-link",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
+      await api.post("/auth/magic-link", { email});
 
-      const data = await res.json();
       localStorage.setItem("login_email", email);
 
-
-      if (!res.ok) {
-        throw new Error(data.message || "Gagal kirim magic link");
-      }
 
       alert("Cek email lo bro, magic link udah dikirim ✨");
     } catch (err: any) {
       alert(err.message);
+      console.log("err:  ", err);
+      
     } finally {
       setLoading(false);
     }
