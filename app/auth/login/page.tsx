@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/app/lib/supabaseClient";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -9,28 +8,38 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     if (!email) {
-      alert("Masukin email dulu bro ");
+      alert("Masukin email dulu bro");
       return;
     }
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: "https://khalify-notion-widgets.vercel.app/auth/callback",
-      },
-    });
+    try {
+      const res = await fetch(
+        "https://khalify-be.vercel.app/auth/magic-link",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
 
-    setLoading(false);
+      const data = await res.json();
+      localStorage.setItem("login_email", email);
 
-    if (error) {
-      console.error(error.message);
-      alert("Gagal ngirim email bro ");
-      return;
+
+      if (!res.ok) {
+        throw new Error(data.message || "Gagal kirim magic link");
+      }
+
+      alert("Cek email lo bro, magic link udah dikirim ✨");
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    alert("Cek email lo bro! Magic link sudah dikirim ");
   };
 
   return (
@@ -41,6 +50,7 @@ export default function LoginPage() {
         type="email"
         placeholder="email lo bro..."
         className="border p-2 rounded"
+        value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
 

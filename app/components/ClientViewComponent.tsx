@@ -78,7 +78,7 @@ export default function ClientViewComponent({
           </div>
 
           <button
-            onClick={() =>
+            onClick={() =>  
               setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
             }
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium
