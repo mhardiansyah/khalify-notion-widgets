@@ -24,7 +24,7 @@ export default function CreateWidgetPageMerged() {
   // 🔐 Pastikan user logged in
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) router.replace("/login");
+      if (!data.user) router.replace("/auth/login");
     });
   }, []);
 

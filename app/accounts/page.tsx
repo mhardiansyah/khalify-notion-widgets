@@ -49,7 +49,7 @@ export default function AccountsPage() {
       const { data } = await supabase.auth.getUser();
 
       if (!data.user) {
-        router.replace("/login");
+        router.replace("/auth/login");
         return;
       }
 
