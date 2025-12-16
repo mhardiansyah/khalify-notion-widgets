@@ -12,14 +12,14 @@ export default function WelcomePage() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    cookies.remove("login_email");
-
+    
     const loadUser = async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) return router.replace("/auth/login");
       setUser(data.user);
     };
     loadUser();
+    cookies.remove("login_email");
   }, []);
 
   if (!user) return <div>Loading...</div>;
