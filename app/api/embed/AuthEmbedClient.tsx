@@ -25,7 +25,6 @@ export default function AuthEmbedClient() {
 
 
 
-        // bersihin email setelah sukses
         localStorage.removeItem("login_email");
 
         router.replace("/welcome");
