@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/app/lib/axios";
 import cookies from "js-cookie";
+import bcrypt from "bcryptjs";
 
 
 export default function AuthEmbedClient() {
@@ -24,10 +25,12 @@ export default function AuthEmbedClient() {
         const res = await api.post("/auth/verify-token", { token, email });
         cookies.set("login_token", res.data.data.jwt, { expires: 1 / 24 });
 
-        // hapus cookie setelah sukses  
-        cookies.remove("login_email");
+        const password = await bcrypt.hash(email, 10);
+        cookies.set("login_password", password, { expires: 1 / 24 });
 
         router.replace("/welcome");
+        cookies.remove("login_email");
+
       } catch (err) {
         console.error("Error verifying token:", err);
         router.replace("/auth/login");
