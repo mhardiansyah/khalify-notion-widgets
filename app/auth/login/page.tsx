@@ -2,6 +2,7 @@
 
 import { api } from "@/app/lib/axios";
 import { useState } from "react";
+import cookies from "js-cookie";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -18,7 +19,9 @@ export default function LoginPage() {
     try {
       await api.post("/auth/magic-link", { email});
 
-      localStorage.setItem("login_email", email);
+      // localStorage.setItem("login_email", email);
+
+      cookies.set("login_email", email);
 
 
       alert("Cek email lo bro, magic link udah dikirim ✨");

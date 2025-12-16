@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/app/lib/axios";
+import Cookies from "js-cookie";
 
 export default function AuthEmbedClient() {
   const router = useRouter();
@@ -10,7 +11,7 @@ export default function AuthEmbedClient() {
 
   useEffect(() => {
     const token = searchParams.get("token");
-    const email = localStorage.getItem("login_email");
+    const email = Cookies.get("login_email");
 
     if (!token || !email) {
       router.replace("/auth/login");
@@ -19,18 +20,15 @@ export default function AuthEmbedClient() {
 
     const verify = async () => {
       try {
-
-
         await api.post("/auth/verify-token", { token, email });
 
-
-
-        localStorage.removeItem("login_email");
+        // hapus cookie setelah sukses
+        Cookies.remove("login_email");
 
         router.replace("/welcome");
       } catch (err) {
-        router.replace("/auth/login");
         console.error("Error verifying token:", err);
+        router.replace("/auth/login");
       }
     };
 
