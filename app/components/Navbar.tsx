@@ -3,8 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { supabase } from "@/app/lib/supabaseClient";
 import { Home, Settings, HelpCircle, User } from "lucide-react";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
+type JwtPayload = {
+  email?: string;
+};
 
 export default function Navbar() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -18,15 +22,24 @@ export default function Navbar() {
   ];
 
   useEffect(() => {
-    const loadUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUserEmail(data.user?.email ?? null);
-    };
-    loadUser();
+    const token = Cookies.get("login_token");
+
+    if (!token) {
+      setUserEmail(null);
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode<JwtPayload>(token);
+      setUserEmail(decoded.email ?? null);
+    } catch (e) {
+      console.error("Invalid JWT", e);
+      setUserEmail(null);
+    }
   }, []);
 
   return (
-    <header className=" sticky top-0 z-50 border-b border-gray-200 backdrop-blur-md bg-white/80">
+    <header className="sticky top-0 z-50 border-b border-gray-200 backdrop-blur-md bg-white/80">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* LEFT */}
@@ -39,7 +52,7 @@ export default function Navbar() {
 
             <div>
               <h1 className="text-md font-semibold text-gray-900">
-                {userEmail ?? "Loading..."}
+                {userEmail ?? "Guest"}
               </h1>
               <p className="text-xs text-purple-600 -mt-1">
                 Instagram Grid Preview
@@ -59,18 +72,15 @@ export default function Navbar() {
                     <Link
                       href={item.id}
                       className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all
-      ${
-        isActive
-          ? "bg-purple-50 text-purple-600 ring-1 ring-purple-200"
-          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-      }
-    `}
+                        ${
+                          isActive
+                            ? "bg-purple-50 text-purple-600 ring-1 ring-purple-200"
+                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        }`}
                     >
                       <Icon
                         className={`w-5 h-5 ${
-                          isActive
-                            ? "text-purple-600"
-                            : "text-gray-400 group-hover:text-gray-700"
+                          isActive ? "text-purple-600" : "text-gray-400"
                         }`}
                       />
                       <span>{item.label}</span>
