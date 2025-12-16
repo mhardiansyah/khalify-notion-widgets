@@ -22,9 +22,9 @@ export default function AuthEmbedClient() {
     const verify = async () => {
       try {
         const res = await api.post("/auth/verify-token", { token, email });
-        cookies.set("login_token", res.data, { expires: 1 / 24 });
+        cookies.set("login_token", res.data.data.jwt, { expires: 1 / 24 });
 
-        // hapus cookie setelah sukses
+        // hapus cookie setelah sukses  
         cookies.remove("login_email");
 
         router.replace("/welcome");
