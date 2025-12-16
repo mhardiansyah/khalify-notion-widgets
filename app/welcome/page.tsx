@@ -11,14 +11,26 @@ export default function WelcomePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
 
+  // useEffect(() => {
+
+  //   const loadUser = async () => {
+  //     const { data } = await supabase.auth.getUser();
+  //     if (!data.user) return router.replace("/auth/login");
+  //     setUser(data.user);
+  //   };
+  //   loadUser();
+  //   cookies.remove("login_email");
+  // }, []);
+
   useEffect(() => {
-    
-    const loadUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) return router.replace("/auth/login");
-      setUser(data.user);
-    };
-    loadUser();
+    const token = cookies.get("login_token");
+
+    if (!token) {
+      router.replace("/auth/login");
+      return;
+    }
+
+    setUser({ token });
     cookies.remove("login_email");
   }, []);
 
