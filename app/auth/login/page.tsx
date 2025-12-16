@@ -29,7 +29,7 @@ export default function LoginPage() {
 
 
 
-      cookies.set("login_email", email, { expires: 1 / 24 }); // 1 jam
+      cookies.set("login_email", email, { expires: 1 / 24 }); 
 
       alert("Cek email lo bro, magic link udah dikirim ✨");
     } catch (err: any) {

@@ -29,7 +29,6 @@ export default function AuthEmbedClient() {
         cookies.set("login_password", password, { expires: 1 / 24 });
 
         router.replace("/welcome");
-        cookies.remove("login_email");
 
       } catch (err) {
         console.error("Error verifying token:", err);
