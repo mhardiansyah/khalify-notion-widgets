@@ -25,11 +25,11 @@ export default function AuthEmbedClient() {
       try {
         const res = await api.post("/auth/verify-token", { token, email });
         console.log("res: " ,res);
-        
+
         cookies.set("login_token", res.data.data.jwt, { expires: 1 / 24 });
 
-        const password = await bcrypt.hash("khalify2025goSecure", 10);
-        cookies.set("login_password", password, { expires: 1 / 24 });
+        // const password = await bcrypt.hash("khalify2025goSecure", 10);
+        // cookies.set("login_password", password, { expires: 1 / 24 });
 
         router.replace("/welcome");
       } catch (err) {
