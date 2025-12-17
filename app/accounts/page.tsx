@@ -64,6 +64,8 @@ export default function AccountsPage() {
     } catch (err) {
       console.error("Invalid JWT", err);
       router.replace("/auth/login");
+    } finally {
+      setLoading(false);
     }
   }, [router]);
 
