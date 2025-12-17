@@ -7,6 +7,8 @@ import FinishStep from "@/app/components/finish-step";
 import { supabase } from "@/app/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
+import { createWidget } from "@/app/lib/widget.api";
 
 export default function CreateWidgetPageMerged() {
   const [step, setStep] = useState(1);
@@ -19,16 +21,9 @@ export default function CreateWidgetPageMerged() {
 
   const [notionUrl, setNotionUrl] = useState("");
   const [isUrlValid, setIsUrlValid] = useState(false);
-    const [user, setUser] = useState<any>(null);
-
+  const [user, setUser] = useState<any>(null);
 
   const router = useRouter();
-
-  // useEffect(() => {
-  //   supabase.auth.getUser().then(({ data }) => {
-  //     if (!data.user) router.replace("/auth/login");
-  //   });
-  // }, []);
 
   useEffect(() => {
     const token = cookies.get("login_token");
@@ -38,39 +33,30 @@ export default function CreateWidgetPageMerged() {
       return;
     }
 
-    setUser({ token });
-    cookies.remove("login_email");
-  }, []);
+    const decoded: any = jwtDecode(token);
+    setUser({ email: decoded.email });
+  }, [router]);
 
   const handleGenerateWidget = async () => {
     if (!db || !isUrlValid || !notionUrl) return;
 
     setLoading(true);
-    setToken(notionUrl);
 
     try {
-      const res = await fetch("/api/embed", {
-        method: "POST",
-        credentials: "include", // ⬅️ SUPER PENTING! Biar cookie terkirim
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token: notionUrl,
-          db,
-        }),
+      const data = await createWidget({
+        token: notionUrl,
+        dbID: db,
+        email: user.email,
       });
 
-      const data = await res.json();
       setLoading(false);
 
-      if (data.success && data.embedUrl) {
-        setEmbedUrl(data.embedUrl);
-        setStep(3);
-      } else {
-        console.error("Failed to create widget:", data);
-      }
+      setEmbedUrl(data.data.embedUrl);
+      setStep(3);
     } catch (err) {
-      setLoading(false);
       console.error("Error creating widget:", err);
+    } finally {
+      setLoading(false);
     }
   };
 

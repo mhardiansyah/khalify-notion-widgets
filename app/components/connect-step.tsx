@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Link2, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { getNotionDatabases } from "../lib/widget.api";
 
 interface ConnectStepProps {
   notionUrl: string;
@@ -31,34 +32,25 @@ export function ConnectStep({
     return input.startsWith("ntn_") && input.length > 20;
   };
 
-  /** FETCH DATABASE LIST FROM BACKEND */
   const detectDb = async (token: string) => {
-    setLoadingDetect(true);
-    setDetectError(null);
-    setDatabases([]);
-    setSelectedDb(null);
+  setLoadingDetect(true);
+  setDetectError(null);
 
-    try {
-      const res = await fetch("/api/notion-detect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
+  try {
+    const data = await getNotionDatabases(token);
 
-      const data = await res.json();
-      setLoadingDetect(false);
-
-      if (!data.databases || data.databases.length === 0) {
-        setDetectError("No databases found or token invalid.");
-        return;
-      }
-
-      setDatabases(data.databases);
-    } catch (err) {
-      setLoadingDetect(false);
-      setDetectError("Failed to fetch databases.");
+    if (!data.data || data.data.length === 0) {
+      setDetectError("No databases found or token invalid.");
+      return;
     }
-  };
+
+    setDatabases(data.data);
+  } catch (err) {
+    setDetectError("Failed to fetch databases.");
+  } finally {
+    setLoadingDetect(false);
+  }
+};
 
   /** INPUT HANDLER */
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
