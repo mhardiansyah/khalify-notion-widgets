@@ -3,25 +3,33 @@
 import ClientViewComponent from "@/app/components/ClientViewComponent";
 import { queryDatabase } from "@/app/lib/notion-server";
 
-export default async function EmbedPage(props: any) {
-  try {
-    const { params, searchParams } = props;
+interface EmbedPageProps {
+  params: {
+    id: string;
+  };
+  searchParams: {
+    db?: string;
+    theme?: "light" | "dark";
+  };
+}
 
+export default async function EmbedPage({
+  params,
+  searchParams,
+}: EmbedPageProps) {
+  try {
     const id = params.id;
-    const db = searchParams?.db;
+    const db = searchParams.db;
 
     if (!db) {
       return <p style={{ color: "red" }}>Database ID missing.</p>;
     }
 
     const theme =
-      searchParams?.theme === "dark" || searchParams?.theme === "light"
+      searchParams.theme === "dark" || searchParams.theme === "light"
         ? searchParams.theme
         : "light";
 
-    /* ===============================
-       1️⃣ FETCH WIDGET FROM BACKEND
-       =============================== */
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BE_URL}/widgets/embed/${id}`,
       { cache: "no-store" }
@@ -35,18 +43,12 @@ export default async function EmbedPage(props: any) {
 
     const { token, profile } = json.data;
 
-    /* ===============================
-       2️⃣ FETCH NOTION DATA
-       =============================== */
     let notionData = await queryDatabase(token, db);
 
     let filtered = notionData.filter(
       (i: any) => i.properties?.Hide?.checkbox !== true
     );
 
-    /* ===============================
-       SORT PINNED
-       =============================== */
     filtered = filtered.sort((a: any, b: any) => {
       const A = a.properties?.Pinned?.checkbox ? 1 : 0;
       const B = b.properties?.Pinned?.checkbox ? 1 : 0;
