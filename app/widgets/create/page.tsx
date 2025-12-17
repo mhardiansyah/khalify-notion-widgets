@@ -52,7 +52,8 @@ export default function CreateWidgetPageMerged() {
     });
 
     console.log("res: ", res);
-    const embedLink = res?.data.embedUrl;
+    const embedLink = res?.data?.embedLink;
+
 
     if (!embedLink) {
       console.log("Embed link Not found", res);
