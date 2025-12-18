@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+export const dynamic = "force-dynamic";
 
 import ClientViewComponent from "@/app/components/ClientViewComponent";
 import { queryDatabase } from "@/app/lib/notion-server";
