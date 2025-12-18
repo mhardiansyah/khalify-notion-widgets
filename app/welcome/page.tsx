@@ -11,16 +11,7 @@ export default function WelcomePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
 
-  // useEffect(() => {
 
-  //   const loadUser = async () => {
-  //     const { data } = await supabase.auth.getUser();
-  //     if (!data.user) return router.replace("/auth/login");
-  //     setUser(data.user);
-  //   };
-  //   loadUser();
-  //   cookies.remove("login_email");
-  // }, []);
 
   useEffect(() => {
     const token = cookies.get("login_token");
@@ -111,7 +102,6 @@ export default function WelcomePage() {
           </div>
         </div>
 
-        {/* 🌈 VIDEO + WHY USE THIS (kode 2) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           {/* VIDEO CARD */}
           <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6">
@@ -164,7 +154,7 @@ export default function WelcomePage() {
         {/* CTA BUTTON BAWAH – posisi benar di luar grid */}
         <div className="flex justify-center md:justify-end mt-6">
           <button
-            onClick={() => router.push("/wideget/create")}
+            onClick={() => router.push("/widget/create")}
             className="flex items-center gap-2 px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors shadow-lg shadow-purple-200 hover:shadow-xl"
           >
             <span>Let&apos;s Started</span>
