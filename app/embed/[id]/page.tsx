@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 export const dynamic = "force-dynamic";
 
 import ClientViewComponent from "@/app/components/ClientViewComponent";
@@ -8,29 +9,15 @@ interface EmbedPageProps {
   params: {
     id: string;
   };
-  searchParams: {
-    db?: string;
-    theme?: "light" | "dark";
-  };
 }
 
-export default async function EmbedPage({
-  params,
-  searchParams,
-}: EmbedPageProps) {
+export default async function EmbedPage({ params }: EmbedPageProps) {
   try {
     const id = params.id;
-    const db = searchParams.db;
 
-    if (!db) {
-      return <p style={{ color: "red" }}>Database ID missing.</p>;
-    }
-
-    const theme =
-      searchParams.theme === "dark" || searchParams.theme === "light"
-        ? searchParams.theme
-        : "light";
-
+    /* ===============================
+       1️⃣ FETCH WIDGET FROM BACKEND
+       =============================== */
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BE_URL}/widgets/embed/${id}`,
       { cache: "no-store" }
@@ -42,9 +29,16 @@ export default async function EmbedPage({
       return <p style={{ color: "red" }}>Invalid widget.</p>;
     }
 
-    const { token, profile } = json.data;
+    const { token, dbID, profile } = json.data;
 
-    let notionData = await queryDatabase(token, db);
+    if (!dbID) {
+      return <p style={{ color: "red" }}>Database ID missing.</p>;
+    }
+
+    /* ===============================
+       2️⃣ FETCH NOTION DATA
+       =============================== */
+    let notionData = await queryDatabase(token, dbID);
 
     let filtered = notionData.filter(
       (i: any) => i.properties?.Hide?.checkbox !== true
@@ -60,7 +54,7 @@ export default async function EmbedPage({
       <ClientViewComponent
         filtered={filtered}
         profile={profile}
-        theme={theme}
+        theme="light"
       />
     );
   } catch (err: any) {
