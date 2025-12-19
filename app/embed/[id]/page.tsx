@@ -14,6 +14,9 @@ export default async function EmbedPage({
   searchParams,
 }: EmbedPageProps) {
   try {
+    console.log("PARAMS RAW:", params);
+    console.log("SEARCH PARAMS RAW:", searchParams);
+
     const widgetId = params.id;
     const dbID = searchParams.db;
 
@@ -37,11 +40,7 @@ export default async function EmbedPage({
     const notionData = await queryDatabase(token, dbID);
 
     return (
-      <ClientViewComponent
-        filtered={notionData}
-        profile={null}
-        theme="light"
-      />
+      <ClientViewComponent filtered={notionData} profile={null} theme="light" />
     );
   } catch (err) {
     console.error("EMBED ERROR:", err);
