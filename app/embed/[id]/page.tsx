@@ -34,7 +34,7 @@ export default async function EmbedPage(props: EmbedPageProps) {
 
     // 🔥 ambil widget
     const widgetRes = await axios.get(
-      `${process.env.NEXT_PUBLIC_BE_URL}/widgets/${dbID}`
+      `https://khalify-be.vercel.app/widgets/${dbID}`
     );
 
     if (!widgetRes.data?.success || !widgetRes.data?.data?.length) {
