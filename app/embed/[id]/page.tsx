@@ -33,7 +33,7 @@ export default async function EmbedPage({
     }
 
     const widgetRes = await axios.get(
-      `${process.env.NEXT_PUBLIC_BE_URL}/widget/${dbID}`,
+      `${process.env.NEXT_PUBLIC_BE_URL}/widgets/${dbID}`,
       { headers: { "Content-Type": "application/json" } }
     );
 
