@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import ClientViewComponent from "@/app/components/ClientViewComponent";
 import { queryDatabase } from "@/app/lib/notion-server";
+import axios from "axios";
 
 interface EmbedPageProps {
   params: { id: string };
@@ -13,48 +14,42 @@ export default async function EmbedPage({
   searchParams,
 }: EmbedPageProps) {
   try {
-    // 🔥 ini ID dari /embed/678216
     const widgetId = params.id;
 
-    // 🔥 ini DB ID dari ?db=xxxx
     const dbID =
-  (typeof searchParams?.db === "string"
-    ? decodeURIComponent(searchParams.db)
-    : null) ??
-  "2a5ad402-6b83-81f2-a5f2-d8e71a60864e";
-
-
-    console.log("widgetId:", widgetId);
-    console.log("dbID:", dbID);
+      typeof searchParams?.db === "string"
+        ? decodeURIComponent(searchParams.db)
+        : null;
 
     if (!widgetId || !dbID) {
       return <p style={{ color: "red" }}>Invalid embed params</p>;
     }
 
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BE_URL}/widgets/embed/by-db/${dbID}`,
-      { cache: "no-store" }
+    // 🔥 ambil widget dari BE
+    const widgetRes = await axios.get(
+      `${process.env.NEXT_PUBLIC_BE_URL}/widget/${dbID}`,
+      { headers: { "Content-Type": "application/json" } }
     );
 
-    const json = await res.json();
-
-    if (!json.success) {
-      return <p style={{ color: "red" }}>Invalid widget.</p>;
+    if (!widgetRes.data.success || !widgetRes.data.data.length) {
+      return <p style={{ color: "red" }}>Widget not found</p>;
     }
 
-    const { token, profile } = json.data;
+    const widget = widgetRes.data.data[0];
+    const token = widget.token;
 
+    // 🔥 query notion
     const notionData = await queryDatabase(token, dbID);
 
     return (
       <ClientViewComponent
         filtered={notionData}
-        profile={profile}
+        profile={null}
         theme="light"
       />
     );
   } catch (err: any) {
     console.error("EMBED ERROR:", err);
-    return <p style={{ color: "red" }}>{err.message}</p>;
+    return <p style={{ color: "red" }}>Embed failed</p>;
   }
 }
