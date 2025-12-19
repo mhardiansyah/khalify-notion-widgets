@@ -15,6 +15,6 @@ export const createWidget = async (payload: CreateWidgetDto) => {
 
 
 export const getWidgetByDbID = async (dbID: string) => {
-  const res = await api.get(`/widget/${dbID}`);
+  const res = await api.get(`/widgets/${dbID}`);
   return res.data;
 };
