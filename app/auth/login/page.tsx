@@ -3,7 +3,8 @@
 import { api } from "@/app/lib/axios";
 import { useState } from "react";
 import cookies from "js-cookie";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");

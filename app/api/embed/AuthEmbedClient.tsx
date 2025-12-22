@@ -29,6 +29,13 @@ export default function AuthEmbedClient() {
 
         cookies.set("login_token", res.data.data.jwt, { expires: 1 / 24 });
 
+        const jwt = res.data.data.jwt;
+        cookies.set("access_token", jwt, {
+          expires: 30,
+          secure: true,
+          sameSite: "strict",
+        });
+
         setStatus("success");
 
         setTimeout(() => {

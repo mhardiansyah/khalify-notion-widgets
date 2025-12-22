@@ -19,8 +19,7 @@ import {
 } from "lucide-react";
 
 import { deleteWidget, getWidgetsByUser } from "../lib/widget.api";
-import {toast, Toaster} from "sonner";
-
+import { toast, Toaster } from "sonner";
 
 interface Widget {
   id: string;
@@ -106,34 +105,57 @@ export default function AccountsPage() {
   };
 
   const handleDeleteWidget = (widgetId: string) => {
-  toast.warning("Hapus widget?", {
-    description: "Widget yang dihapus tidak bisa dikembalikan.",
-    action: {
-      label: "Hapus",
-      onClick: async () => {
-        try {
-          const res = await deleteWidget(widgetId);
+    toast.warning("Hapus widget?", {
+      description: "Widget yang dihapus tidak bisa dikembalikan.",
+      action: {
+        label: "Hapus",
+        onClick: async () => {
+          try {
+            const res = await deleteWidget(widgetId);
 
-          if (res?.success) {
-            setWidgets((prev) =>
-              prev.filter((widget) => widget.id !== widgetId)
-            );
+            if (res?.success) {
+              setWidgets((prev) =>
+                prev.filter((widget) => widget.id !== widgetId)
+              );
 
-            toast.success("Widget berhasil dihapus");
+              toast.success("Widget berhasil dihapus");
+            }
+          } catch (err) {
+            console.error("DELETE WIDGET ERROR:", err);
+            toast.error("Gagal menghapus widget");
           }
-        } catch (err) {
-          console.error("DELETE WIDGET ERROR:", err);
-          toast.error("Gagal menghapus widget");
-        }
+        },
       },
-    },
-    cancel: {
-      label: "Batal",
-      onClick: () => {},
-    },
-  });
-};
+      cancel: {
+        label: "Batal",
+        onClick: () => {},
+      },
+    });
+  };
 
+  const handleLogout = () => {
+    toast.warning("Yakin logout?", {
+      description: "Kamu perlu login lagi untuk mengakses dashboard.",
+      action: {
+        label: "Logout",
+        onClick: () => {
+          cookies.remove("access_token");
+          cookies.remove("login_token");
+          cookies.remove("login_email");
+
+          toast.success("Berhasil logout 👋");
+
+          setTimeout(() => {
+            router.replace("/auth/login");
+          }, 800);
+        },
+      },
+      cancel: {
+        label: "Batal",
+        onClick: () => {},
+      },
+    });
+  };
 
   if (loading) return <div className="p-10">Loading...</div>;
 
@@ -180,6 +202,14 @@ export default function AccountsPage() {
                     Upgrade
                   </button>
                 </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="w-full mt-4 rounded-xl border border-red-200 
+             text-red-600 py-2 text-sm hover:bg-red-50 transition"
+                >
+                  Logout
+                </button>
               </div>
             </div>
 
@@ -224,7 +254,10 @@ export default function AccountsPage() {
                       </div>
                     </div>
                     <MoreVertical className="w-4 h-4" />
-                    < Trash2Icon className="w-4 h-4" onClick={() => handleDeleteWidget(widget.id)}/>
+                    <Trash2Icon
+                      className="w-4 h-4"
+                      onClick={() => handleDeleteWidget(widget.id)}
+                    />
                   </div>
 
                   {/* TOKEN */}
