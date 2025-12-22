@@ -15,6 +15,7 @@ export default function CreateWidgetPageMerged() {
 
   const [token, setToken] = useState<string | null>(null);
   const [db, setDb] = useState<string | null>(null);
+  const [dbname, setDbname] = useState<string | null>(null);
 
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,7 +49,8 @@ export default function CreateWidgetPageMerged() {
     const res = await createWidget({
       token: notionUrl,
       dbID: db,
-      email: user.jwt, 
+      email: user.jwt,
+      name: dbname || "My Notion Widget", 
     });
 
     console.log("res: ", res);
@@ -124,7 +126,10 @@ export default function CreateWidgetPageMerged() {
               }}
               isUrlValid={isUrlValid}
               setIsUrlValid={setIsUrlValid}
-              onSelectDb={(dbId) => setDb(dbId)}
+              onSelectDb={(dbId, name) => {
+                setDb(dbId);
+                setDbname(name);
+              }}
               onCreateWidget={handleGenerateWidget}
               loading={loading}
             />

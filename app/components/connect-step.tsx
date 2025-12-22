@@ -8,7 +8,7 @@ interface ConnectStepProps {
   setNotionUrl: (url: string) => void;
   isUrlValid: boolean;
   setIsUrlValid: (valid: boolean) => void;
-  onSelectDb: (dbId: string) => void;
+  onSelectDb: (dbId: string, name: string) => void;
   onCreateWidget: () => void;
   loading: boolean;
 }
@@ -131,7 +131,7 @@ export function ConnectStep({
               key={db.id}
               onClick={() => {
                 setSelectedDb(db);
-                onSelectDb(db.id);
+                onSelectDb(db.id, db.name);
               }}
               className={`p-4 border rounded-lg cursor-pointer transition
                 ${
