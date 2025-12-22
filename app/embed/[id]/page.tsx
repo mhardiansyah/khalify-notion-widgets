@@ -32,9 +32,8 @@ export default async function EmbedPage(props: EmbedPageProps) {
       );
     }
 
-    // 🔥 ambil widget
     const widgetRes = await axios.get(
-      `https://khalify-be.vercel.app/widgets/${dbID}`
+      `https://khalify-be.vercel.app/widgets/detail/${dbID}`
     );
 
     if (!widgetRes.data?.success || !widgetRes.data?.data?.length) {
