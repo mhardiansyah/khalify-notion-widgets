@@ -27,14 +27,7 @@ export default function AuthEmbedClient() {
       try {
         const res = await api.post("/auth/verify-token", { token, email });
 
-        cookies.set("login_token", res.data.data.jwt, { expires: 1 / 24 });
-
-        const jwt = res.data.data.jwt;
-        cookies.set("access_token", jwt, {
-          expires: 30,
-          secure: true,
-          sameSite: "strict",
-        });
+        cookies.set("login_token", res.data.data.jwt, { expires: 30, secure: true, sameSite: "strict" });
 
         setStatus("success");
 

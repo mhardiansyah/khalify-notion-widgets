@@ -72,10 +72,6 @@ export default function AccountsPage() {
       setLoading(false);
     }
   }, [router]);
-
-  /* =======================
-     LOAD WIDGETS FROM BE
-  ======================= */
   useEffect(() => {
     const loadWidgets = async () => {
       try {
@@ -94,9 +90,6 @@ export default function AccountsPage() {
     loadWidgets();
   }, []);
 
-  /* =======================
-     TOGGLE TOKEN
-  ======================= */
   const toggleTokenVisibility = (id: string) => {
     setShowTokens((prev) => ({
       ...prev,
