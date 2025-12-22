@@ -15,13 +15,13 @@ import {
   ExternalLink,
   Crown,
   User as UserIcon,
+  Trash2Icon,
 } from "lucide-react";
 
-import { getWidgetsByUser } from "../lib/widget.api";
+import { deleteWidget, getWidgetsByUser } from "../lib/widget.api";
+import {toast, Toaster} from "sonner";
 
-/* =======================
-   TYPES
-======================= */
+
 interface Widget {
   id: string;
   token: string;
@@ -105,6 +105,36 @@ export default function AccountsPage() {
     }));
   };
 
+  const handleDeleteWidget = (widgetId: string) => {
+  toast.warning("Hapus widget?", {
+    description: "Widget yang dihapus tidak bisa dikembalikan.",
+    action: {
+      label: "Hapus",
+      onClick: async () => {
+        try {
+          const res = await deleteWidget(widgetId);
+
+          if (res?.success) {
+            setWidgets((prev) =>
+              prev.filter((widget) => widget.id !== widgetId)
+            );
+
+            toast.success("Widget berhasil dihapus");
+          }
+        } catch (err) {
+          console.error("DELETE WIDGET ERROR:", err);
+          toast.error("Gagal menghapus widget");
+        }
+      },
+    },
+    cancel: {
+      label: "Batal",
+      onClick: () => {},
+    },
+  });
+};
+
+
   if (loading) return <div className="p-10">Loading...</div>;
 
   return (
@@ -169,7 +199,6 @@ export default function AccountsPage() {
             </div>
           </div>
 
-          {/* ================= RIGHT ================= */}
           <div>
             <div className="flex justify-between mb-6">
               <h2 className="text-xl">Your Widgets</h2>
@@ -195,6 +224,7 @@ export default function AccountsPage() {
                       </div>
                     </div>
                     <MoreVertical className="w-4 h-4" />
+                    < Trash2Icon className="w-4 h-4" onClick={() => handleDeleteWidget(widget.id)}/>
                   </div>
 
                   {/* TOKEN */}

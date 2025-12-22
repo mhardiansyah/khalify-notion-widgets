@@ -28,3 +28,8 @@ export const getWidgetsByUser = async (jwt: string) => {
   });
   return res.data;
 }
+
+export const deleteWidget = async(id: string) => {
+  const res = await api.delete(`/widgets/delete/${id}`);
+  return res.data;
+}
