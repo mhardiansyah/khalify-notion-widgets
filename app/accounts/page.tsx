@@ -141,161 +141,196 @@ export default function AccountsPage() {
     });
   };
 
+  const license = {
+    key: "e90d011-2302-dc51-8805-f18409C33F",
+    expiredAt: "Nov 2, 2025",
+  };
+
   if (loading) return <div className="p-10">Loading...</div>;
 
   return (
     <>
-  <Navbar />
+      <Navbar />
 
-  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50">
-    <div className="max-w-7xl mx-auto px-6 py-12 space-y-10">
-
-      {/* ===== TOP SUMMARY ===== */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* ACCOUNT */}
-        <div className="md:col-span-2 rounded-3xl p-6 bg-white/70 backdrop-blur border shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
-              <UserIcon />
-            </div>
-
-            <div className="flex-1">
-              <p className="text-sm text-slate-500">Signed in as</p>
-              <p className="font-medium text-slate-900">{user?.email}</p>
-            </div>
-
-            <span className="px-4 py-1 rounded-full text-xs bg-purple-100 text-purple-700">
-              Basic Account
-            </span>
-          </div>
-
-          <div className="mt-6 flex items-center justify-between">
-            <button className="flex items-center gap-2 text-sm text-purple-600 hover:underline">
-              <Crown className="w-4 h-4" />
-              Upgrade to Pro
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="text-sm text-red-500 hover:underline"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-
-        {/* STATS */}
-        <div className="rounded-3xl p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-md">
-          <p className="text-sm opacity-80">Your Stats</p>
-
-          <div className="mt-6 space-y-3">
-            <div>
-              <p className="text-3xl font-semibold">{widgets.length}</p>
-              <p className="text-xs opacity-80">Active Widgets</p>
-            </div>
-            <div>
-              <p className="text-3xl font-semibold">∞</p>
-              <p className="text-xs opacity-80">API Calls</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ===== WIDGET LIST ===== */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-slate-900">
-            Your Widgets
-          </h2>
-
-          <span className="px-4 py-1 rounded-full text-sm bg-purple-100 text-purple-700">
-            {widgets.length} Active
-          </span>
-        </div>
-
-        {/* GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {widgets.map((widget) => (
-            <div
-              key={widget.id}
-              className="group rounded-3xl border bg-white shadow-sm hover:shadow-lg transition overflow-hidden"
-            >
-              {/* HEADER */}
-              <div className="p-6 flex items-start justify-between">
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center font-semibold">
-                    {widget.name?.[0]?.toUpperCase() || "W"}
-                  </div>
-
-                  <div>
-                    <h3 className="font-medium text-slate-900">
-                      {widget.name || "My Widget"}
-                    </h3>
-                    <p className="text-xs text-slate-500 truncate max-w-[180px]">
-                      {widget.id}
-                    </p>
-                  </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50">
+        <div className="max-w-7xl mx-auto px-6 py-12 space-y-10">
+          {/* ===== TOP SUMMARY ===== */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* ACCOUNT */}
+            <div className="md:col-span-2 rounded-3xl p-6 bg-white/70 backdrop-blur border shadow-sm">
+              {/* USER HEADER */}
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
+                  <UserIcon />
                 </div>
 
-                <Trash2Icon
-                  onClick={() => handleDeleteWidget(widget.id)}
-                  className="w-4 h-4 text-slate-400 hover:text-red-500 cursor-pointer"
-                />
+                <div className="flex-1">
+                  <p className="text-sm text-slate-500">Signed in as</p>
+                  <p className="font-medium text-slate-900">{user?.email}</p>
+                </div>
+
+                <span className="px-4 py-1 rounded-full text-xs bg-purple-100 text-purple-700">
+                  Basic Account
+                </span>
               </div>
 
-              {/* BODY */}
-              <div className="px-6 pb-6 space-y-4">
-                {/* TOKEN */}
-                <div>
-                  <p className="text-xs text-slate-500 mb-1">
-                    Integration Token
-                  </p>
-
-                  <div className="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2">
-                    <p className="font-mono text-xs truncate flex-1">
-                      {showTokens[widget.id]
-                        ? widget.token
-                        : "••••••••••••••••••"}
-                    </p>
-
-                    <button
-                      onClick={() => toggleTokenVisibility(widget.id)}
-                    >
-                      {showTokens[widget.id] ? (
-                        <EyeOff className="w-4 h-4 text-slate-500" />
-                      ) : (
-                        <Eye className="w-4 h-4 text-slate-500" />
-                      )}
-                    </button>
+              {/* LICENSE */}
+              <div className="mt-6 rounded-2xl bg-purple-50 border border-purple-100 p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm">
+                    🔑
                   </div>
+
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-900">
+                      Your License
+                    </p>
+                    <p className="text-xs text-slate-500">Basic License Key</p>
+                  </div>
+
+                  <span className="text-[11px] px-2 py-1 rounded-full bg-white text-purple-600 border">
+                    Active
+                  </span>
                 </div>
 
-                {/* DB */}
-                <div>
-                  <p className="text-xs text-slate-500 mb-1">
-                    Database ID
+                <div className="bg-white rounded-xl px-4 py-3 border">
+                  <p className="text-[11px] text-slate-500 mb-1 flex justify-between">
+                    <span>Activated</span>
+                    <span className="text-slate-400">{license.expiredAt}</span>
                   </p>
-                  <p className="font-mono text-xs bg-slate-50 rounded-xl px-3 py-2 truncate">
-                    {widget.dbID}
+
+                  <p className="font-mono text-xs text-slate-800 truncate">
+                    {license.key}
                   </p>
                 </div>
+              </div>
 
-                {/* LINK */}
-                <a
-                  href={widget.link}
-                  target="_blank"
-                  className="inline-flex items-center gap-2 text-sm text-purple-600 hover:underline"
+              {/* ACTIONS */}
+              <div className="mt-6 flex items-center justify-between">
+                <button className="flex items-center gap-2 text-sm text-purple-600 hover:underline">
+                  <Crown className="w-4 h-4" />
+                  Upgrade to Pro
+                </button>
+
+                <button
+                  onClick={handleLogout}
+                  className="text-sm text-red-500 hover:underline"
                 >
-                  View Widget
-                  <ExternalLink className="w-4 h-4" />
-                </a>
+                  Logout
+                </button>
               </div>
             </div>
-          ))}
+
+            {/* STATS */}
+            <div className="rounded-3xl p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-md">
+              <p className="text-sm opacity-80">Your Stats</p>
+
+              <div className="mt-6 space-y-3">
+                <div>
+                  <p className="text-3xl font-semibold">{widgets.length}</p>
+                  <p className="text-xs opacity-80">Active Widgets</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-semibold">∞</p>
+                  <p className="text-xs opacity-80">API Calls</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ===== WIDGET LIST ===== */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold text-slate-900">
+                Your Widgets
+              </h2>
+
+              <span className="px-4 py-1 rounded-full text-sm bg-purple-100 text-purple-700">
+                {widgets.length} Active
+              </span>
+            </div>
+
+            {/* GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {widgets.map((widget) => (
+                <div
+                  key={widget.id}
+                  className="group rounded-3xl border bg-white shadow-sm hover:shadow-lg transition overflow-hidden"
+                >
+                  {/* HEADER */}
+                  <div className="p-6 flex items-start justify-between">
+                    <div className="flex gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center font-semibold">
+                        {widget.name?.[0]?.toUpperCase() || "W"}
+                      </div>
+
+                      <div>
+                        <h3 className="font-medium text-slate-900">
+                          {widget.name || "My Widget"}
+                        </h3>
+                        <p className="text-xs text-slate-500 truncate max-w-[180px]">
+                          {widget.id}
+                        </p>
+                      </div>
+                    </div>
+
+                    <Trash2Icon
+                      onClick={() => handleDeleteWidget(widget.id)}
+                      className="w-4 h-4 text-slate-400 hover:text-red-500 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* BODY */}
+                  <div className="px-6 pb-6 space-y-4">
+                    {/* TOKEN */}
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">
+                        Integration Token
+                      </p>
+
+                      <div className="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2">
+                        <p className="font-mono text-xs truncate flex-1">
+                          {showTokens[widget.id]
+                            ? widget.token
+                            : "••••••••••••••••••"}
+                        </p>
+
+                        <button
+                          onClick={() => toggleTokenVisibility(widget.id)}
+                        >
+                          {showTokens[widget.id] ? (
+                            <EyeOff className="w-4 h-4 text-slate-500" />
+                          ) : (
+                            <Eye className="w-4 h-4 text-slate-500" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* DB */}
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">Database ID</p>
+                      <p className="font-mono text-xs bg-slate-50 rounded-xl px-3 py-2 truncate">
+                        {widget.dbID}
+                      </p>
+                    </div>
+
+                    {/* LINK */}
+                    <a
+                      href={widget.link}
+                      target="_blank"
+                      className="inline-flex items-center gap-2 text-sm text-purple-600 hover:underline"
+                    >
+                      View Widget
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-</>
+    </>
   );
 }
