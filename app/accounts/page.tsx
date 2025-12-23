@@ -276,7 +276,13 @@ export default function AccountsPage() {
                       </span>
                     </div>
 
-                    <MoreVertical className="w-5 h-5 text-slate-400 cursor-pointer" />
+                    {/* <MoreVertical className="w-5 h-5 text-slate-400 cursor-pointer" /> */}
+                    <button
+                      onClick={() => handleDeleteWidget(widget.id)}
+                      className="p-2 rounded-lg hover:bg-red-50 transition group"
+                    >
+                      <Trash2Icon className="w-5 h-5 text-slate-400 group-hover:text-red-500" />
+                    </button>
                   </div>
 
                   {/* EMBED LINK */}
@@ -362,13 +368,13 @@ export default function AccountsPage() {
                       </div>
 
                       {/* DELETE */}
-                      <button
+                      {/* <button
                         onClick={() => handleDeleteWidget(widget.id)}
                         className="flex items-center gap-2 text-red-500 hover:underline mt-2"
                       >
                         <Trash2Icon className="w-4 h-4" />
                         Delete Widget
-                      </button>
+                      </button> */}
                     </div>
                   )}
                 </div>
