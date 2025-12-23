@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Navbar from "@/app/components/Navbar";
 import { ConnectStep } from "@/app/components/connect-step";
 import FinishStep from "@/app/components/finish-step";
-import { supabase } from "@/app/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import cookies from "js-cookie";
 // import { jwtDecode } from "jwt-decode";
