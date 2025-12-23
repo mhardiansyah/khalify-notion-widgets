@@ -46,6 +46,7 @@ export default function AccountsPage() {
 
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [showTokens, setShowTokens] = useState<Record<string, boolean>>({});
+  const [openDetails, setOpenDetails] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const token = cookies.get("login_token");
@@ -83,6 +84,13 @@ export default function AccountsPage() {
 
   const toggleTokenVisibility = (id: string) => {
     setShowTokens((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const toggleDetails = (id: string) => {
+    setOpenDetails((prev) => ({
       ...prev,
       [id]: !prev[id],
     }));
@@ -255,76 +263,114 @@ export default function AccountsPage() {
               {widgets.map((widget) => (
                 <div
                   key={widget.id}
-                  className="group rounded-3xl border bg-white shadow-sm hover:shadow-lg transition overflow-hidden"
+                  className="rounded-2xl border bg-white shadow-sm hover:shadow-md transition"
                 >
                   {/* HEADER */}
-                  <div className="p-6 flex items-start justify-between">
-                    <div className="flex gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center font-semibold">
-                        {widget.name?.[0]?.toUpperCase() || "W"}
-                      </div>
-
-                      <div>
-                        <h3 className="font-medium text-slate-900">
-                          {widget.name || "My Widget"}
-                        </h3>
-                        <p className="text-xs text-slate-500 truncate max-w-[180px]">
-                          {widget.id}
-                        </p>
-                      </div>
+                  <div className="flex items-center justify-between p-5">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">
+                        Widget #{widget.id.slice(0, 6).toUpperCase()}
+                      </p>
+                      <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full mt-1">
+                        ● Active
+                      </span>
                     </div>
 
-                    <Trash2Icon
-                      onClick={() => handleDeleteWidget(widget.id)}
-                      className="w-4 h-4 text-slate-400 hover:text-red-500 cursor-pointer"
-                    />
+                    <MoreVertical className="w-5 h-5 text-slate-400 cursor-pointer" />
                   </div>
 
-                  {/* BODY */}
-                  <div className="px-6 pb-6 space-y-4">
-                    {/* TOKEN */}
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">
-                        Integration Token
+                  {/* EMBED LINK */}
+                  <div className="px-5 pb-4">
+                    <p className="text-xs text-slate-500 mb-1">Embed Link</p>
+
+                    <div className="flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-xl px-3 py-2">
+                      <p className="text-xs font-mono truncate flex-1 text-slate-700">
+                        {widget.link}
                       </p>
 
-                      <div className="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2">
-                        <p className="font-mono text-xs truncate flex-1">
-                          {showTokens[widget.id]
-                            ? widget.token
-                            : "••••••••••••••••••"}
-                        </p>
-
-                        <button
-                          onClick={() => toggleTokenVisibility(widget.id)}
-                        >
-                          {showTokens[widget.id] ? (
-                            <EyeOff className="w-4 h-4 text-slate-500" />
-                          ) : (
-                            <Eye className="w-4 h-4 text-slate-500" />
-                          )}
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(widget.link);
+                          toast.success("Link copied");
+                        }}
+                        className="flex items-center gap-1 text-xs bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700"
+                      >
+                        Copy
+                      </button>
                     </div>
 
-                    {/* DB */}
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">Database ID</p>
-                      <p className="font-mono text-xs bg-slate-50 rounded-xl px-3 py-2 truncate">
-                        {widget.dbID}
-                      </p>
-                    </div>
-
-                    {/* LINK */}
                     <a
                       href={widget.link}
                       target="_blank"
-                      className="inline-flex items-center gap-2 text-sm text-purple-600 hover:underline"
+                      className="inline-flex items-center gap-1 text-xs text-purple-600 mt-2"
                     >
-                      View Widget
-                      <ExternalLink className="w-4 h-4" />
+                      Open in new tab
+                      <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
+
+                  {/* ADVANCED TOGGLE */}
+                  <button
+                    onClick={() => toggleDetails(widget.id)}
+                    className="w-full flex items-center justify-between px-5 py-3 text-xs text-slate-500 border-t hover:bg-slate-50"
+                  >
+                    Show Advanced Details
+                    {openDetails[widget.id] ? "▲" : "▼"}
+                  </button>
+
+                  {/* ADVANCED DETAILS */}
+                  {openDetails[widget.id] && (
+                    <div className="px-5 pb-5 space-y-3 text-xs">
+                      {/* Widget ID */}
+                      <div>
+                        <p className="text-slate-500 mb-1">Widget ID</p>
+                        <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                          <span className="font-mono flex-1 truncate">
+                            {widget.id}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* TOKEN */}
+                      <div>
+                        <p className="text-slate-500 mb-1">Integration Token</p>
+                        <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                          <span className="font-mono flex-1 truncate">
+                            {showTokens[widget.id]
+                              ? widget.token
+                              : "••••••••••••••••••"}
+                          </span>
+
+                          <button
+                            onClick={() => toggleTokenVisibility(widget.id)}
+                          >
+                            {showTokens[widget.id] ? (
+                              <EyeOff className="w-4 h-4 text-slate-400" />
+                            ) : (
+                              <Eye className="w-4 h-4 text-slate-400" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* DB */}
+                      <div>
+                        <p className="text-slate-500 mb-1">Database ID</p>
+                        <div className="bg-slate-50 rounded-lg px-3 py-2 font-mono truncate">
+                          {widget.dbID}
+                        </div>
+                      </div>
+
+                      {/* DELETE */}
+                      <button
+                        onClick={() => handleDeleteWidget(widget.id)}
+                        className="flex items-center gap-2 text-red-500 hover:underline mt-2"
+                      >
+                        <Trash2Icon className="w-4 h-4" />
+                        Delete Widget
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
