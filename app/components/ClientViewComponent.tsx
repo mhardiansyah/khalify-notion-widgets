@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Pin } from "lucide-react";
+import { Pin, X, ExternalLink, Tag } from "lucide-react";
 import AutoThumbnail from "@/app/components/AutoThumbnail";
 import EmbedFilter from "@/app/components/EmbedFilter";
 import RefreshButton from "@/app/components/RefreshButton";
@@ -25,10 +25,11 @@ type Profile = {
 interface Props {
   filtered: any[];
   profile?: Profile | null;
-  theme?: "light" | "dark"; // initial theme dari server
+  theme?: "light" | "dark";
   gridColumns?: number;
 }
 
+/* ================= MAIN ================= */
 
 export default function ClientViewComponent({
   filtered = [],
@@ -40,23 +41,20 @@ export default function ClientViewComponent({
   const [showBio, setShowBio] = useState(true);
   const [showHighlight, setShowHighlight] = useState(true);
   const [currentTheme, setCurrentTheme] = useState<"light" | "dark">(theme);
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
-  /* sync kalau theme dari server berubah */
   useEffect(() => {
     setCurrentTheme(theme);
   }, [theme]);
-
 
   const bg =
     currentTheme === "light" ? "bg-white text-gray-900" : "bg-black text-white";
 
   const cardBg = currentTheme === "light" ? "bg-white" : "bg-gray-900";
 
-  const subtleBorder =
-    currentTheme === "light" ? "border-gray-200" : "border-gray-800";
-
   return (
     <main className={`${bg} min-h-screen w-full flex flex-col`}>
+      {/* ================= HEADER ================= */}
       <div
         className={`sticky top-0 z-30 px-5 py-4 border-b backdrop-blur-md ${
           currentTheme === "light"
@@ -66,74 +64,64 @@ export default function ClientViewComponent({
       >
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-base font-semibold tracking-tight">
-              Creator Gallery
-            </h1>
+            <h1 className="text-base font-semibold">Creator Gallery</h1>
             <p className="text-xs text-gray-500">
               Curated content from your Notion database
             </p>
           </div>
 
           <button
-            onClick={() =>  
+            onClick={() =>
               setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
             }
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium
-    transition shadow-sm ring-1 mr-40
-    ${
-      currentTheme === "dark"
-        ? "bg-gray-800 text-white ring-gray-600 hover:bg-gray-700"
-        : "bg-gray-100 text-gray-900 ring-gray-300 hover:bg-gray-200"
-    }
-  `}
+            className={`px-4 py-2 rounded-full text-xs ring-1 mr-40
+              ${
+                currentTheme === "dark"
+                  ? "bg-gray-800 text-white ring-gray-600"
+                  : "bg-gray-100 text-gray-900 ring-gray-300"
+              }`}
           >
-            <span className="text-sm">
-              {currentTheme === "dark" ? "🌙" : "☀️"}
-            </span>
-            <span>{currentTheme === "dark" ? "Dark mode" : "Light mode"}</span>
+            {currentTheme === "dark" ? "🌙 Dark" : "☀️ Light"}
           </button>
+
           <RefreshButton />
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3 justify-between">
-          <div className="inline-flex rounded-full border text-xs overflow-hidden">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="inline-flex rounded-full border overflow-hidden text-xs">
             <button
               onClick={() => setViewMode("visual")}
-              className={`px-4 py-1.5 transition ${
+              className={`px-4 py-1.5 ${
                 viewMode === "visual"
                   ? "bg-gray-900 text-white"
-                  : currentTheme === "light"
-                  ? "bg-white text-gray-700"
-                  : "bg-black text-gray-300"
+                  : "bg-transparent"
               }`}
             >
               Visual
             </button>
             <button
               onClick={() => setViewMode("map")}
-              className={`px-4 py-1.5 transition ${
+              className={`px-4 py-1.5 ${
                 viewMode === "map"
                   ? "bg-gray-900 text-white"
-                  : currentTheme === "light"
-                  ? "bg-white text-gray-700"
-                  : "bg-black text-gray-300"
+                  : "bg-transparent"
               }`}
             >
-              Map View
+              Map
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-xs">
+          <div className="flex gap-2">
             <ToggleChip
               label="Show bio"
               active={showBio}
-              onClick={() => setShowBio((v) => !v)}
+              onClick={() => setShowBio(!showBio)}
               theme={currentTheme}
             />
             <ToggleChip
               label="Show highlight"
               active={showHighlight}
-              onClick={() => setShowHighlight((v) => !v)}
+              onClick={() => setShowHighlight(!showHighlight)}
               theme={currentTheme}
             />
           </div>
@@ -144,19 +132,16 @@ export default function ClientViewComponent({
         </div>
       </div>
 
+      {/* ================= CONTENT ================= */}
       <div className="p-5 space-y-6">
-        {showBio && profile && (profile.bio || profile.name) && (
-          <BioSection profile={profile} theme={currentTheme} />
-        )}
+        {showBio && profile && <BioSection profile={profile} theme={currentTheme} />}
 
-        {showHighlight &&
-          profile?.highlights &&
-          profile.highlights.length > 0 && (
-            <HighlightSection
-              highlights={profile.highlights}
-              theme={currentTheme}
-            />
-          )}
+        {showHighlight && profile?.highlights && (
+          <HighlightSection
+            highlights={profile.highlights}
+            theme={currentTheme}
+          />
+        )}
 
         {viewMode === "visual" ? (
           <VisualGrid
@@ -164,26 +149,30 @@ export default function ClientViewComponent({
             gridColumns={gridColumns}
             theme={currentTheme}
             cardBg={cardBg}
+            onSelect={setSelectedItem}
           />
         ) : (
           <MapViewGrid filtered={filtered} />
         )}
       </div>
+
+      {selectedItem && (
+        <DetailModal
+          item={selectedItem}
+          theme={currentTheme}
+          onClose={() => setSelectedItem(null)}
+        />
+      )}
     </main>
   );
 }
 
+/* ================= SECTIONS ================= */
 
-function BioSection({
-  profile,
-  theme,
-}: {
-  profile: Profile;
-  theme: "light" | "dark";
-}) {
+function BioSection({ profile, theme }: any) {
   return (
     <section
-      className={`w-full border rounded-2xl p-4 flex gap-4 ${
+      className={`border rounded-2xl p-4 flex gap-4 ${
         theme === "light"
           ? "bg-white border-gray-200"
           : "bg-gray-900 border-gray-800"
@@ -200,15 +189,7 @@ function BioSection({
   );
 }
 
-/* ================= HIGHLIGHT ================= */
-
-function HighlightSection({
-  highlights,
-  theme,
-}: {
-  highlights: Highlight[];
-  theme: "light" | "dark";
-}) {
+function HighlightSection({ highlights, theme }: any) {
   return (
     <section
       className={`border rounded-2xl p-4 ${
@@ -218,7 +199,7 @@ function HighlightSection({
       }`}
     >
       <div className="flex gap-3 overflow-x-auto">
-        {highlights.map((h, i) => (
+        {highlights.map((h: any, i: number) => (
           <div key={i} className="min-w-[72px] text-center">
             <div className="w-14 h-14 rounded-full bg-gray-300 mx-auto mb-1" />
             <p className="text-[11px]">{h.title}</p>
@@ -229,15 +210,19 @@ function HighlightSection({
   );
 }
 
-/* ================= VISUAL GRID ================= */
+/* ================= GRID ================= */
 
-function VisualGrid({ filtered, gridColumns, theme, cardBg }: any) {
+function VisualGrid({
+  filtered,
+  gridColumns,
+  theme,
+  cardBg,
+  onSelect,
+}: any) {
   return (
     <div
       className="grid gap-4"
-      style={{
-        gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`,
-      }}
+      style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
     >
       {filtered.map((item: any, i: number) => {
         const name =
@@ -248,10 +233,12 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg }: any) {
         return (
           <div
             key={i}
-            className={`relative group rounded-xl overflow-hidden aspect-[4/5] ${cardBg}`}
+            onClick={() => onSelect(item)}
+            className={`relative group rounded-xl overflow-hidden aspect-[4/5] cursor-pointer
+              hover:-translate-y-1 transition ${cardBg}`}
           >
             {pinned && (
-              <Pin className="absolute top-3 right-3 text-yellow-400" />
+              <Pin className="absolute top-3 right-3 text-yellow-400 z-10" />
             )}
 
             <AutoThumbnail src={image} />
@@ -259,7 +246,7 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg }: any) {
             <div
               className={`absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 transition bg-gradient-to-t ${
                 theme === "light" ? "from-black/70" : "from-black/80"
-              } to-transparent`}
+              }`}
             >
               <p className="text-white text-xs">{name}</p>
             </div>
@@ -270,49 +257,38 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg }: any) {
   );
 }
 
-/* ================= MAP VIEW ================= */
-
 function MapViewGrid({ filtered }: any) {
   const colors = ["bg-[#A3A18C]", "bg-[#CFC6A8]", "bg-[#9FA29A]"];
 
   return (
     <div className="grid grid-cols-3 gap-px bg-gray-200">
-      {filtered.map((item: any, i: number) => {
-        const name =
-          item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
-        const pillar = item.properties?.["Content Pillar"]?.select?.name || "";
-        const pinned = item.properties?.Pinned?.checkbox;
-
-        return (
-          <div
-            key={i}
-            className={`relative group aspect-square flex items-center justify-center ${
-              colors[i % colors.length]
-            }`}
-          >
-            {pinned && <Pin className="absolute top-3 right-3 text-white" />}
-            <h3 className="text-white text-sm text-center px-4">{name}</h3>
-            <div className="absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 bg-gradient-to-t from-black/70 to-transparent">
-              <p className="text-white text-[11px] uppercase">{pillar}</p>
-            </div>
-          </div>
-        );
-      })}
+      {filtered.map((item: any, i: number) => (
+        <div
+          key={i}
+          className={`aspect-square flex items-center justify-center ${
+            colors[i % colors.length]
+          }`}
+        >
+          <h3 className="text-white text-sm text-center px-3">
+            {item.properties?.Name?.title?.[0]?.plain_text}
+          </h3>
+        </div>
+      ))}
     </div>
   );
 }
 
-/* ================= CHIP ================= */
+/* ================= UI ================= */
 
 function ToggleChip({ label, active, onClick, theme }: any) {
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1 rounded-full border text-[11px] ${
+      className={`px-3 py-1 rounded-full text-[11px] border ${
         active
           ? "bg-purple-600 border-purple-600 text-white"
           : theme === "light"
-          ? "bg-white border-gray-300 text-gray-700"
+          ? "bg-white border-gray-300"
           : "bg-black border-gray-700 text-gray-300"
       }`}
     >
@@ -321,7 +297,57 @@ function ToggleChip({ label, active, onClick, theme }: any) {
   );
 }
 
-/* ================= IMAGE ================= */
+/* ================= MODAL ================= */
+
+function DetailModal({ item, theme, onClose }: any) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+
+  const name =
+    item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
+  const image = extractImage(item);
+
+  return (
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`w-full max-w-5xl rounded-2xl overflow-hidden ${
+          theme === "light" ? "bg-white" : "bg-gray-900"
+        }`}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full"
+        >
+          <X size={18} />
+        </button>
+
+        <div className="flex flex-col lg:flex-row">
+          <div className="lg:w-2/3 bg-black flex items-center justify-center">
+            <img src={image} alt={name} className="object-contain h-full" />
+          </div>
+
+          <div className="lg:w-1/3 p-6 space-y-4">
+            <h2 className="text-xl font-semibold">{name}</h2>
+
+            <button className="w-full bg-purple-600 text-white py-2 rounded-lg flex items-center justify-center gap-2">
+              <ExternalLink size={16} /> Open Original
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ================= HELPERS ================= */
 
 function extractImage(item: any) {
   const p = item.properties;
