@@ -216,13 +216,12 @@ function VisualGrid({
   filtered,
   gridColumns,
   theme,
-  cardBg,
   onSelect,
 }: any) {
   return (
     <div
-      className="grid gap-4"
-      style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
+      className="columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4"
+      style={{ columnCount: gridColumns }}
     >
       {filtered.map((item: any, i: number) => {
         const name =
@@ -234,21 +233,37 @@ function VisualGrid({
           <div
             key={i}
             onClick={() => onSelect(item)}
-            className={`relative group rounded-xl overflow-hidden aspect-[4/5] cursor-pointer
-              hover:-translate-y-1 transition ${cardBg}`}
+            className="relative group mb-4 break-inside-avoid cursor-pointer overflow-hidden rounded-xl"
           >
             {pinned && (
-              <Pin className="absolute top-3 right-3 text-yellow-400 z-10" />
+              <Pin className="absolute top-3 right-3 z-10 text-yellow-400" />
             )}
 
-            <AutoThumbnail src={image} />
+            {/* IMAGE */}
+            <img
+              src={image}
+              alt={name}
+              className="
+                w-full h-auto
+                object-cover
+                transition-transform duration-300
+                group-hover:scale-105
+              "
+            />
 
+            {/* OVERLAY */}
             <div
-              className={`absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 transition bg-gradient-to-t ${
-                theme === "light" ? "from-black/70" : "from-black/80"
-              }`}
+              className="
+                absolute inset-0
+                flex items-end
+                p-3
+                opacity-0
+                group-hover:opacity-100
+                transition
+                bg-gradient-to-t from-black/70 to-transparent
+              "
             >
-              <p className="text-white text-xs">{name}</p>
+              <p className="text-white text-xs leading-tight">{name}</p>
             </div>
           </div>
         );
@@ -256,6 +271,7 @@ function VisualGrid({
     </div>
   );
 }
+
 
 function MapViewGrid({ filtered }: any) {
   const colors = ["bg-[#A3A18C]", "bg-[#CFC6A8]", "bg-[#9FA29A]"];
