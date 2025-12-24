@@ -56,72 +56,81 @@ export default function ClientViewComponent({
     <main className={`${bg} min-h-screen w-full flex flex-col`}>
       {/* ================= HEADER ================= */}
       <div
-        className={`sticky top-0  px-5 py-4 border-b backdrop-blur-md ${
-          currentTheme === "light"
-            ? "bg-white/80 border-gray-200"
-            : "bg-black/70 border-gray-800"
+  className={`sticky top-0 px-5 py-4 border-b backdrop-blur-md ${
+    currentTheme === "light"
+      ? "bg-white/80 border-gray-200"
+      : "bg-black/70 border-gray-800"
+  }`}
+>
+  {/* ROW ATAS */}
+  <div className="flex items-center justify-between gap-3">
+    {/* KIRI */}
+    <div className="inline-flex rounded-full border overflow-hidden text-xs">
+      <button
+        onClick={() => setViewMode("visual")}
+        className={`px-4 py-1.5 ${
+          viewMode === "visual"
+            ? "bg-gray-900 text-white"
+            : "bg-transparent"
         }`}
       >
-        <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-          <button
-            onClick={() =>
-              setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
-            }
-            className={`px-4 py-2 rounded-full text-xs ring-1
-      ${
-        currentTheme === "dark"
-          ? "bg-gray-800 text-white ring-gray-600"
-          : "bg-gray-100 text-gray-900 ring-gray-300"
-      }`}
-          >
-            {currentTheme === "dark" ? "🌙 Dark" : "☀️ Light"}
-          </button>
+        Visual
+      </button>
+      <button
+        onClick={() => setViewMode("map")}
+        className={`px-4 py-1.5 ${
+          viewMode === "map"
+            ? "bg-gray-900 text-white"
+            : "bg-transparent"
+        }`}
+      >
+        Map
+      </button>
+    </div>
 
-          <RefreshButton />
-        </div>
+    {/* KANAN */}
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() =>
+          setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
+        }
+        className={`px-4 py-2 rounded-full text-xs ring-1
+          ${
+            currentTheme === "dark"
+              ? "bg-gray-800 text-white ring-gray-600"
+              : "bg-gray-100 text-gray-900 ring-gray-300"
+          }`}
+      >
+        {currentTheme === "dark" ? "🌙 Dark" : "☀️ Light"}
+      </button>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex rounded-full border overflow-hidden text-xs">
-            <button
-              onClick={() => setViewMode("visual")}
-              className={`px-4 py-1.5 ${
-                viewMode === "visual"
-                  ? "bg-gray-900 text-white"
-                  : "bg-transparent"
-              }`}
-            >
-              Visual
-            </button>
-            <button
-              onClick={() => setViewMode("map")}
-              className={`px-4 py-1.5 ${
-                viewMode === "map" ? "bg-gray-900 text-white" : "bg-transparent"
-              }`}
-            >
-              Map
-            </button>
-          </div>
+      <RefreshButton />
+    </div>
+  </div>
 
-          <div className="flex gap-2">
-            <ToggleChip
-              label="Show bio"
-              active={showBio}
-              onClick={() => setShowBio(!showBio)}
-              theme={currentTheme}
-            />
-            <ToggleChip
-              label="Show highlight"
-              active={showHighlight}
-              onClick={() => setShowHighlight(!showHighlight)}
-              theme={currentTheme}
-            />
-          </div>
-        </div>
+  {/* ROW BAWAH */}
+  <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+    <div className="flex gap-2">
+      <ToggleChip
+        label="Show bio"
+        active={showBio}
+        onClick={() => setShowBio(!showBio)}
+        theme={currentTheme}
+      />
+      <ToggleChip
+        label="Show highlight"
+        active={showHighlight}
+        onClick={() => setShowHighlight(!showHighlight)}
+        theme={currentTheme}
+      />
+    </div>
+  </div>
 
-        <div className="mt-4">
-          <EmbedFilter />
-        </div>
-      </div>
+  <div className="mt-4">
+    <EmbedFilter />
+  </div>
+</div>
+
 
       {/* ================= CONTENT ================= */}
       <div className="p-5 space-y-6">
