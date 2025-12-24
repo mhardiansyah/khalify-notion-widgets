@@ -56,30 +56,29 @@ export default function ClientViewComponent({
     <main className={`${bg} min-h-screen w-full flex flex-col`}>
       {/* ================= HEADER ================= */}
       <div
-        className={`sticky top-0 z-30 px-5 py-4 border-b backdrop-blur-md ${
+        className={`sticky top-0  px-5 py-4 border-b backdrop-blur-md ${
           currentTheme === "light"
             ? "bg-white/80 border-gray-200"
             : "bg-black/70 border-gray-800"
         }`}
       >
         <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-  <button
-    onClick={() =>
-      setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
-    }
-    className={`px-4 py-2 rounded-full text-xs ring-1
+          <button
+            onClick={() =>
+              setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
+            }
+            className={`px-4 py-2 rounded-full text-xs ring-1
       ${
         currentTheme === "dark"
           ? "bg-gray-800 text-white ring-gray-600"
           : "bg-gray-100 text-gray-900 ring-gray-300"
       }`}
-  >
-    {currentTheme === "dark" ? "🌙 Dark" : "☀️ Light"}
-  </button>
+          >
+            {currentTheme === "dark" ? "🌙 Dark" : "☀️ Light"}
+          </button>
 
-  <RefreshButton />
-</div>
-
+          <RefreshButton />
+        </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex rounded-full border overflow-hidden text-xs">
