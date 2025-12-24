@@ -62,7 +62,7 @@ export default function ClientViewComponent({
             : "bg-black/70 border-gray-800"
         }`}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={() =>
               setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
