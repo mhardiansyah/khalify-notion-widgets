@@ -5,22 +5,29 @@ import { queryDatabase } from "@/app/lib/notion-server";
 import axios from "axios";
 
 interface EmbedPageProps {
-  params: { id: string };
-  searchParams: { db?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ db?: string }>;
 }
 
-export default async function EmbedPage({
-  params,
-  searchParams,
-}: EmbedPageProps) {
+export default async function EmbedPage(props: EmbedPageProps) {
   try {
+    // 🔥 UNWRAP PROMISE
+    const params = await props.params;
+    const searchParams = await props.searchParams;
+
+    console.log("PARAMS:", params);
+    console.log("SEARCH PARAMS:", searchParams);
+
     const widgetId = params.id;
     const dbID = searchParams.db;
+
+    console.log("widgetId:", widgetId);
+    console.log("dbID:", dbID);
 
     if (!widgetId || !dbID) {
       return (
         <p className="text-red-500 text-center mt-10">
-          Invalid embed parameters
+          Invalid embed params
         </p>
       );
     }
@@ -37,9 +44,9 @@ export default async function EmbedPage({
       );
     }
 
-    const widget = widgetRes.data.data[0];
-    const token = widget.token;
+    const token = widgetRes.data.data[0].token;
 
+    // 🔥 query notion
     const notionData = await queryDatabase(token, dbID);
 
     return (
@@ -47,14 +54,13 @@ export default async function EmbedPage({
         filtered={notionData}
         profile={null}
         theme="light"
-        gridColumns={3} // 👉 tinggal ganti kalo mau
       />
     );
   } catch (err) {
     console.error("EMBED ERROR:", err);
     return (
       <p className="text-red-500 text-center mt-10">
-        Embed failed to load
+        Embed failed
       </p>
     );
   }
