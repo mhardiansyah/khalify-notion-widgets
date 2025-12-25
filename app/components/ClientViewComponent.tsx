@@ -106,28 +106,36 @@ export default function ClientViewComponent({
             </IconButton>
 
             {openFilter && (
-              <div
-                className={`
-      fixed
-      top-[64px]   /* tinggi header */
-      left-1/2 -translate-x-1/2
-      z-50
-      w-[600px]
-      rounded-xl
-      border
-      shadow-xl
-      ${
-        currentTheme === "light"
-          ? "bg-white border-gray-200"
-          : "bg-gray-900 border-gray-800"
-      }
-    `}
-              >
-                <div className="p-4">
-                  <EmbedFilter />
-                </div>
-              </div>
-            )}
+  <>
+    {/* overlay */}
+    <div
+      className="fixed inset-0 z-40"
+      onClick={() => setOpenFilter(false)}
+    />
+
+    {/* popup */}
+    <div
+      className={`
+        fixed
+        top-[64px]
+        left-1/2 -translate-x-1/2
+        z-50
+        rounded-xl
+        border
+        shadow-xl
+        ${
+          currentTheme === "light"
+            ? "bg-white border-gray-200"
+            : "bg-gray-900 border-gray-800"
+        }
+      `}
+    >
+      {/* ⛔ NO EXTRA PADDING */}
+      <EmbedFilter />
+    </div>
+  </>
+)}
+
           </div>
 
           <IconButton onClick={() => setOpenSetting((s) => !s)}>
