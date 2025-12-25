@@ -2,7 +2,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Pin, X, ExternalLink, Tag } from "lucide-react";
+import {
+  Pin,
+  X,
+  ExternalLink,
+  Settings,
+  Menu,
+} from "lucide-react";
 import AutoThumbnail from "@/app/components/AutoThumbnail";
 import EmbedFilter from "@/app/components/EmbedFilter";
 import RefreshButton from "@/app/components/RefreshButton";
@@ -38,11 +44,16 @@ export default function ClientViewComponent({
   theme = "light",
   gridColumns = 3,
 }: Props) {
-  const [viewMode, setViewMode] = useState<"visual" | "map">("visual");
+  const [viewMode] = useState<"visual" | "map">("visual");
   const [showBio, setShowBio] = useState(true);
   const [showHighlight, setShowHighlight] = useState(true);
-  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">(theme);
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [currentTheme, setCurrentTheme] =
+    useState<"light" | "dark">(theme);
+  const [selectedItem, setSelectedItem] =
+    useState<any | null>(null);
+
+  const [openFilter, setOpenFilter] = useState(false);
+  const [openSetting, setOpenSetting] = useState(false);
 
   const params = useSearchParams();
 
@@ -51,9 +62,14 @@ export default function ClientViewComponent({
   }, [theme]);
 
   const bg =
-    currentTheme === "light" ? "bg-white text-gray-900" : "bg-black text-white";
+    currentTheme === "light"
+      ? "bg-white text-gray-900"
+      : "bg-black text-white";
 
-  const cardBg = currentTheme === "light" ? "bg-white" : "bg-gray-900";
+  const cardBg =
+    currentTheme === "light" ? "bg-white" : "bg-gray-900";
+
+  /* ================= FILTER LOGIC ================= */
 
   const filteredData = filtered.filter((item) => {
     const platform = params.get("platform");
@@ -62,111 +78,129 @@ export default function ClientViewComponent({
 
     const props = item.properties;
 
-    // PLATFORM
     if (platform && platform !== "All Platform") {
-      const itemPlatform = props.Platform?.select?.name;
-      if (itemPlatform !== platform) return false;
+      if (props.Platform?.select?.name !== platform)
+        return false;
     }
 
-    // STATUS
     if (status && status !== "All Status") {
-      const itemStatus = props.Status?.select?.name;
-      if (itemStatus !== status) return false;
+      if (props.Status?.select?.name !== status)
+        return false;
     }
 
-    // PINNED
-    if (pinned === "true") {
-      if (props.Pinned?.checkbox !== true) return false;
-    }
+    if (pinned === "true" && props.Pinned?.checkbox !== true)
+      return false;
 
-    if (pinned === "false") {
-      if (props.Pinned?.checkbox !== false) return false;
-    }
+    if (pinned === "false" && props.Pinned?.checkbox !== false)
+      return false;
 
     return true;
   });
 
+  /* ================= RENDER ================= */
+
   return (
-    <main className={`${bg} min-h-screen w-full flex flex-col`}>
-      {/* ================= HEADER ================= */}
-      <div
-        className={`sticky top-0 z-40 px-5 py-4 border-b backdrop-blur-md ${
+    <main className={`${bg} min-h-screen w-full`}>
+      {/* ================= HEADER BAR ================= */}
+      <header
+        className={`sticky top-0 z-40 px-4 py-3 flex items-center justify-between border-b backdrop-blur ${
           currentTheme === "light"
             ? "bg-white/80 border-gray-200"
             : "bg-black/70 border-gray-800"
         }`}
       >
-        {/* ROW ATAS */}
-        <div className="flex items-center justify-between gap-3">
-          {/* KIRI */}
-          <div className="inline-flex rounded-full border overflow-hidden text-xs">
-            <button
-              onClick={() => setViewMode("visual")}
-              className={`px-4 py-1.5 ${
-                viewMode === "visual"
-                  ? "bg-gray-900 text-white"
-                  : "bg-transparent"
-              }`}
-            >
-              Visual
-            </button>
-            <button
-              onClick={() => setViewMode("map")}
-              className={`px-4 py-1.5 ${
-                viewMode === "map" ? "bg-gray-900 text-white" : "bg-transparent"
-              }`}
-            >
-              Map
-            </button>
-          </div>
+        <span className="font-semibold text-sm">
+          khaslify
+        </span>
 
-          {/* KANAN */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() =>
-                setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
-              }
-              className={`px-4 py-2 rounded-full text-xs ring-1
-          ${
-            currentTheme === "dark"
-              ? "bg-gray-800 text-white ring-gray-600"
-              : "bg-gray-100 text-gray-900 ring-gray-300"
-          }`}
-            >
-              {currentTheme === "dark" ? "🌙 Dark" : "☀️ Light"}
-            </button>
-
+        <div className="flex items-center gap-2">
+          <IconButton>
             <RefreshButton />
+          </IconButton>
+
+          <IconButton onClick={() => setOpenFilter(true)}>
+            <Menu size={16} />
+          </IconButton>
+
+          <IconButton
+            onClick={() => setOpenSetting((s) => !s)}
+          >
+            <Settings size={16} />
+          </IconButton>
+        </div>
+      </header>
+
+      {/* ================= SETTINGS POPOVER ================= */}
+      {openSetting && (
+        <div
+          className={`absolute right-4 top-14 z-50 w-56 rounded-xl border shadow ${
+            currentTheme === "light"
+              ? "bg-white border-gray-200"
+              : "bg-gray-900 border-gray-800"
+          }`}
+        >
+          <SettingToggle
+            label="Show Bio"
+            value={showBio}
+            onChange={() => setShowBio(!showBio)}
+          />
+          <SettingToggle
+            label="Show Highlight"
+            value={showHighlight}
+            onChange={() =>
+              setShowHighlight(!showHighlight)
+            }
+          />
+          <SettingToggle
+            label="Dark Mode"
+            value={currentTheme === "dark"}
+            onChange={() =>
+              setCurrentTheme((t) =>
+                t === "light" ? "dark" : "light"
+              )
+            }
+          />
+        </div>
+      )}
+
+      {/* ================= FILTER DRAWER ================= */}
+      {openFilter && (
+        <div className="fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setOpenFilter(false)}
+          />
+
+          <div
+            className={`absolute right-0 top-0 h-full w-[320px] p-4 overflow-y-auto ${
+              currentTheme === "light"
+                ? "bg-white"
+                : "bg-gray-900"
+            }`}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-semibold text-sm">
+                Filter
+              </h3>
+              <button
+                onClick={() => setOpenFilter(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <EmbedFilter />
           </div>
         </div>
-
-        {/* ROW BAWAH */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex gap-2">
-            <ToggleChip
-              label="Show bio"
-              active={showBio}
-              onClick={() => setShowBio(!showBio)}
-              theme={currentTheme}
-            />
-            <ToggleChip
-              label="Show highlight"
-              active={showHighlight}
-              onClick={() => setShowHighlight(!showHighlight)}
-              theme={currentTheme}
-            />
-          </div>
-        </div>
-
-        <div className="mt-4 relative">
-          <EmbedFilter />
-        </div>
-      </div>
+      )}
 
       {/* ================= CONTENT ================= */}
       <div className="p-5 space-y-6">
         {showBio && profile && (
-          <BioSection profile={profile} theme={currentTheme} />
+          <BioSection
+            profile={profile}
+            theme={currentTheme}
+          />
         )}
 
         {showHighlight && profile?.highlights && (
@@ -176,7 +210,7 @@ export default function ClientViewComponent({
           />
         )}
 
-        {viewMode === "visual" ? (
+        {viewMode === "visual" && (
           <VisualGrid
             filtered={filteredData}
             gridColumns={gridColumns}
@@ -184,8 +218,6 @@ export default function ClientViewComponent({
             cardBg={cardBg}
             onSelect={setSelectedItem}
           />
-        ) : (
-          <MapViewGrid filtered={filtered} />
         )}
       </div>
 
@@ -197,6 +229,47 @@ export default function ClientViewComponent({
         />
       )}
     </main>
+  );
+}
+
+/* ================= UI SMALL ================= */
+
+function IconButton({ children, onClick }: any) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-9 h-9 flex items-center justify-center rounded-full border hover:bg-gray-100 dark:hover:bg-gray-800"
+    >
+      {children}
+    </button>
+  );
+}
+
+function SettingToggle({
+  label,
+  value,
+  onChange,
+}: any) {
+  return (
+    <button
+      onClick={onChange}
+      className="w-full px-4 py-3 flex items-center justify-between text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+    >
+      <span>{label}</span>
+      <span
+        className={`w-9 h-5 rounded-full transition ${
+          value ? "bg-purple-600" : "bg-gray-300"
+        }`}
+      >
+        <span
+          className={`block w-4 h-4 bg-white rounded-full translate-y-0.5 transition ${
+            value
+              ? "translate-x-4"
+              : "translate-x-1"
+          }`}
+        />
+      </span>
+    </button>
   );
 }
 
@@ -215,7 +288,9 @@ function BioSection({ profile, theme }: any) {
       <div>
         <h2 className="font-semibold">{profile.name}</h2>
         {profile.bio && (
-          <p className="text-xs text-gray-500 mt-1">{profile.bio}</p>
+          <p className="text-xs text-gray-500 mt-1">
+            {profile.bio}
+          </p>
         )}
       </div>
     </section>
@@ -245,24 +320,33 @@ function HighlightSection({ highlights, theme }: any) {
 
 /* ================= GRID ================= */
 
-function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
+function VisualGrid({
+  filtered,
+  gridColumns,
+  theme,
+  cardBg,
+  onSelect,
+}: any) {
   return (
     <div
       className="grid gap-4"
-      style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
+      style={{
+        gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
+      }}
     >
       {filtered.map((item: any, i: number) => {
         const name =
-          item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
+          item.properties?.Name?.title?.[0]?.plain_text ||
+          "Untitled";
         const image = extractImage(item);
-        const pinned = item.properties?.Pinned?.checkbox;
+        const pinned =
+          item.properties?.Pinned?.checkbox;
 
         return (
           <div
             key={i}
             onClick={() => onSelect(item)}
-            className={`relative group rounded-xl overflow-hidden aspect-[4/5] cursor-pointer
-              hover:-translate-y-1 transition ${cardBg}`}
+            className={`relative group rounded-xl overflow-hidden aspect-[4/5] cursor-pointer hover:-translate-y-1 transition ${cardBg}`}
           >
             {pinned && (
               <Pin className="absolute top-3 right-3 text-yellow-400 z-10" />
@@ -272,55 +356,19 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
 
             <div
               className={`absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 transition bg-gradient-to-t ${
-                theme === "light" ? "from-black/70" : "from-black/80"
+                theme === "light"
+                  ? "from-black/70"
+                  : "from-black/80"
               }`}
             >
-              <p className="text-white text-xs">{name}</p>
+              <p className="text-white text-xs">
+                {name}
+              </p>
             </div>
           </div>
         );
       })}
     </div>
-  );
-}
-
-function MapViewGrid({ filtered }: any) {
-  const colors = ["bg-[#A3A18C]", "bg-[#CFC6A8]", "bg-[#9FA29A]"];
-
-  return (
-    <div className="grid grid-cols-3 gap-px bg-gray-200">
-      {filtered.map((item: any, i: number) => (
-        <div
-          key={i}
-          className={`aspect-square flex items-center justify-center ${
-            colors[i % colors.length]
-          }`}
-        >
-          <h3 className="text-white text-sm text-center px-3">
-            {item.properties?.Name?.title?.[0]?.plain_text}
-          </h3>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ================= UI ================= */
-
-function ToggleChip({ label, active, onClick, theme }: any) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1 rounded-full text-[11px] border ${
-        active
-          ? "bg-purple-600 border-purple-600 text-white"
-          : theme === "light"
-          ? "bg-white border-gray-300"
-          : "bg-black border-gray-700 text-gray-300"
-      }`}
-    >
-      {label}
-    </button>
   );
 }
 
@@ -334,7 +382,9 @@ function DetailModal({ item, theme, onClose }: any) {
     };
   }, []);
 
-  const name = item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
+  const name =
+    item.properties?.Name?.title?.[0]?.plain_text ||
+    "Untitled";
   const image = extractImage(item);
 
   return (
@@ -345,7 +395,9 @@ function DetailModal({ item, theme, onClose }: any) {
       <div
         onClick={(e) => e.stopPropagation()}
         className={`w-full max-w-5xl rounded-2xl overflow-hidden ${
-          theme === "light" ? "bg-white" : "bg-gray-900"
+          theme === "light"
+            ? "bg-white"
+            : "bg-gray-900"
         }`}
       >
         <button
@@ -357,14 +409,21 @@ function DetailModal({ item, theme, onClose }: any) {
 
         <div className="flex flex-col lg:flex-row">
           <div className="lg:w-2/3 bg-black flex items-center justify-center">
-            <img src={image} alt={name} className="object-contain h-full" />
+            <img
+              src={image}
+              alt={name}
+              className="object-contain h-full"
+            />
           </div>
 
           <div className="lg:w-1/3 p-6 space-y-4">
-            <h2 className="text-xl font-semibold">{name}</h2>
+            <h2 className="text-xl font-semibold">
+              {name}
+            </h2>
 
             <button className="w-full bg-purple-600 text-white py-2 rounded-lg flex items-center justify-center gap-2">
-              <ExternalLink size={16} /> Open Original
+              <ExternalLink size={16} />
+              Open Original
             </button>
           </div>
         </div>
