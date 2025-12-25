@@ -112,7 +112,7 @@ export default function ClientViewComponent({
       top-[64px]   /* tinggi header */
       left-1/2 -translate-x-1/2
       z-50
-      w-[360px]
+      w-[600px]
       rounded-xl
       border
       shadow-xl
