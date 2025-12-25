@@ -27,7 +27,6 @@ interface Props {
   filtered: any[];
   profile?: Profile | null;
   theme?: "light" | "dark";
-  gridColumns?: number;
 }
 
 /* ================= MAIN ================= */
@@ -36,9 +35,7 @@ export default function ClientViewComponent({
   filtered = [],
   profile,
   theme = "light",
-  gridColumns = 3,
 }: Props) {
-  const [viewMode] = useState<"visual" | "map">("visual");
   const [showBio, setShowBio] = useState(true);
   const [showHighlight, setShowHighlight] = useState(true);
   const [currentTheme, setCurrentTheme] = useState<"light" | "dark">(theme);
@@ -76,7 +73,6 @@ export default function ClientViewComponent({
     }
 
     if (pinned === "true" && props.Pinned?.checkbox !== true) return false;
-
     if (pinned === "false" && props.Pinned?.checkbox !== false) return false;
 
     return true;
@@ -86,7 +82,7 @@ export default function ClientViewComponent({
 
   return (
     <main className={`${bg} min-h-screen w-full`}>
-      {/* ================= HEADER BAR ================= */}
+      {/* ================= HEADER ================= */}
       <header
         className={`sticky top-0 z-40 px-4 py-3 flex items-center justify-between border-b backdrop-blur ${
           currentTheme === "light"
@@ -97,45 +93,54 @@ export default function ClientViewComponent({
         <span className="font-semibold text-sm">khaslify</span>
 
         <div className="flex items-center gap-2">
-          {/* 🔥 REFRESH ICON */}
           <RefreshButton />
 
           <div className="relative">
-            <IconButton onClick={() => setOpenFilter((s) => !s)}>
+            <IconButton onClick={() => setOpenFilter(true)}>
               <Menu size={16} />
             </IconButton>
 
             {openFilter && (
-  <>
-    {/* overlay */}
-    <div
-      className="fixed inset-0 z-40"
-      onClick={() => setOpenFilter(false)}
-    />
+              <>
+                <div
+                  className="fixed inset-0 z-40 bg-black/30"
+                  onClick={() => setOpenFilter(false)}
+                />
 
-    {/* popup */}
-    <div
-      className={`
-        fixed
-        top-[64px]
-        left-1/2 -translate-x-1/2
-        z-50
-        rounded-xl
-        border
-        shadow-xl
-        ${
-          currentTheme === "light"
-            ? "bg-white border-gray-200"
-            : "bg-gray-900 border-gray-800"
-        }
-      `}
-    >
-      {/* ⛔ NO EXTRA PADDING */}
-      <EmbedFilter />
-    </div>
-  </>
-)}
+                {/* DESKTOP */}
+                <div
+                  className={`
+                    hidden sm:block
+                    fixed top-[64px] left-1/2 -translate-x-1/2 z-50
+                    rounded-xl border shadow-xl max-w-[90vw]
+                    ${
+                      currentTheme === "light"
+                        ? "bg-white border-gray-200"
+                        : "bg-gray-900 border-gray-800"
+                    }
+                  `}
+                >
+                  <EmbedFilter />
+                </div>
 
+                {/* MOBILE */}
+                <div
+                  className={`
+                    sm:hidden
+                    fixed bottom-0 left-0 right-0 z-50
+                    rounded-t-2xl border-t shadow-xl
+                    ${
+                      currentTheme === "light"
+                        ? "bg-white border-gray-200"
+                        : "bg-gray-900 border-gray-800"
+                    }
+                  `}
+                >
+                  <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-2" />
+                  <EmbedFilter />
+                </div>
+              </>
+            )}
           </div>
 
           <IconButton onClick={() => setOpenSetting((s) => !s)}>
@@ -144,6 +149,7 @@ export default function ClientViewComponent({
         </div>
       </header>
 
+      {/* ================= SETTINGS ================= */}
       {openSetting && (
         <div
           className={`absolute right-4 top-14 z-50 w-56 rounded-xl border shadow ${
@@ -173,7 +179,7 @@ export default function ClientViewComponent({
       )}
 
       {/* ================= CONTENT ================= */}
-      <div className="p-5 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         {showBio && profile && (
           <BioSection profile={profile} theme={currentTheme} />
         )}
@@ -185,15 +191,12 @@ export default function ClientViewComponent({
           />
         )}
 
-        {viewMode === "visual" && (
-          <VisualGrid
-            filtered={filteredData}
-            gridColumns={gridColumns}
-            theme={currentTheme}
-            cardBg={cardBg}
-            onSelect={setSelectedItem}
-          />
-        )}
+        <VisualGrid
+          filtered={filteredData}
+          theme={currentTheme}
+          cardBg={cardBg}
+          onSelect={setSelectedItem}
+        />
       </div>
 
       {selectedItem && (
@@ -247,7 +250,7 @@ function SettingToggle({ label, value, onChange }: any) {
 function BioSection({ profile, theme }: any) {
   return (
     <section
-      className={`border rounded-2xl p-4 flex gap-4 ${
+      className={`border rounded-2xl p-4 flex flex-col sm:flex-row gap-4 ${
         theme === "light"
           ? "bg-white border-gray-200"
           : "bg-gray-900 border-gray-800"
@@ -287,14 +290,9 @@ function HighlightSection({ highlights, theme }: any) {
 
 /* ================= GRID ================= */
 
-function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
+function VisualGrid({ filtered, theme, cardBg, onSelect }: any) {
   return (
-    <div
-      className="grid gap-4"
-      style={{
-        gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
-      }}
-    >
+    <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
       {filtered.map((item: any, i: number) => {
         const name =
           item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
@@ -305,7 +303,7 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
           <div
             key={i}
             onClick={() => onSelect(item)}
-            className={`relative group  overflow-hidden aspect-[4/5] cursor-pointer hover:-translate-y-1 transition ${cardBg}`}
+            className={`relative group overflow-hidden aspect-[4/5] cursor-pointer hover:-translate-y-1 transition ${cardBg}`}
           >
             {pinned && (
               <Pin className="absolute top-3 right-3 text-yellow-400 z-10" />
@@ -347,20 +345,24 @@ function DetailModal({ item, theme, onClose }: any) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-5xl rounded-2xl overflow-hidden ${
+        className={`relative w-full max-w-5xl rounded-2xl overflow-hidden ${
           theme === "light" ? "bg-white" : "bg-gray-900"
         }`}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full"
+          className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full z-10"
         >
           <X size={18} />
         </button>
 
         <div className="flex flex-col lg:flex-row">
           <div className="lg:w-2/3 bg-black flex items-center justify-center">
-            <img src={image} alt={name} className="object-contain h-full" />
+            <img
+              src={image}
+              alt={name}
+              className="object-contain max-h-[70vh] w-full"
+            />
           </div>
 
           <div className="lg:w-1/3 p-6 space-y-4">
