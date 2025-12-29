@@ -15,7 +15,7 @@ const filterOptions = {
     "Other",
     "Behind the Scenes",
   ],
-  pinned: ["Pinned + Unpinned", "Pinned Only", "Unpinned Only"],
+  pinned: ["Pinned", "Pinned Only", "Unpinned Only"],
 };
 
 const defaultValue = {
