@@ -84,17 +84,16 @@ export default function EmbedFilter() {
       <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
         {/* FILTER GRID */}
         <div
-  className="
-    absolute z-50 mt-2
-    w-full
-    max-h-[240px]
-    overflow-y-auto
-    overscroll-contain
-    bg-white border border-gray-200
-    rounded-lg shadow
+          className="
+    grid
+    grid-cols-1
+    sm:grid-cols-2
+    md:grid-cols-3
+    lg:grid-cols-3
+    xl:grid-cols-3
+    gap-3
   "
->
-
+        >
           {Object.entries(current).map(([key, value]) => (
             <div key={key} className="relative w-full">
               <button
