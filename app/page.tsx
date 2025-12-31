@@ -17,7 +17,7 @@ export default function Home() {
     } else {
       router.replace("/welcome");
     }
-  }, []);
+  }, [router]);
   return (
     <>  
     {/* <LoginPage /> */}
