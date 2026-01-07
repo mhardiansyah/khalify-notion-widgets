@@ -119,7 +119,7 @@ export default function EmbedFilter() {
                       rounded-lg shadow
                     "
                   >
-                    {filterOptions[key as keyof typeof filterOptions].map(
+                    {filterOptions[key as keyof typeof filterOptions].map(   
                       (opt) => (
                         <button
                           key={opt}

@@ -2,71 +2,60 @@
 
 import { useState, useEffect } from "react";
 import Navbar from "@/app/components/Navbar";
-import { ConnectStep } from "@/app/components/connect-step";
 import FinishStep from "@/app/components/finish-step";
 import { useRouter } from "next/navigation";
 import cookies from "js-cookie";
-// import { jwtDecode } from "jwt-decode";
 import { createWidget } from "@/app/lib/widget.api";
+import CreateTokenStep from "@/app/components/CreateTokenStep";
+import InputTokenStep from "@/app/components/InputTokenStep";
+import TemplateStep from "@/app/components/TemplateStep";
+import SelectDatabaseStep from "@/app/components/SelectDatabaseStep";
+
+// STEP COMPONENTS
+
+type WizardStep = 1 | 2 | 3 | 4 | 5;
 
 export default function CreateWidgetPageMerged() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState<WizardStep>(1);
 
-  const [token, setToken] = useState<string | null>(null);
+  const [notionToken, setNotionToken] = useState("");
+  const [isTokenValid, setIsTokenValid] = useState(false);
+
   const [db, setDb] = useState<string | null>(null);
-  const [dbname, setDbname] = useState<string | null>(null);
+  const [dbName, setDbName] = useState<string | null>(null);
 
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const [notionUrl, setNotionUrl] = useState("");
-  const [isUrlValid, setIsUrlValid] = useState(false);
   const [user, setUser] = useState<any>(null);
 
   const router = useRouter();
 
   useEffect(() => {
     const jwt = cookies.get("login_token");
-
     if (!jwt) {
       router.replace("/auth/login");
       return;
     }
-
-    // simpan JWT MENTAH
     setUser({ jwt });
   }, [router]);
 
   const handleGenerateWidget = async () => {
-    if (!db || !isUrlValid || !notionUrl || !user?.jwt) return;
+    if (!db || !isTokenValid || !notionToken || !user?.jwt) return;
 
     setLoading(true);
-
     try {
       const res = await createWidget({
-        token: notionUrl,
+        token: notionToken,
         dbID: db,
         email: user.jwt,
-        name: dbname || "My Notion Widget",
+        name: dbName || "My Notion Widget",
       });
 
-      console.log('res: ', res);
-      console.log("DB NAME:", dbname);
-      console.log("DB ID:", db);
-
-      console.log("res: ", res);
       const embedLink = res?.data?.embedLink;
-
-      if (!embedLink) {
-        console.log("Embed link Not found", res);
-        return;
-      }
+      if (!embedLink) return;
 
       setEmbedUrl(embedLink);
-
-      setStep(3);
-    } catch (err) {
-      console.error("Error creating widget:", err);
+      setStep(5);
     } finally {
       setLoading(false);
     }
@@ -76,70 +65,73 @@ export default function CreateWidgetPageMerged() {
     <>
       <Navbar />
 
-      <div className="w-full min-h-screen bg-white text-black p-10">
-        {/* Step Indicator */}
+      <div className="min-h-screen bg-white p-10">
+        {/* STEP INDICATOR */}
         <div className="flex justify-center mb-10">
-          <div className="flex items-center gap-10">
-            {[1, 2, 3].map((id) => (
-              <div key={id} className="flex items-center gap-2">
-                <div
-                  className={`w-8 h-8 flex items-center justify-center rounded-full text-white 
-                    ${step === id ? "bg-purple-600" : "bg-gray-300"}`}
-                >
-                  {id}
+          <div className="flex gap-8">
+            {[
+              "Setup",
+              "Create Token",
+              "Input Token",
+              "Select DB",
+              "Finish",
+            ].map((label, i) => {
+              const id = (i + 1) as WizardStep;
+              return (
+                <div key={id} className="flex items-center gap-2">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-white
+                      ${step === id ? "bg-purple-600" : "bg-gray-300"}`}
+                  >
+                    {id}
+                  </div>
+                  <span
+                    className={
+                      step === id ? "text-purple-600" : "text-gray-500"
+                    }
+                  >
+                    {label}
+                  </span>
                 </div>
-                <span
-                  className={`${
-                    step === id ? "text-purple-600" : "text-gray-600"
-                  }`}
-                >
-                  {["Setup", "Connect", "Finish"][id - 1]}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
-        {/* Step Content */}
+        {/* CONTENT */}
         <div className="max-w-5xl mx-auto bg-gray-50 p-8 rounded-xl shadow">
-          {step === 1 && (
-            <div className="text-center">
-              <h1 className="text-2xl font-bold mb-4">
-                Step 1 — Setup Template
-              </h1>
-              <button
-                className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-                onClick={() => setStep(2)}
-              >
-                Continue →
-              </button>
-            </div>
-          )}
+          {step === 1 && <TemplateStep onConfirm={() => setStep(2)} />}
 
-          {step === 2 && (
-            <ConnectStep
-              notionUrl={notionUrl}
-              setNotionUrl={(val) => {
-                setNotionUrl(val);
-                setIsUrlValid(val.startsWith("ntn_"));
+          {step === 2 && <CreateTokenStep onNext={() => setStep(3)} />}
+
+          {step === 3 && (
+            <InputTokenStep
+              token={notionToken}
+              setToken={setNotionToken}
+              onValid={() => {
+                setIsTokenValid(true);
+                setStep(4);
               }}
-              isUrlValid={isUrlValid}
-              setIsUrlValid={setIsUrlValid}
-              onSelectDb={(dbId, name) => {
-                setDb(dbId);
-                setDbname(name);
-              }}
-              onCreateWidget={handleGenerateWidget}
-              loading={loading}
             />
           )}
 
-          {step === 3 && db && (
+          {step === 4 && (
+            <SelectDatabaseStep
+              token={notionToken}
+              onSelect={(id, name) => {
+                setDb(id);
+                setDbName(name);
+                handleGenerateWidget();
+              }}
+            />
+          )}
+
+          {step === 5 && (
             <FinishStep
-              db={db}
+              db={db!}
               embedUrl={embedUrl}
-              onBack={() => setStep(2)}
-              token={token}
+              token={notionToken}
+              onBack={() => setStep(4)}
             />
           )}
         </div>
