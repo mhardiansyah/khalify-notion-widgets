@@ -6,7 +6,7 @@ import { getNotionDatabases } from "@/app/lib/widget.api";
 
 interface SelectDatabaseStepProps {
   token: string;
-  onSelect: (dbId: string, name: string) => Promise<void> | void;
+  onSelect: (dbId: string, name: string) => void;
 }
 
 export default function SelectDatabaseStep({
@@ -15,22 +15,15 @@ export default function SelectDatabaseStep({
 }: SelectDatabaseStepProps) {
   const [databases, setDatabases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processingDbId, setProcessingDbId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDb = async () => {
-      setLoading(true);
       const res = await getNotionDatabases(token);
       setDatabases(res.data || []);
       setLoading(false);
     };
     fetchDb();
   }, [token]);
-
-  const handleSelect = async (db: any) => {
-    setProcessingDbId(db.id);
-    await onSelect(db.id, db.name);
-  };
 
   if (loading) {
     return (
@@ -44,44 +37,21 @@ export default function SelectDatabaseStep({
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Select Database</h2>
 
-      {databases.map((db) => {
-        const isProcessing = processingDbId === db.id;
-
-        return (
-          <button
-            key={db.id}
-            disabled={!!processingDbId}
-            onClick={() => handleSelect(db)}
-            className={`w-full p-4 border rounded-lg text-left transition
-              ${
-                isProcessing
-                  ? "border-purple-600 bg-purple-50"
-                  : "hover:border-purple-500"
-              }
-              disabled:opacity-60`}
-          >
-            <div className="flex gap-3 items-center">
-              {isProcessing ? (
-                <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
-              ) : (
-                <Folder className="w-5 h-5 text-yellow-500" />
-              )}
-
-              <div className="flex-1">
-                <p className="font-medium">
-                  {db.name}
-                  {isProcessing && (
-                    <span className="ml-2 text-sm text-purple-600">
-                      Processing…
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs text-gray-500">{db.id}</p>
-              </div>
+      {databases.map((db) => (
+        <button
+          key={db.id}
+          onClick={() => onSelect(db.id, db.name)}
+          className="w-full p-4 border rounded-lg text-left hover:border-purple-500"
+        >
+          <div className="flex gap-3">
+            <Folder className="w-5 h-5 text-yellow-500 mt-0.5" />
+            <div>
+              <p className="font-medium">{db.name}</p>
+              <p className="text-xs text-gray-500">{db.id}</p>
             </div>
-          </button>
-        );
-      })}
+          </div>
+        </button>
+      ))}
     </div>
   );
 }
