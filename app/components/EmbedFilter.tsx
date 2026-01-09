@@ -115,14 +115,15 @@ export default function EmbedFilter() {
     bg-white border border-gray-200 shadow-xl
     overflow-y-auto
 
-    /* MOBILE */
+    /* MOBILE → BOTTOM SHEET */
     bottom-0 left-0 right-0
     max-h-[70vh]
     rounded-t-2xl
 
-    /* DESKTOP */
-    sm:top-1/2 sm:left-1/2
-    sm:-translate-x-1/2 sm:-translate-y-1/2
+    /* DESKTOP → TURUN DIKIT (ANTI OVERFLOW) */
+    sm:top-20
+    sm:left-1/2
+    sm:-translate-x-1/2
     sm:bottom-auto sm:right-auto
     sm:w-[90vw] sm:max-w-sm
     sm:rounded-xl
