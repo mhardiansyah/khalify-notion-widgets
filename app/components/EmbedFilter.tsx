@@ -112,11 +112,13 @@ export default function EmbedFilter() {
                   />
                   <div
                     className="
-                      absolute z-50 mt-2
-                      w-full
-                      max-w-[90vw]
-                      bg-white border border-gray-200
-                      rounded-lg shadow
+                      fixed z-50
+    left-1/2 top-1/2
+    -translate-x-1/2 -translate-y-1/2
+    w-[90vw] max-w-sm
+    max-h-[70vh] overflow-y-auto
+    bg-white border border-gray-200
+    rounded-xl shadow-xl
                     "
                   >
                     {filterOptions[key as keyof typeof filterOptions].map(   
