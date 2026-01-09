@@ -115,20 +115,25 @@ export default function EmbedFilter() {
     bg-white border border-gray-200 shadow-xl
     overflow-y-auto
 
-    /* MOBILE FIX */
-    top-24 left-1/2
+    /* MOBILE */
+    bottom-4
+    left-1/2
     -translate-x-1/2
     w-[92vw]
-    max-h-[65vh]
+    max-h-[70dvh]
     rounded-2xl
 
     /* DESKTOP */
-    sm:top-20
-    sm:w-[90vw]
-    sm:max-w-sm
+    sm:absolute
+    sm:top-full
+    sm:left-0
+    sm:mt-2
+    sm:w-full
+    sm:max-h-64
     sm:rounded-xl
   "
 >
+
 
                     {filterOptions[key as keyof typeof filterOptions].map(
                       (opt) => (
