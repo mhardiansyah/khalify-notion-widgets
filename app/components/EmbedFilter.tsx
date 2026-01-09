@@ -115,15 +115,15 @@ export default function EmbedFilter() {
     bg-white border border-gray-200 shadow-xl
     overflow-y-auto
 
-    /* MOBILE */
-    bottom-4
-    left-1/2
-    -translate-x-1/2
+    left-1/2 -translate-x-1/2
     w-[92vw]
-    max-h-[70dvh]
     rounded-2xl
 
-    /* DESKTOP */
+    /* real mobile safe area */
+    top-[20vh]
+    max-h-[calc(var(--vh)*70)]
+
+    /* desktop */
     sm:absolute
     sm:top-full
     sm:left-0
@@ -133,8 +133,6 @@ export default function EmbedFilter() {
     sm:rounded-xl
   "
 >
-
-
                     {filterOptions[key as keyof typeof filterOptions].map(
                       (opt) => (
                         <button
