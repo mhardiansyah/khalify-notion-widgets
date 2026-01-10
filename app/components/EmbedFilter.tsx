@@ -3,6 +3,7 @@
 import { ChevronDown, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import Portal from "./Portal";
 
 const filterOptions = {
   platform: ["All Platform", "Instagram", "Tiktok", "Others"],
@@ -115,43 +116,32 @@ export default function EmbedFilter() {
                 </button>
 
                 {open === key && (
-                  <>
-                    {/* 🔥 GLOBAL MODAL */}
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-                      {/* backdrop */}
-                      <div
-                        className="absolute inset-0 bg-black/40"
-                        onClick={() => setOpen(null)}
-                      />
+                 <Portal>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      {/* backdrop */}
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={() => setOpen(null)}
+      />
 
-                      {/* modal */}
-                      <div
-                        className="
-                          relative
-                          w-full max-w-sm
-                          bg-white
-                          rounded-2xl
-                          shadow-2xl
-                          max-h-[80dvh]
-                          overflow-y-auto
-                        "
-                      >
-                        {filterOptions[key].map((opt) => (
-                          <button
-                            key={opt}
-                            onClick={() => updateFilter(key, opt)}
-                            className={`w-full px-4 py-2 text-left text-sm ${
-                              value === opt
-                                ? "bg-purple-50 text-purple-700"
-                                : "hover:bg-gray-100"
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
+      {/* modal */}
+      <div className="relative w-[90vw] max-w-sm bg-white rounded-2xl shadow-2xl max-h-[80vh] overflow-y-auto">
+        {filterOptions[key].map((opt) => (
+          <button
+            key={opt}
+            onClick={() => updateFilter(key, opt)}
+            className={`w-full px-4 py-2 text-left text-sm ${
+              value === opt
+                ? "bg-purple-50 text-purple-700"
+                : "hover:bg-gray-100"
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+  </Portal>
                 )}
               </div>
             );
