@@ -68,12 +68,6 @@ export default function EmbedFilter() {
     setOpen(null);
   };
 
-  useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "unset";
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [open]);
 
   const clearAll = () => {
     const newParams = new URLSearchParams();
@@ -151,33 +145,32 @@ export default function EmbedFilter() {
 
       {/* ================= MODAL (MOBILE ONLY) ================= */}
       {open && (
-        <>
-          {/* backdrop */}
-          <div
-            className="fixed inset-0 z-[9998] bg-black/40 sm:hidden"
-            onClick={() => setOpen(null)}
-          />
+  <div className="absolute inset-0 z-50 sm:hidden">
+    <div
+      className="absolute inset-0 bg-black/40"
+      onClick={() => setOpen(null)}
+    />
 
-          {/* center modal */}
-          <div className="fixed inset-0 z-[9999] sm:hidden flex items-center justify-center">
-            <div className="w-[90%] max-w-sm bg-white rounded-2xl shadow-2xl max-h-[80dvh] overflow-y-auto">
-              {filterOptions[open].map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => updateFilter(open, opt)}
-                  className={`w-full px-4 py-3 text-left text-sm ${
-                    current[open] === opt
-                      ? "bg-purple-50 text-purple-700"
-                      : "hover:bg-gray-100"
-                  }`}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+    <div className="relative z-10 flex items-center justify-center h-full">
+      <div className="w-[90%] max-w-sm bg-white rounded-2xl shadow-2xl max-h-[80%] overflow-y-auto">
+        {filterOptions[open].map((opt) => (
+          <button
+            key={opt}
+            onClick={() => updateFilter(open, opt)}
+            className={`w-full px-4 py-3 text-left text-sm ${
+              current[open] === opt
+                ? "bg-purple-50 text-purple-700"
+                : "hover:bg-gray-100"
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
