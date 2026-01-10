@@ -135,6 +135,7 @@ export default function ClientViewComponent({
                 <div
                   className={`
     sm:hidden
+    mt-10
     fixed inset-x-0 bottom-0 z-50
     max-h-[85dvh]
     rounded-t-2xl
