@@ -91,7 +91,8 @@ export default function EmbedFilter() {
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
 
           {Object.entries(current).map(([key, value]) => (
-            <div key={key} className="relative w-full">
+            <div key={key} className="relative w-full min-w-0">
+
               <button
                 onClick={() => setOpen(open === key ? null : key)}
                 className={`
@@ -109,7 +110,8 @@ export default function EmbedFilter() {
                   }
                 `}
               >
-                <span className="truncate">{value}</span>
+               <span className="truncate min-w-0 flex-1">{value}</span>
+
                 <ChevronDown className="w-4 h-4 ml-auto shrink-0" />
               </button>
 
