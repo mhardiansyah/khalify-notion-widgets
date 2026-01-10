@@ -133,9 +133,9 @@ export default function ClientViewComponent({
 
                 {/* MOBILE BOTTOM SHEET */}
                 <div
-  className={`
+                  className={`
     sm:hidden
-    fixed inset-x-2 bottom-0 z-50
+    fixed inset-x-0 bottom-0 z-50
     max-h-[85dvh]
     rounded-t-2xl
     shadow-2xl
@@ -146,15 +146,15 @@ export default function ClientViewComponent({
         : "bg-gray-900 border-gray-800"
     }
   `}
->
-  {/* handle */}
-  <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-3" />
+                >
+                  {/* handle */}
+                  <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mt-10 mx-auto my-3" />
 
-  {/* scroll area */}
-  <div className="flex-1 overflow-y-auto px-3 pb-6">
-    <EmbedFilter />
-  </div>
-</div>
+                  {/* scroll area */}
+                  <div className="flex-1 overflow-y-auto px-3 pb-6">
+                    <EmbedFilter />
+                  </div>
+                </div>
               </>
             )}
           </div>
