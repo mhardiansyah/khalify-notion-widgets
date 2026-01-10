@@ -25,6 +25,9 @@ const defaultValue = {
   pinned: "Pinned",
 };
 
+// 🔒 urutan fix biar mobile 2x2 konsisten
+const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
+
 export default function EmbedFilter() {
   const router = useRouter();
   const params = useSearchParams();
@@ -84,44 +87,64 @@ export default function EmbedFilter() {
     current[key as keyof typeof current] !==
     defaultValue[key as keyof typeof defaultValue];
 
-  const activeCount = Object.keys(current).filter(isActive).length;
+  const activeCount = orderedKeys.filter(isActive).length;
 
   return (
-    <div className="mb-4">
+    <div className="w-full">
       <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 space-y-3">
         {/* FILTER GRID */}
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {Object.entries(current).map(([key, value]) => (
-            <div key={key} className="relative w-full">
-              <button
-                onClick={() => setOpen(open === key ? null : key)}
-                className={`
-                  w-full px-3 py-1.5 sm:px-4 sm:py-2
-                  rounded-lg flex items-center gap-2
-                  border text-[13px] sm:text-sm transition
-                  ${
-                    isActive(key)
-                      ? "bg-purple-50 border-purple-300 text-purple-700"
-                      : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
-                  }
-                `}
-              >
-                <span className="truncate flex-1">{value}</span>
-                <ChevronDown className="w-4 h-4 shrink-0" />
-              </button>
+          {orderedKeys.map((key) => {
+            const value = current[key];
 
-              {open === key && (
-                <>
-                  {/* OVERLAY */}
-                  <div
-                    className="fixed inset-0 z-40 bg-black/30"
-                    onClick={() => setOpen(null)}
-                  />
+            return (
+              <div key={key} className="relative w-full">
+                <button
+                  onClick={() => setOpen(open === key ? null : key)}
+                  className={`
+                    w-full px-3 py-1.5 sm:px-4 sm:py-2
+                    rounded-lg flex items-center gap-2
+                    border text-[13px] sm:text-sm transition
+                    ${
+                      isActive(key)
+                        ? "bg-purple-50 border-purple-300 text-purple-700"
+                        : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
+                    }
+                  `}
+                >
+                  <span className="truncate flex-1">{value}</span>
+                  <ChevronDown className="w-4 h-4 shrink-0" />
+                </button>
 
-                  {/* DESKTOP DROPDOWN */}
-                  <div className="hidden sm:block absolute z-50 mt-2 w-full bg-white border border-gray-200 shadow-xl rounded-xl max-h-64 overflow-y-auto">
-                    {filterOptions[key as keyof typeof filterOptions].map(
-                      (opt) => (
+                {open === key && (
+                  <>
+                    {/* overlay */}
+                    <div
+                      className="fixed inset-0 z-40 bg-black/30"
+                      onClick={() => setOpen(null)}
+                    />
+
+                    {/* DROPDOWN (DESKTOP + MOBILE CONTENT) */}
+                    {/* DROPDOWN */}
+<div
+  className="
+    z-50 bg-white border border-gray-200 shadow-xl
+    rounded-xl
+    max-h-[60vh] overflow-y-auto
+
+    /* DESKTOP */
+    absolute mt-2 w-full
+
+    /* MOBILE = FULL SHEET */
+    sm:absolute
+    fixed sm:fixed
+    inset-x-0 bottom-0 sm:inset-auto
+    rounded-t-2xl sm:rounded-xl
+    max-h-[85dvh] sm:max-h-[60vh]
+  "
+>
+
+                      {filterOptions[key].map((opt) => (
                         <button
                           key={opt}
                           onClick={() => updateFilter(key, opt)}
@@ -133,43 +156,13 @@ export default function EmbedFilter() {
                         >
                           {opt}
                         </button>
-                      )
-                    )}
-                  </div>
-
-                  {/* MOBILE BOTTOM SHEET (FIXED) */}
-                  <div
-                    className="
-                      sm:hidden fixed inset-x-0 bottom-0 z-50
-                      bg-white rounded-t-2xl shadow-2xl
-                      max-h-[70dvh] overflow-hidden
-                      animate-in slide-in-from-bottom-4
-                    "
-                  >
-                    <div className="w-10 h-1 bg-gray-400/40 rounded-full mx-auto my-2" />
-
-                    <div className="px-3 pb-4 overflow-y-auto max-h-[calc(70dvh-24px)]">
-                      {filterOptions[key as keyof typeof filterOptions].map(
-                        (opt) => (
-                          <button
-                            key={opt}
-                            onClick={() => updateFilter(key, opt)}
-                            className={`w-full px-3 py-2 rounded-md text-left text-[13px] ${
-                              value === opt
-                                ? "bg-purple-100 text-purple-700"
-                                : "hover:bg-gray-100"
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        )
-                      )}
+                      ))}
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* CLEAR ALL */}
@@ -185,25 +178,23 @@ export default function EmbedFilter() {
         )}
       </div>
 
-      
       {/* ACTIVE FILTER CHIPS */}
       {activeCount > 0 && (
         <div className="flex flex-wrap gap-2 mt-3">
-          {Object.entries(current).map(
-            ([key, value]) =>
+          {orderedKeys.map(
+            (key) =>
               isActive(key) && (
                 <div
                   key={key}
                   className="flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm"
                 >
                   <span className="capitalize">{key}</span>
-                  <span className="truncate max-w-[120px]">{value}</span>
+                  <span className="truncate max-w-[120px]">
+                    {current[key]}
+                  </span>
                   <button
                     onClick={() =>
-                      updateFilter(
-                        key,
-                        defaultValue[key as keyof typeof defaultValue]
-                      )
+                      updateFilter(key, defaultValue[key])
                     }
                   >
                     <X className="w-3 h-3" />
