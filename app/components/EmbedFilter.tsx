@@ -2,7 +2,7 @@
 
 import { ChevronDown, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const filterOptions = {
   platform: ["All Platform", "Instagram", "Tiktok", "Others"],
@@ -66,6 +66,14 @@ export default function EmbedFilter() {
     setOpen(null);
   };
 
+  useEffect(() => {
+  document.body.style.overflow = open ? "hidden" : "unset";
+  return () => {
+    document.body.style.overflow = "unset";
+  };
+}, [open]);
+
+
   const clearAll = () => {
     const newParams = new URLSearchParams();
     const db = params.get("db");
@@ -81,18 +89,17 @@ export default function EmbedFilter() {
 
   return (
     <div className="mb-4">
-      <div className="
+      <div
+        className="
   bg-white border border-gray-200 rounded-xl
   p-3 sm:p-4
   space-y-2 sm:space-y-3
-">
-
+"
+      >
         {/* FILTER GRID */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-
           {Object.entries(current).map(([key, value]) => (
             <div key={key} className="relative w-full min-w-0">
-
               <button
                 onClick={() => setOpen(open === key ? null : key)}
                 className={`
@@ -110,61 +117,73 @@ export default function EmbedFilter() {
                   }
                 `}
               >
-               <span className="truncate min-w-0 flex-1">{value}</span>
+                <span className="truncate min-w-0 flex-1">{value}</span>
 
                 <ChevronDown className="w-4 h-4 ml-auto shrink-0" />
               </button>
 
               {open === key && (
                 <>
+                  {/* overlay */}
                   <div
-                    className="fixed inset-0 z-40"
+                    className="fixed inset-0 z-40 bg-black/30"
                     onClick={() => setOpen(null)}
                   />
-                 <div
-  className="
-    fixed z-50
-    bg-white border border-gray-200 shadow-xl
-    overflow-y-auto
 
-    left-1/2 -translate-x-1/2
-    w-[90vw]
-    max-w-xs
-    rounded-2xl
-
-    /* MOBILE: center & compact */
-    top-[10vh]
-    max-h-[45vh]
-    
-    /* DESKTOP */
-    sm:absolute
-    sm:top-full
-    sm:left-0
-    sm:mt-2
-    sm:w-full
-    sm:max-h-64
-    sm:rounded-xl
-  "
->
-
+                  {/* DESKTOP */}
+                  <div
+                    className="
+        hidden sm:block
+        absolute z-50 mt-2 w-full
+        bg-white border border-gray-200 shadow-xl
+        rounded-xl max-h-64 overflow-y-auto
+      "
+                  >
                     {filterOptions[key as keyof typeof filterOptions].map(
                       (opt) => (
                         <button
                           key={opt}
                           onClick={() => updateFilter(key, opt)}
-                          className={`
-                            w-full px-4 py-2 text-left text-sm transition
-                            ${
-                              value === opt
-                                ? "bg-purple-50 text-purple-700"
-                                : "hover:bg-gray-100"
-                            }
-                          `}
+                          className={`w-full px-4 py-2 text-left text-sm ${
+                            value === opt
+                              ? "bg-purple-50 text-purple-700"
+                              : "hover:bg-gray-100"
+                          }`}
                         >
                           {opt}
                         </button>
                       )
                     )}
+                  </div>
+
+                  {/* MOBILE BOTTOM SHEET */}
+                  <div
+                    className="
+        sm:hidden
+        fixed bottom-0 left-0 right-0 z-50
+        bg-white rounded-t-2xl shadow-2xl
+        max-h-[70vh] overflow-y-auto
+      "
+                  >
+                    <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-2" />
+
+                    <div className="px-4 pb-6 space-y-1">
+                      {filterOptions[key as keyof typeof filterOptions].map(
+                        (opt) => (
+                          <button
+                            key={opt}
+                            onClick={() => updateFilter(key, opt)}
+                            className={`w-full px-4 py-3 rounded-lg text-left text-sm ${
+                              value === opt
+                                ? "bg-purple-100 text-purple-700"
+                                : "hover:bg-gray-100"
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        )
+                      )}
+                    </div>
                   </div>
                 </>
               )}
