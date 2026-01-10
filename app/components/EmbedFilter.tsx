@@ -129,20 +129,18 @@ export default function EmbedFilter() {
 <div
   className="
     z-50 bg-white border border-gray-200 shadow-xl
-    rounded-xl
-    max-h-[60vh] overflow-y-auto
+    rounded-2xl
+    overflow-y-auto
 
-    /* DESKTOP */
-    absolute mt-2 w-full
-
-    /* MOBILE = FULL SHEET */
-    sm:absolute
-    fixed sm:fixed
-    inset-x-0 bottom-0 sm:inset-auto
-    rounded-t-2xl sm:rounded-xl
-    max-h-[85dvh] sm:max-h-[60vh]
+    /* MOBILE + DESKTOP = CENTER MODAL */
+    fixed
+    left-1/2 top-1/2
+    -translate-x-1/2 -translate-y-1/2
+    w-[90vw] max-w-sm
+    max-h-[70vh]
   "
 >
+
 
                       {filterOptions[key].map((opt) => (
                         <button
