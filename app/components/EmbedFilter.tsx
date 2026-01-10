@@ -113,18 +113,17 @@ export default function EmbedFilter() {
   className="
     fixed z-50
     bg-white border border-gray-200 shadow-xl
-    overflow-y-auto
 
     left-1/2 -translate-x-1/2
-    w-[88vw]
-    max-w-sm
+    w-[85vw]
+    max-w-xs
     rounded-2xl
 
-    /* MOBILE: center & compact */
-    top-[12vh]
-    max-h-[calc(var(--vh)*55)]
-    
-    /* DESKTOP */
+    top-[10vh]
+    max-h-[50vh]
+
+    flex flex-col
+
     sm:absolute
     sm:top-full
     sm:left-0
@@ -134,26 +133,23 @@ export default function EmbedFilter() {
     sm:rounded-xl
   "
 >
+  <div className="overflow-y-auto max-h-full">
+    {filterOptions[key as keyof typeof filterOptions].map((opt) => (
+      <button
+        key={opt}
+        onClick={() => updateFilter(key, opt)}
+        className={`w-full px-4 py-2 text-left text-sm transition ${
+          value === opt
+            ? "bg-purple-50 text-purple-700"
+            : "hover:bg-gray-100"
+        }`}
+      >
+        {opt}
+      </button>
+    ))}
+  </div>
+</div>
 
-                    {filterOptions[key as keyof typeof filterOptions].map(
-                      (opt) => (
-                        <button
-                          key={opt}
-                          onClick={() => updateFilter(key, opt)}
-                          className={`
-                            w-full px-4 py-2 text-left text-sm transition
-                            ${
-                              value === opt
-                                ? "bg-purple-50 text-purple-700"
-                                : "hover:bg-gray-100"
-                            }
-                          `}
-                        >
-                          {opt}
-                        </button>
-                      )
-                    )}
-                  </div>
                 </>
               )}
             </div>
