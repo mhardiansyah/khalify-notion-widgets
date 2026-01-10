@@ -109,7 +109,7 @@ export default function ClientViewComponent({
               <>
                 {/* overlay */}
                 <div
-                  className="fixed inset-0 z-40 bg-black/30"
+                  className="fixed inset-0 z-40 bg-black/30 pt-4"
                   onClick={() => setOpenFilter(false)}
                 />
 
@@ -133,21 +133,21 @@ export default function ClientViewComponent({
 
                 {/* MOBILE BOTTOM SHEET */}
                 <div
-                  className={`
+  className={`
     sm:hidden
-    mt-10
     fixed inset-x-0 bottom-0 z-50
-    max-h-[85dvh]
+    max-h-[80dvh]
     rounded-t-2xl
     shadow-2xl
     flex flex-col
+    translate-y-0
     ${
       currentTheme === "light"
         ? "bg-white border-t border-gray-200"
         : "bg-gray-900 border-gray-800"
     }
   `}
-                >
+>
                   {/* handle */}
                   <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mt-10 mx-auto my-3" />
 
