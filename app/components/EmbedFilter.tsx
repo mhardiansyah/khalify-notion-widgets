@@ -126,13 +126,13 @@ export default function EmbedFilter() {
     overflow-y-auto
 
     left-1/2 -translate-x-1/2
-    w-[88vw]
-    max-w-sm
+    w-[90vw]
+    max-w-xs
     rounded-2xl
 
     /* MOBILE: center & compact */
-    top-[12vh]
-    max-h-[calc(var(--vh)*55)]
+    top-[10vh]
+    max-h-[45vh]
     
     /* DESKTOP */
     sm:absolute
