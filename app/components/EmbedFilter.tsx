@@ -69,6 +69,7 @@ export default function EmbedFilter() {
   };
 
 
+
   const clearAll = () => {
     const newParams = new URLSearchParams();
     const db = params.get("db");
@@ -145,28 +146,40 @@ export default function EmbedFilter() {
 
       {/* ================= MODAL (MOBILE ONLY) ================= */}
       {open && (
-  <div className="absolute inset-0 z-50 sm:hidden">
+  <div className="sm:hidden">
+    {/* backdrop LOCAL */}
     <div
-      className="absolute inset-0 bg-black/40"
+      className="fixed inset-0 z-40 bg-black/30"
       onClick={() => setOpen(null)}
     />
 
-    <div className="relative z-10 flex items-center justify-center h-full">
-      <div className="w-[90%] max-w-sm bg-white rounded-2xl shadow-2xl max-h-[80%] overflow-y-auto">
-        {filterOptions[open].map((opt) => (
-          <button
-            key={opt}
-            onClick={() => updateFilter(open, opt)}
-            className={`w-full px-4 py-3 text-left text-sm ${
-              current[open] === opt
-                ? "bg-purple-50 text-purple-700"
-                : "hover:bg-gray-100"
-            }`}
-          >
-            {opt}
-          </button>
-        ))}
-      </div>
+    {/* option sheet */}
+    <div
+      className="
+        fixed inset-x-0 bottom-0 z-50
+        bg-white
+        rounded-t-2xl
+        max-h-[70dvh]
+        overflow-y-auto
+        shadow-2xl
+      "
+    >
+      {/* handle */}
+      <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-3" />
+
+      {filterOptions[open].map((opt) => (
+        <button
+          key={opt}
+          onClick={() => updateFilter(open, opt)}
+          className={`w-full px-4 py-3 text-left text-sm border-b ${
+            current[open] === opt
+              ? "bg-purple-50 text-purple-700"
+              : "hover:bg-gray-100"
+          }`}
+        >
+          {opt}
+        </button>
+      ))}
     </div>
   </div>
 )}

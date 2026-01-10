@@ -109,7 +109,7 @@ export default function ClientViewComponent({
               <>
                 {/* overlay */}
                 <div
-                  className="fixed inset-0 z-40 bg-black/30 pt-4"
+                  className="fixed inset-0 z-40 bg-black/30"
                   onClick={() => setOpenFilter(false)}
                 />
 
@@ -132,31 +132,29 @@ export default function ClientViewComponent({
                 </div>
 
                 {/* MOBILE BOTTOM SHEET */}
-<div
-  className={`
+                <div
+                  className={`
     sm:hidden
-    fixed inset-x-0 bottom-0 top-[72px]
-    z-50
+    fixed inset-x-0 bottom-0 z-50
+    max-h-[85dvh]
     rounded-t-2xl
     shadow-2xl
     flex flex-col
-    overflow-hidden
     ${
       currentTheme === "light"
         ? "bg-white border-t border-gray-200"
         : "bg-gray-900 border-gray-800"
     }
   `}
->
-  {/* handle */}
-  <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-3" />
+                >
+                  {/* handle */}
+                  <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-3" />
 
-  {/* scroll area */}
-  <div className="flex-1 overflow-y-auto px-3 pb-6 overscroll-contain">
-    <EmbedFilter />
-  </div>
-</div>
-
+                  {/* scroll area */}
+                  <div className="flex-1 overflow-y-auto px-3 pb-6">
+                    <EmbedFilter />
+                  </div>
+                </div>
               </>
             )}
           </div>
