@@ -125,7 +125,25 @@ export default function EmbedFilter() {
                     />
 
                     {/* DROPDOWN (DESKTOP + MOBILE CONTENT) */}
-                    <div className="absolute z-50 mt-2 w-full bg-white border border-gray-200 shadow-xl rounded-xl max-h-[60vh] overflow-y-auto">
+                    {/* DROPDOWN */}
+<div
+  className="
+    z-50 bg-white border border-gray-200 shadow-xl
+    rounded-xl
+    max-h-[60vh] overflow-y-auto
+
+    /* DESKTOP */
+    absolute mt-2 w-full
+
+    /* MOBILE = FULL SHEET */
+    sm:absolute
+    fixed sm:fixed
+    inset-x-0 bottom-0 sm:inset-auto
+    rounded-t-2xl sm:rounded-xl
+    max-h-[85dvh] sm:max-h-[60vh]
+  "
+>
+
                       {filterOptions[key].map((opt) => (
                         <button
                           key={opt}
