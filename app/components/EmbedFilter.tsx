@@ -88,43 +88,23 @@ export default function EmbedFilter() {
             const value = current[key];
 
             return (
-              <div key={key} className="w-full relative">
+              <div key={key} className="w-full">
                 <button
                   onClick={() => setOpen(open === key ? null : key)}
-                  className={`w-full px-3 py-2 rounded-lg flex items-center gap-2 border text-sm`}
+                  className={`
+                    w-full px-3 py-1.5 sm:px-4 sm:py-2
+                    rounded-lg flex items-center gap-2
+                    border text-[13px] sm:text-sm transition
+                    ${
+                      isActive(key)
+                        ? "bg-purple-50 border-purple-300 text-purple-700"
+                        : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
+                    }
+                  `}
                 >
                   <span className="truncate flex-1">{value}</span>
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="w-4 h-4 shrink-0" />
                 </button>
-
-                {open === key && (
-                  <div
-                    className="
-        mt-2
-        w-full
-        rounded-xl
-        border
-        bg-white
-        max-h-[40dvh]
-        overflow-y-auto
-        shadow-lg
-      "
-                  >
-                    {filterOptions[key].map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => updateFilter(key, opt)}
-                        className={`w-full px-4 py-3 text-left text-sm ${
-                          current[key] === opt
-                            ? "bg-purple-50 text-purple-700"
-                            : "hover:bg-gray-100"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             );
           })}
@@ -160,7 +140,7 @@ export default function EmbedFilter() {
               )
           )}
         </div>
-      )}
+      )}      
     </div>
   );
 }
