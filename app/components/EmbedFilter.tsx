@@ -82,79 +82,85 @@ export default function EmbedFilter() {
 
   return (
     <div className="w-full">
-  {/* FILTER SCROLL AREA */}
-  <div className="max-h-[65dvh] overflow-y-auto pr-1">
-    <div className="bg-white border border-gray-200 rounded-xl p-3 space-y-3">
-      <div className="grid grid-cols-2 gap-2">
-        {orderedKeys.map((key) => {
-          const value = current[key];
+      <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 space-y-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {orderedKeys.map((key) => {
+            const value = current[key];
 
-          return (
-            <div key={key} className="w-full relative">
-              <button
-                onClick={() => setOpen(open === key ? null : key)}
-                className="w-full px-3 py-2 rounded-lg flex items-center gap-2 border text-sm bg-gray-50"
-              >
-                <span className="truncate flex-1">{value}</span>
-                <ChevronDown className="w-4 h-4" />
-              </button>
+            return (
+              <div key={key} className="w-full relative">
+                <button
+                  onClick={() => setOpen(open === key ? null : key)}
+                  className={`w-full px-3 py-2 rounded-lg flex items-center gap-2 border text-sm`}
+                >
+                  <span className="truncate flex-1">{value}</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
 
-              {open === key && (
-                <div className="mt-2 w-full rounded-xl border bg-white max-h-[40dvh] overflow-y-auto shadow-lg">
-                  {filterOptions[key].map((opt) => (
-                    <button
-                      key={opt}
-                      onClick={() => updateFilter(key, opt)}
-                      className={`w-full px-4 py-3 text-left text-sm ${
-                        current[key] === opt
-                          ? "bg-purple-50 text-purple-700"
-                          : "hover:bg-gray-100"
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                {open === key && (
+                  <div
+                    className="
+        mt-2
+        w-full
+        rounded-xl
+        border
+        bg-white
+        max-h-[40dvh]
+        overflow-y-auto
+        shadow-lg
+      "
+                  >
+                    {filterOptions[key].map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => updateFilter(key, opt)}
+                        className={`w-full px-4 py-3 text-left text-sm ${
+                          current[key] === opt
+                            ? "bg-purple-50 text-purple-700"
+                            : "hover:bg-gray-100"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {activeCount > 0 && (
+          <div className="flex justify-end">
+            <button
+              onClick={clearAll}
+              className="text-sm text-gray-500 hover:text-gray-900"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
       </div>
 
       {activeCount > 0 && (
-        <div className="flex justify-end">
-          <button
-            onClick={clearAll}
-            className="text-sm text-gray-500 hover:text-gray-900"
-          >
-            Clear all
-          </button>
+        <div className="flex flex-wrap gap-2 mt-3">
+          {orderedKeys.map(
+            (key) =>
+              isActive(key) && (
+                <div
+                  key={key}
+                  className="flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm"
+                >
+                  <span className="capitalize">{key}</span>
+                  <span className="truncate max-w-[120px]">{current[key]}</span>
+                  <button onClick={() => updateFilter(key, defaultValue[key])}>
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )
+          )}
         </div>
       )}
     </div>
-  </div>
-
-  {/* ACTIVE FILTER CHIPS */}
-  {activeCount > 0 && (
-    <div className="flex flex-wrap gap-2 mt-3">
-      {orderedKeys.map(
-        (key) =>
-          isActive(key) && (
-            <div
-              key={key}
-              className="flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm"
-            >
-              <span className="capitalize">{key}</span>
-              <span className="truncate max-w-[120px]">{current[key]}</span>
-              <button onClick={() => updateFilter(key, defaultValue[key])}>
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          )
-      )}
-    </div>
-  )}
-</div>
-
   );
 }
