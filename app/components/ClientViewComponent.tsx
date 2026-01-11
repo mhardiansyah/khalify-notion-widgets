@@ -117,7 +117,7 @@ export default function ClientViewComponent({
                 <div
                   className={`
         hidden sm:block
-        fixed  left-1/2 -translate-x-1/2
+        fixed top-[64px] left-1/2 -translate-x-1/2
         z-50
         rounded-xl border shadow-xl
         max-w-[90vw]
@@ -136,7 +136,8 @@ export default function ClientViewComponent({
                   className={`
     sm:hidden
     fixed inset-x-0 bottom-0 z-50
-    max-h-[85dvh]
+    h-[50dvh]
+    top-16
     rounded-t-2xl
     shadow-2xl
     flex flex-col
