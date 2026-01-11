@@ -137,8 +137,8 @@ export default function ClientViewComponent({
   className={`
     sm:hidden
     fixed inset-x-0 bottom-0 z-50
-    min-h-[40dvh]
-    max-h-[85dvh]
+    top-2
+    h-[35dvh]
     rounded-t-2xl
     shadow-2xl
     flex flex-col
@@ -149,7 +149,6 @@ export default function ClientViewComponent({
     }
   `}
 >
-
 
                   {/* handle */}
                   <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-3" />
