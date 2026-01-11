@@ -144,16 +144,16 @@ export default function EmbedFilter() {
 
       {/* ================= MODAL (MOBILE ONLY) ================= */}
       {open && (
-        <div className="sm:hidden relative z-50">
-          {/* backdrop */}
-          <div
-            className="absolute inset-0 bg-black/30"
-            onClick={() => setOpen(null)}
-          />
+  <div className="sm:hidden relative z-50">
+    {/* backdrop */}
+    <div
+      className="absolute inset-0 bg-black/30"
+      onClick={() => setOpen(null)}
+    />
 
-          {/* option list */}
-          <div
-            className="
+    {/* option list */}
+    <div
+      className="
         absolute left-0 right-0
         mt-4
         bg-white
@@ -162,23 +162,24 @@ export default function EmbedFilter() {
         overflow-y-auto
         shadow-xl
       "
-          >
-            {filterOptions[open].map((opt) => (
-              <button
-                key={opt}
-                onClick={() => updateFilter(open, opt)}
-                className={`w-full px-4 py-3 text-left text-sm border-b ${
-                  current[open] === opt
-                    ? "bg-purple-50 text-purple-700"
-                    : "hover:bg-gray-100"
-                }`}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+    >
+      {filterOptions[open].map((opt) => (
+        <button
+          key={opt}
+          onClick={() => updateFilter(open, opt)}
+          className={`w-full px-4 py-3 text-left text-sm border-b ${
+            current[open] === opt
+              ? "bg-purple-50 text-purple-700"
+              : "hover:bg-gray-100"
+          }`}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
