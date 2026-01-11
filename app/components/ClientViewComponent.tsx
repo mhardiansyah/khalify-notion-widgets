@@ -137,7 +137,7 @@ export default function ClientViewComponent({
     sm:hidden
     fixed inset-x-0 bottom-0 z-50
     max-h-[85dvh]
-    overflow-hidden
+    overflow-visible
     rounded-t-2xl
     shadow-2xl
     flex flex-col
@@ -153,7 +153,7 @@ export default function ClientViewComponent({
                   <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-3" />
 
                   {/* scroll area */}
-                  <div className="flex-1 overflow-y-auto px-3 pb-8">
+                  <div className="flex-1 overflow-y-auto px-3 pb-32">
                     <EmbedFilter />
                   </div>
                 </div>
