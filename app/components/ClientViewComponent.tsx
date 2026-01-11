@@ -132,30 +132,42 @@ export default function ClientViewComponent({
                 </div>
 
                 {/* MOBILE BOTTOM SHEET */}
-                <div
-                  className={`
+               {/* MOBILE BOTTOM SHEET */}
+<div
+  className="
     sm:hidden
-    fixed inset-x-0 bottom-0 z-50
-    max-h-[85dvh]
-    rounded-t-2xl
-    shadow-2xl
-    flex flex-col
-    ${
-      currentTheme === "light"
-        ? "bg-white border-t border-gray-200"
-        : "bg-gray-900 border-gray-800"
-    }
-  `}
-                >
-                  {/* handle */}
-                  <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-3" />
+    fixed inset-0 z-50
+    flex items-end
+  "
+>
+  {/* backdrop */}
+  <div
+    className="absolute inset-0 bg-black/40"
+    onClick={() => setOpenFilter(false)}
+  />
 
-                  {/* scroll area */}
-                  <div className="flex-1 overflow-y-auto px-3 pb-6 max-h-[70dvh]">
+  {/* sheet */}
+  <div
+    className="
+      relative
+      w-full
+      max-h-[75dvh]
+      bg-white
+      rounded-t-2xl
+      shadow-2xl
+      overflow-hidden
+    "
+  >
+    {/* handle */}
+    <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-3" />
 
-                    <EmbedFilter />
-                  </div>
-                </div>
+    {/* content scroll */}
+    <div className="overflow-y-auto px-3 pb-6 max-h-[65dvh]">
+      <EmbedFilter />
+    </div>
+  </div>
+</div>
+
               </>
             )}
           </div>
@@ -356,9 +368,7 @@ function VisualGrid({ filtered, theme, cardBg, onSelect }: any) {
                 ${theme === "light" ? "from-black/70" : "from-black/80"}
               `}
             >
-              <p className="text-white text-xs line-clamp-2">
-                {name}
-              </p>
+              <p className="text-white text-xs line-clamp-2">{name}</p>
             </div>
           </div>
         );
