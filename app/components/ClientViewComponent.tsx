@@ -117,7 +117,7 @@ export default function ClientViewComponent({
                 <div
                   className={`
         hidden sm:block
-        fixed top-[64px] left-1/2 -translate-x-1/2
+        fixed top-20 left-1/2 -translate-x-1/2
         z-50
         rounded-xl border shadow-xl
         max-w-[90vw]
