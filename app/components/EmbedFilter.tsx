@@ -85,29 +85,64 @@ export default function EmbedFilter() {
       <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 space-y-3">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {orderedKeys.map((key) => {
-            const value = current[key];
+  const value = current[key];
+  const isOpen = open === key;
 
-            return (
-              <div key={key} className="w-full">
-                <button
-                  onClick={() => setOpen(open === key ? null : key)}
-                  className={`
-                    w-full px-3 py-1.5 sm:px-4 sm:py-2
-                    rounded-lg flex items-center gap-2
-                    border text-[13px] sm:text-sm transition
-                    ${
-                      isActive(key)
-                        ? "bg-purple-50 border-purple-300 text-purple-700"
-                        : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
-                    }
-                  `}
-                >
-                  <span className="truncate flex-1">{value}</span>
-                  <ChevronDown className="w-4 h-4 shrink-0" />
-                </button>
-              </div>
-            );
-          })}
+  return (
+    <div key={key} className="w-full relative">
+      <button
+        onClick={() => setOpen(isOpen ? null : key)}
+        className={`
+          w-full px-3 py-1.5 sm:px-4 sm:py-2
+          rounded-lg flex items-center gap-2
+          border text-[13px] sm:text-sm transition
+          ${
+            isActive(key)
+              ? "bg-purple-50 border-purple-300 text-purple-700"
+              : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
+          }
+        `}
+      >
+        <span className="truncate flex-1">{value}</span>
+        <ChevronDown
+          className={`w-4 h-4 transition ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {/* DROPDOWN — NEMPEL KE BUTTON */}
+      {isOpen && (
+        <div
+          className="
+            sm:hidden
+            absolute top-full left-0 right-0 mt-1
+            z-50
+            bg-white
+            border
+            rounded-xl
+            shadow-lg
+            max-h-60
+            overflow-y-auto
+          "
+        >
+          {filterOptions[key].map((opt) => (
+            <button
+              key={opt}
+              onClick={() => updateFilter(key, opt)}
+              className={`w-full px-4 py-3 text-left text-sm border-b last:border-b-0 ${
+                current[key] === opt
+                  ? "bg-purple-50 text-purple-700"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+})}
+
         </div>
 
         {activeCount > 0 && (
@@ -143,23 +178,7 @@ export default function EmbedFilter() {
       )}
 
       {/* MOBILE INLINE OPTIONS */}
-      {open && (
-        <div className="sm:hidden mt-2 border rounded-xl overflow-hidden">
-          {filterOptions[open].map((opt) => (
-            <button
-              key={opt}
-              onClick={() => updateFilter(open, opt)}
-              className={`w-full px-4 py-3 text-left text-sm border-b last:border-b-0 ${
-                current[open] === opt
-                  ? "bg-purple-50 text-purple-700"
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-      )}
+      
     </div>
   );
 }
