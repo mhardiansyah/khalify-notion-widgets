@@ -52,19 +52,7 @@ export default function ClientViewComponent({
   useEffect(() => {
     setCurrentTheme(theme);
   }, [theme]);
-
-  useEffect(() => {
-  if (openFilter) {
-    document.body.style.overflow = "hidden";
-  } else {
-    document.body.style.overflow = "";
-  }
-
-  return () => {
-    document.body.style.overflow = "";
-  };
-}, [openFilter]);
-
+  
 
   const bg =
     currentTheme === "light" ? "bg-white text-gray-900" : "bg-black text-white";
@@ -98,8 +86,7 @@ export default function ClientViewComponent({
   /* ================= RENDER ================= */
 
   return (
-    <main className={`${bg} w-full`} style={{ minHeight: "calc(var(--vh) * 100)" }}>
-
+    <main className={`${bg} min-h-screen w-full`}>
       {/* ================= HEADER BAR ================= */}
       <header
         className={`sticky top-0 z-40 px-4 py-3 flex items-center justify-between border-b backdrop-blur ${
@@ -145,41 +132,42 @@ export default function ClientViewComponent({
                   <EmbedFilter />
                 </div>
 
-               {/* MOBILE BOTTOM SHEET */}
-{openFilter && (
-  <div className="sm:hidden fixed inset-0 z-50 flex items-end">
-    {/* backdrop */}
-    <div
-      className="absolute inset-0 bg-black/40"
-      onClick={() => setOpenFilter(false)}
-    />
+                {/* MOBILE BOTTOM SHEET */}
+                {/* MOBILE BOTTOM SHEET */}
+                <div
+                  className="
+    sm:hidden
+    fixed inset-0 z-50
+    flex items-end
+  "
+                >
+                  {/* backdrop */}
+                  <div
+                    className="absolute inset-0 bg-black/40"
+                    onClick={() => setOpenFilter(false)}
+                  />
 
-    {/* sheet */}
-    <div
-      className="
-        relative
-        w-full
-        rounded-t-2xl
-        bg-white
-        shadow-2xl
-        overflow-hidden
-      "
-      style={{
-        maxHeight: "calc(var(--vh) * 80)",
-      }}
-    >
-      {/* handle */}
-      <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-3" />
+                  {/* sheet */}
+                  <div
+                    className="
+      relative
+      w-full
+      max-h-[75dvh]
+      bg-white
+      rounded-t-2xl
+      shadow-2xl
+      overflow-hidden
+    "
+                  >
+                    {/* handle */}
+                    <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-3" />
 
-      {/* scrollable content */}
-      <div className="overflow-y-auto px-3 pb-6">
-        <EmbedFilter />
-      </div>
-    </div>
-  </div>
-)}
-
-                
+                    {/* content scroll */}
+                    <div className="overflow-y-auto px-3 pb-6 max-h-[65dvh]">
+                      <EmbedFilter />
+                    </div>
+                  </div>
+                </div>
               </>
             )}
           </div>
