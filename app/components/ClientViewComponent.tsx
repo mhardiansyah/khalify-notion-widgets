@@ -52,7 +52,6 @@ export default function ClientViewComponent({
   useEffect(() => {
     setCurrentTheme(theme);
   }, [theme]);
-  
 
   const bg =
     currentTheme === "light" ? "bg-white text-gray-900" : "bg-black text-white";
@@ -133,39 +132,29 @@ export default function ClientViewComponent({
                 </div>
 
                 {/* MOBILE BOTTOM SHEET */}
-                {/* MOBILE BOTTOM SHEET */}
                 <div
-                  className="
+  className={`
     sm:hidden
-    fixed inset-0 z-50
-    flex items-end
-  "
-                >
-                  {/* backdrop */}
-                  <div
-                    className="absolute inset-0 bg-black/40"
-                    onClick={() => setOpenFilter(false)}
-                  />
+    fixed inset-x-0 bottom-0 z-50
+    max-h-[85dvh]
+    overflow-hidden
+    rounded-t-2xl
+    shadow-2xl
+    flex flex-col
+    ${
+      currentTheme === "light"
+        ? "bg-white border-t border-gray-200"
+        : "bg-gray-900 border-gray-800"
+    }
+  `}
+>
 
-                  {/* sheet */}
-                  <div
-                    className="
-      relative
-      w-full
-      max-h-[75dvh]
-      bg-white
-      rounded-t-2xl
-      shadow-2xl
-      overflow-hidden
-    "
-                  >
-                    {/* handle */}
-                    <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-3" />
+                  {/* handle */}
+                  <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-3" />
 
-                    {/* content scroll */}
-                    <div className="overflow-y-auto px-3 pb-6 max-h-[65dvh]">
-                      <EmbedFilter />
-                    </div>
+                  {/* scroll area */}
+                  <div className="flex-1 overflow-y-auto px-3 pb-8">
+                    <EmbedFilter />
                   </div>
                 </div>
               </>
@@ -321,15 +310,13 @@ function HighlightSection({ highlights, theme }: any) {
 
 /* ================= GRID ================= */
 
-function VisualGrid({ filtered, theme, cardBg, onSelect }: any) {
+function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
   return (
     <div
-      className="
-        grid gap-3
-        grid-cols-2
-        sm:grid-cols-3
-        lg:grid-cols-4
-      "
+      className="grid gap-4"
+      style={{
+        gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
+      }}
     >
       {filtered.map((item: any, i: number) => {
         const name =
@@ -341,34 +328,20 @@ function VisualGrid({ filtered, theme, cardBg, onSelect }: any) {
           <div
             key={i}
             onClick={() => onSelect(item)}
-            className={`
-              relative group overflow-hidden
-              aspect-[4/5]
-              cursor-pointer
-              transition
-              hover:-translate-y-1
-              ${cardBg}
-            `}
+            className={`relative group  overflow-hidden aspect-[4/5] cursor-pointer hover:-translate-y-1 transition ${cardBg}`}
           >
             {pinned && (
-              <Pin className="absolute top-2 right-2 text-yellow-400 z-10" />
+              <Pin className="absolute top-3 right-3 text-yellow-400 z-10" />
             )}
 
             <AutoThumbnail src={image} />
 
-            {/* hover overlay */}
             <div
-              className={`
-                absolute inset-0
-                flex items-end
-                p-3
-                opacity-0 group-hover:opacity-100
-                transition
-                bg-gradient-to-t
-                ${theme === "light" ? "from-black/70" : "from-black/80"}
-              `}
+              className={`absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 transition bg-gradient-to-t ${
+                theme === "light" ? "from-black/70" : "from-black/80"
+              }`}
             >
-              <p className="text-white text-xs line-clamp-2">{name}</p>
+              <p className="text-white text-xs">{name}</p>
             </div>
           </div>
         );
