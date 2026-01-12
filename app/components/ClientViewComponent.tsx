@@ -197,28 +197,31 @@ export default function ClientViewComponent({
       )}
 
       {/* ================= CONTENT ================= */}
-      <div className="p-5 space-y-6">
-        {showBio && profile && (
-          <BioSection profile={profile} theme={currentTheme} />
-        )}
-
-        {showHighlight && profile?.highlights && (
-          <HighlightSection
-            highlights={profile.highlights}
-            theme={currentTheme}
+      <div
+          className={`absolute right-4 top-14 z-50 w-56 rounded-xl border shadow overflow-hidden ${
+            currentTheme === "light"
+              ? "bg-white border-gray-200"
+              : "bg-gray-900 border-gray-800"
+          }`}
+        >
+          <SettingToggle
+            label="Show Bio"
+            value={showBio}
+            onChange={() => setShowBio(!showBio)}
           />
-        )}
-
-        {viewMode === "visual" && (
-          <VisualGrid
-            filtered={filteredData}
-            gridColumns={gridColumns}
-            theme={currentTheme}
-            cardBg={cardBg}
-            onSelect={setSelectedItem}
+          <SettingToggle
+            label="Show Highlight"
+            value={showHighlight}
+            onChange={() => setShowHighlight(!showHighlight)}
           />
-        )}
-      </div>
+          <SettingToggle
+            label="Dark Mode"
+            value={currentTheme === "dark"}
+            onChange={() =>
+              setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
+            }
+          />
+        </div>
 
       {selectedItem && (
         <DetailModal
