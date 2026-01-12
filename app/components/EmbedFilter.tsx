@@ -30,7 +30,8 @@ const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
 export default function EmbedFilter() {
   const router = useRouter();
   const params = useSearchParams();
-  const [open, setOpen] = useState<string | null>(null);
+  type FilterKey = keyof typeof filterOptions;
+  const [open, setOpen] = useState<FilterKey | null>(null);
 
   const [position, setPosition] = useState<"top" | "bottom">("bottom");
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -94,17 +95,18 @@ export default function EmbedFilter() {
   return (
     <div className="w-full">
       <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 space-y-3">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {/* 🔥 MOBILE = 1 COL | DESKTOP = GRID */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {orderedKeys.map((key) => {
             const value = current[key];
 
             return (
               <div key={key} className="relative w-full">
+                {/* ===== DESKTOP BUTTON (TETAP) ===== */}
                 <button
                   ref={triggerRef}
                   onClick={() => {
                     if (!triggerRef.current) return;
-
                     const rect = triggerRef.current.getBoundingClientRect();
                     const spaceBelow = window.innerHeight - rect.bottom;
                     const spaceAbove = rect.top;
@@ -117,55 +119,69 @@ export default function EmbedFilter() {
                     setOpen(open === key ? null : key);
                   }}
                   className={`
-    w-full px-3 py-1.5 sm:px-4 sm:py-2
-    rounded-lg flex items-center gap-2
-    border text-[13px] sm:text-sm transition
-    ${
-      isActive(key)
-        ? "bg-purple-50 border-purple-300 text-purple-700"
-        : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
-    }
-  `}
+                    hidden sm:flex
+                    w-full px-4 py-2 rounded-lg
+                    items-center justify-between
+                    border text-sm transition
+                    ${
+                      isActive(key)
+                        ? "bg-purple-50 border-purple-300 text-purple-700"
+                        : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
+                    }
+                  `}
                 >
-                  <span className="truncate flex-1">{value}</span>
-                  <ChevronDown className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{value}</span>
+                  <ChevronDown className="w-4 h-4" />
                 </button>
 
-                {open === key && (
-                  <>
-                    {/* CLICK OUTSIDE */}
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setOpen(null)}
-                    />
+                {/* ===== MOBILE CARD ===== */}
+                <button
+                  onClick={() => setOpen(key)}
+                  className={`
+                    sm:hidden
+                    w-full px-4 py-3 rounded-xl
+                    flex items-center justify-between
+                    border
+                    ${
+                      isActive(key)
+                        ? "bg-purple-50 border-purple-300 text-purple-700"
+                        : "bg-gray-50 border-gray-300"
+                    }
+                  `}
+                >
+                  <span className="font-medium truncate">{value}</span>
+                  <ChevronDown className="w-4 h-4 opacity-60" />
+                </button>
 
-                    {/* DROPDOWN */}
-                    <div
-                      className={`
-        absolute z-50 w-full max-w-sm
-        bg-white rounded-xl shadow-xl
-        max-h-[260px] overflow-y-auto
-        ${position === "bottom" ? "mt-2 top-full" : "mb-2 bottom-full"}
-      `}
-                    >
-                      {filterOptions[key].map((opt) => (
-                        <button
-                          key={opt}
-                          onClick={() => updateFilter(key, opt)}
-                          className={`
-            w-full px-4 py-2 text-left text-sm
-            ${
-              value === opt
-                ? "bg-purple-50 text-purple-700"
-                : "hover:bg-gray-100"
-            }
-          `}
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
-                  </>
+                {/* ===== DESKTOP DROPDOWN ===== */}
+                {open === key && (
+                  <div
+                    className={`
+                      hidden sm:block
+                      absolute z-50 w-full
+                      bg-white rounded-xl shadow-xl
+                      max-h-[260px] overflow-y-auto
+                      ${
+                        position === "bottom"
+                          ? "mt-2 top-full"
+                          : "mb-2 bottom-full"
+                      }
+                    `}
+                  >
+                    {filterOptions[key].map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => updateFilter(key, opt)}
+                        className={`w-full px-4 py-2 text-left text-sm ${
+                          value === opt
+                            ? "bg-purple-50 text-purple-700"
+                            : "hover:bg-gray-100"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             );
@@ -183,6 +199,34 @@ export default function EmbedFilter() {
           </div>
         )}
       </div>
+
+      {/* ===== MOBILE BOTTOM SHEET ===== */}
+      {open && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/40 z-40 sm:hidden"
+            onClick={() => setOpen(null)}
+          />
+
+          <div className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto sm:hidden">
+            <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4" />
+
+            <h3 className="text-sm font-semibold capitalize mb-3">
+              {open}
+            </h3>
+
+            {filterOptions[open].map((opt) => (
+              <button
+                key={opt}
+                onClick={() => updateFilter(open, opt)}
+                className="w-full px-4 py-3 rounded-lg text-left hover:bg-gray-100"
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {activeCount > 0 && (
         <div className="flex flex-wrap gap-2 mt-3">
