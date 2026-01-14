@@ -107,6 +107,7 @@ export default function CreateWidgetPageMerged() {
             <InputTokenStep
               token={notionToken}
               setToken={setNotionToken}
+              setTokenValid={setIsTokenValid}
               onDbSelect={(id, name) => {
                 setDb(id);
                 setDbName(name);
@@ -125,7 +126,7 @@ export default function CreateWidgetPageMerged() {
               onBack={() => setStep(4)}
             />
           )}
-        </div>
+        </div>  
       </div>
     </>
   );

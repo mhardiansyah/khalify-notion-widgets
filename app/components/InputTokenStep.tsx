@@ -12,12 +12,15 @@ import { getNotionDatabases } from "@/app/lib/widget.api";
 interface InputTokenStepProps {
   token: string;
   setToken: (val: string) => void;
+  setTokenValid: (val: boolean) => void; // ✅ NEW
   onDbSelect: (dbId: string, name: string) => void;
 }
+
 
 export default function InputTokenStep({
   token,
   setToken,
+  setTokenValid,
   onDbSelect,
 }: InputTokenStepProps) {
   const [loading, setLoading] = useState(false);
@@ -25,30 +28,39 @@ export default function InputTokenStep({
   const [databases, setDatabases] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!token.startsWith("ntn_")) return;
+  if (!token.startsWith("ntn_")) {
+    setTokenValid(false);
+    return;
+  }
 
-    const validateAndFetch = async () => {
-      setLoading(true);
-      setError(null);
+  const validateAndFetch = async () => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const res = await getNotionDatabases(token);
-        if (!res.data || res.data.length === 0) {
-          setError("Token valid tapi database tidak ditemukan");
-          setDatabases([]);
-          return;
-        }
-        setDatabases(res.data);
-      } catch {
-        setError("Invalid token atau belum di-share ke database");
+    try {
+      const res = await getNotionDatabases(token);
+
+      if (!res.data || res.data.length === 0) {
+        setError("Token valid tapi database tidak ditemukan");
         setDatabases([]);
-      } finally {
-        setLoading(false);
+        setTokenValid(false);
+        return;
       }
-    };
 
-    validateAndFetch();
-  }, [token]);
+      setDatabases(res.data);
+      setTokenValid(true); // 🔥 PENTING
+    } catch {
+      setError("Invalid token atau belum di-share ke database");
+      setDatabases([]);
+      setTokenValid(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  validateAndFetch();
+}, [token, setTokenValid]);
+
 
   return (
     <div className="space-y-6">
