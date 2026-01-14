@@ -1,45 +1,60 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Folder,
+} from "lucide-react";
 import { getNotionDatabases } from "@/app/lib/widget.api";
 
 interface InputTokenStepProps {
   token: string;
   setToken: (val: string) => void;
-  onValid: () => void;
+  onDbSelect: (dbId: string, name: string) => void;
 }
 
 export default function InputTokenStep({
   token,
   setToken,
-  onValid,
+  onDbSelect,
 }: InputTokenStepProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [databases, setDatabases] = useState<any[]>([]);
 
-  const validate = async (value: string) => {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    if (!token.startsWith("ntn_")) return;
 
-    try {
-      const res = await getNotionDatabases(value);
-      if (!res.data || res.data.length === 0) {
-        setError("No database found or token invalid");
-        return;
+    const validateAndFetch = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const res = await getNotionDatabases(token);
+        if (!res.data || res.data.length === 0) {
+          setError("Token valid tapi database tidak ditemukan");
+          setDatabases([]);
+          return;
+        }
+        setDatabases(res.data);
+      } catch {
+        setError("Invalid token atau belum di-share ke database");
+        setDatabases([]);
+      } finally {
+        setLoading(false);
       }
-      onValid();
-    } catch {
-      setError("Invalid token or no access");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    validateAndFetch();
+  }, [token]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <h2 className="text-xl font-semibold">Paste Notion Token</h2>
 
+      {/* INPUT TOKEN */}
       <div className="relative">
         <input
           value={token}
@@ -54,22 +69,37 @@ export default function InputTokenStep({
               <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
             ) : error ? (
               <AlertCircle className="w-5 h-5 text-red-500" />
-            ) : (
+            ) : databases.length > 0 ? (
               <CheckCircle2 className="w-5 h-5 text-green-500" />
-            )}
+            ) : null}
           </div>
         )}
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      <button
-        onClick={() => validate(token)}
-        disabled={!token || loading}
-        className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg disabled:opacity-50"
-      >
-        Validate Token
-      </button>
+      {/* DATABASE LIST */}
+      {databases.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="font-semibold">Select Database</h3>
+
+          {databases.map((db) => (
+            <button
+              key={db.id}
+              onClick={() => onDbSelect(db.id, db.name)}
+              className="w-full p-4 border rounded-lg text-left hover:border-purple-500"
+            >
+              <div className="flex gap-3">
+                <Folder className="w-5 h-5 text-yellow-500 mt-0.5" />
+                <div>
+                  <p className="font-medium">{db.name}</p>
+                  <p className="text-xs text-gray-500">{db.id}</p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

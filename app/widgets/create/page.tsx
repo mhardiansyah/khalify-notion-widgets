@@ -13,7 +13,7 @@ import SelectDatabaseStep from "@/app/components/SelectDatabaseStep";
 
 // STEP COMPONENTS
 
-type WizardStep = 1 | 2 | 3 | 4 | 5;
+type WizardStep = 1 | 2 | 3 | 4 ;
 
 export default function CreateWidgetPageMerged() {
   const [step, setStep] = useState<WizardStep>(1);
@@ -55,7 +55,7 @@ export default function CreateWidgetPageMerged() {
       if (!embedLink) return;
 
       setEmbedUrl(embedLink);
-      setStep(5);
+      setStep(4);
     } finally {
       setLoading(false);
     }
@@ -72,8 +72,7 @@ export default function CreateWidgetPageMerged() {
             {[
               "Setup",
               "Create Token",
-              "Input Token",
-              "Select DB",
+              "Input Token & Select DB",
               "Finish",
             ].map((label, i) => {
               const id = (i + 1) as WizardStep;
@@ -108,17 +107,7 @@ export default function CreateWidgetPageMerged() {
             <InputTokenStep
               token={notionToken}
               setToken={setNotionToken}
-              onValid={() => {
-                setIsTokenValid(true);
-                setStep(4);
-              }}
-            />
-          )}
-
-          {step === 4 && (
-            <SelectDatabaseStep
-              token={notionToken}
-              onSelect={(id, name) => {
+              onDbSelect={(id, name) => {
                 setDb(id);
                 setDbName(name);
                 handleGenerateWidget();
@@ -126,7 +115,9 @@ export default function CreateWidgetPageMerged() {
             />
           )}
 
-          {step === 5 && (
+          
+
+          {step === 4 && (
             <FinishStep
               db={db!}
               embedUrl={embedUrl}
