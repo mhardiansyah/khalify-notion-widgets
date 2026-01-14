@@ -2,7 +2,7 @@
 
 import { ChevronDown, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const filterOptions = {
   platform: ["All Platform", "Instagram", "Tiktok", "Others"],
@@ -31,7 +31,6 @@ export default function EmbedFilter() {
   const router = useRouter();
   const params = useSearchParams();
   const [open, setOpen] = useState<string | null>(null);
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   const current = {
     platform: params.get("platform") ?? defaultValue.platform,
@@ -92,7 +91,7 @@ export default function EmbedFilter() {
   return (
     <div className="w-full">
       <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 space-y-3">
-        {/* 🔥 MOBILE = 1 kolom */}
+        {/* ⬇️ MOBILE 1 KOLOM */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
           {orderedKeys.map((key) => {
             const value = current[key];
@@ -100,12 +99,10 @@ export default function EmbedFilter() {
             return (
               <div key={key} className="relative w-full">
                 <button
-                  ref={triggerRef}
                   onClick={() => setOpen(open === key ? null : key)}
                   className={`
-                    w-full px-3 py-1.5 sm:px-4 sm:py-2
-                    rounded-lg flex items-center gap-2
-                    border text-[13px] sm:text-sm transition
+                    w-full px-3 py-2 rounded-lg flex items-center gap-2
+                    border text-sm transition
                     ${
                       isActive(key)
                         ? "bg-purple-50 border-purple-300 text-purple-700"
@@ -125,21 +122,18 @@ export default function EmbedFilter() {
                       onClick={() => setOpen(null)}
                     />
 
-                    {/* ✅ DROPDOWN — ALWAYS KE BAWAH */}
-                    <div
-                      className="
-                        absolute z-50 w-full mt-2 top-full
-                        rounded-xl border shadow-lg
-                        bg-white
-                        max-h-[260px] overflow-y-auto
-                      "
-                    >
+                    {/* ⬇️ DROPDOWN MIRIP SETTING */}
+                    <div className="absolute z-50 mt-2 w-56 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+                      <div className="px-4 py-2 text-xs font-semibold text-gray-400 border-b">
+                        {key.toUpperCase()}
+                      </div>
+
                       {filterOptions[key].map((opt) => (
                         <button
                           key={opt}
                           onClick={() => updateFilter(key, opt)}
                           className={`
-                            w-full px-4 py-3 text-left text-sm rounded-lg
+                            w-full px-4 py-3 flex items-center justify-between text-sm
                             ${
                               value === opt
                                 ? "bg-purple-50 text-purple-700"
@@ -147,7 +141,10 @@ export default function EmbedFilter() {
                             }
                           `}
                         >
-                          {opt}
+                          <span>{opt}</span>
+                          {value === opt && (
+                            <span className="text-xs">✓</span>
+                          )}
                         </button>
                       ))}
                     </div>
