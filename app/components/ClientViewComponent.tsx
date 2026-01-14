@@ -2,33 +2,34 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Pin, X, ExternalLink, Settings, Menu } from "lucide-react";
+import { Pin, X, ExternalLink, Settings, Menu, ChevronRight } from "lucide-react";
 import AutoThumbnail from "@/app/components/AutoThumbnail";
 import EmbedFilter from "@/app/components/EmbedFilter";
 import RefreshButton from "@/app/components/RefreshButton";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
-/* ================= TYPES ================= */
+/* ================= FILTER CONFIG ================= */
 
-type Highlight = {
-  title: string;
-  image?: string;
+const filterOptions = {
+  platform: ["All Platform", "Instagram", "Tiktok", "Others"],
+  status: ["All Status", "Not started", "In progress", "Done"],
+  pillar: [
+    "All Pillars",
+    "Tips and How to",
+    "Client Wins",
+    "Offer and Service",
+    "Other",
+    "Behind the Scenes",
+  ],
+  pinned: ["Pinned", "Pinned Only", "Unpinned Only"],
 };
 
-type Profile = {
-  name?: string;
-  username?: string;
-  avatarUrl?: string;
-  bio?: string;
-  highlights?: Highlight[];
+const defaultValue = {
+  platform: "All Platform",
+  status: "All Status",
+  pillar: "All Pillars",
+  pinned: "Pinned",
 };
-
-interface Props {
-  filtered: any[];
-  profile?: Profile | null;
-  theme?: "light" | "dark";
-  gridColumns?: number;
-}
 
 /* ================= MAIN ================= */
 
@@ -37,130 +38,80 @@ export default function ClientViewComponent({
   profile,
   theme = "light",
   gridColumns = 3,
-}: Props) {
-  const [viewMode] = useState<"visual" | "map">("visual");
+}: any) {
+  const params = useSearchParams();
+  const router = useRouter();
+
+  const [currentTheme, setCurrentTheme] = useState(theme);
   const [showBio, setShowBio] = useState(true);
   const [showHighlight, setShowHighlight] = useState(true);
-  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">(theme);
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
   const [openFilter, setOpenFilter] = useState(false);
   const [openSetting, setOpenSetting] = useState(false);
 
-  const params = useSearchParams();
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
 
-  useEffect(() => {
-    setCurrentTheme(theme);
-  }, [theme]);
+  const current = {
+    platform: params.get("platform") ?? defaultValue.platform,
+    status: params.get("status") ?? defaultValue.status,
+    pillar: params.get("pillar") ?? defaultValue.pillar,
+    pinned:
+      params.get("pinned") === "true"
+        ? "Pinned Only"
+        : params.get("pinned") === "false"
+        ? "Unpinned Only"
+        : defaultValue.pinned,
+  };
 
-  const bg =
-    currentTheme === "light" ? "bg-white text-gray-900" : "bg-black text-white";
+  const updateFilter = (key: string, value: string) => {
+    const q = new URLSearchParams(params.toString());
 
-  const cardBg = currentTheme === "light" ? "bg-white" : "bg-gray-900";
-
-  /* ================= FILTER LOGIC ================= */
-
-  const filteredData = filtered.filter((item) => {
-    const platform = params.get("platform");
-    const status = params.get("status");
-    const pinned = params.get("pinned");
-
-    const props = item.properties;
-
-    if (platform && platform !== "All Platform") {
-      if (props.Platform?.select?.name !== platform) return false;
+    if (value === defaultValue[key as keyof typeof defaultValue]) {
+      q.delete(key);
+    } else {
+      if (key === "pinned") {
+        q.set(
+          key,
+          value === "Pinned Only"
+            ? "true"
+            : value === "Unpinned Only"
+            ? "false"
+            : "all"
+        );
+      } else {
+        q.set(key, value);
+      }
     }
 
-    if (status && status !== "All Status") {
-      if (props.Status?.select?.name !== status) return false;
-    }
+    router.push(`?${q.toString()}`);
+    setActiveKey(null);
+    setOpenFilter(false);
+  };
 
-    if (pinned === "true" && props.Pinned?.checkbox !== true) return false;
-
-    if (pinned === "false" && props.Pinned?.checkbox !== false) return false;
-
+  const filteredData = filtered.filter((item: any) => {
+    const p = item.properties;
+    if (current.platform !== "All Platform" && p.Platform?.select?.name !== current.platform) return false;
+    if (current.status !== "All Status" && p.Status?.select?.name !== current.status) return false;
+    if (params.get("pinned") === "true" && p.Pinned?.checkbox !== true) return false;
+    if (params.get("pinned") === "false" && p.Pinned?.checkbox !== false) return false;
     return true;
   });
 
   /* ================= RENDER ================= */
 
   return (
-    <main className={`${bg} min-h-screen w-full`}>
-      {/* ================= HEADER BAR ================= */}
-      <header
-        className={`sticky top-0 z-40 px-4 py-3 flex items-center justify-between border-b backdrop-blur ${
-          currentTheme === "light"
-            ? "bg-white/80 border-gray-200"
-            : "bg-black/70 border-gray-800"
-        }`}
-      >
+    <main className={`${currentTheme === "light" ? "bg-white text-gray-900" : "bg-black text-white"} min-h-screen`}>
+      {/* ================= HEADER ================= */}
+      <header className="sticky top-0 z-40 px-4 py-3 flex justify-between border-b bg-white/80 backdrop-blur">
         <span className="font-semibold text-sm">khaslify</span>
 
-        <div className="flex items-center gap-2">
-          {/* 🔥 REFRESH ICON */}
+        <div className="flex gap-2">
           <RefreshButton />
 
-          <div className="relative">
-            <IconButton onClick={() => setOpenFilter((s) => !s)}>
-              <Menu size={16} />
-            </IconButton>
-
-            {openFilter && (
-              <>
-                {/* overlay */}
-                <div
-                  className="fixed inset-0 z-40 bg-black/30"
-                  onClick={() => setOpenFilter(false)}
-                />
-
-                {/* DESKTOP / TABLET */}
-                <div
-                  className={`
-        hidden sm:block
-        fixed top-[64px] left-1/2 -translate-x-1/2
-        z-50
-        rounded-xl border shadow-xl
-        max-w-[90vw]
-        ${
-          currentTheme === "light"
-            ? "bg-white border-gray-200"
-            : "bg-gray-900 border-gray-800"
-        }
-      `}
-                >
-                  <EmbedFilter />
-                </div>
-
-                {/* MOBILE BOTTOM SHEET */}
-                <div
-  onClick={(e) => e.stopPropagation()}
-  className={`
-    sm:hidden
-    fixed inset-x-0 bottom-0 z-50
-    top-2
-    h-[35dvh]
-    rounded-t-2xl
-    shadow-2xl
-    flex flex-col
-    ${
-      currentTheme === "light"
-        ? "bg-white border-t border-gray-200"
-        : "bg-gray-900 border-gray-800"
-    }
-  `}
->
-
-                  {/* handle */}
-                  <div className="w-12 h-1.5 bg-gray-400/40 rounded-full mx-auto my-3" />
-
-                  {/* scroll area */}
-                  <div className="flex-1 overflow-y-auto px-3 pb-6">
-                    <EmbedFilter />
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+          <IconButton onClick={() => setOpenFilter(true)}>
+            <Menu size={16} />
+          </IconButton>
 
           <IconButton onClick={() => setOpenSetting((s) => !s)}>
             <Settings size={16} />
@@ -168,135 +119,107 @@ export default function ClientViewComponent({
         </div>
       </header>
 
-      {openSetting && (
-        <div
-          className={`absolute right-4 top-14 z-50 w-56 rounded-xl border shadow ${
-            currentTheme === "light"
-              ? "bg-white border-gray-200"
-              : "bg-gray-900 border-gray-800"
-          }`}
-        >
-          <SettingToggle
-            label="Show Bio"
-            value={showBio}
-            onChange={() => setShowBio(!showBio)}
-          />
-          <SettingToggle
-            label="Show Highlight"
-            value={showHighlight}
-            onChange={() => setShowHighlight(!showHighlight)}
-          />
-          <SettingToggle
-            label="Dark Mode"
-            value={currentTheme === "dark"}
-            onChange={() =>
-              setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
-            }
-          />
+      {/* ================= FILTER ================= */}
+      {openFilter && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setOpenFilter(false)} />
+
+          {/* DESKTOP */}
+          <div className="hidden sm:block fixed top-[64px] left-1/2 -translate-x-1/2 z-50">
+            <EmbedFilter />
+          </div>
+
+          {/* MOBILE – SETTINGS STYLE */}
+          <div className="sm:hidden fixed inset-x-0 bottom-0 top-2 z-50 bg-white rounded-t-2xl flex flex-col">
+            <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-3" />
+
+            <div className="px-4 space-y-2">
+              {Object.keys(current).map((key) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveKey(key)}
+                  className="w-full px-4 py-3 rounded-xl border flex justify-between items-center text-sm bg-gray-50"
+                >
+                  <span className="capitalize">{key}</span>
+                  <span className="flex items-center gap-2 text-gray-500">
+                    {current[key as keyof typeof current]}
+                    <ChevronRight size={16} />
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ================= OPTION SHEET ================= */}
+      {activeKey && (
+        <div className="fixed inset-0 z-[60] bg-black/30">
+          <div className="absolute bottom-0 w-full bg-white rounded-t-2xl p-4 space-y-2">
+            {filterOptions[activeKey as keyof typeof filterOptions].map((opt) => (
+              <button
+                key={opt}
+                onClick={() => updateFilter(activeKey, opt)}
+                className="w-full py-3 text-left rounded-lg hover:bg-gray-100"
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       {/* ================= CONTENT ================= */}
       <div className="p-5 space-y-6">
-        {showBio && profile && (
-          <BioSection profile={profile} theme={currentTheme} />
-        )}
-
+        {showBio && profile && <BioSection profile={profile} />}
         {showHighlight && profile?.highlights && (
-          <HighlightSection
-            highlights={profile.highlights}
-            theme={currentTheme}
-          />
+          <HighlightSection highlights={profile.highlights} />
         )}
 
-        {viewMode === "visual" && (
-          <VisualGrid
-            filtered={filteredData}
-            gridColumns={gridColumns}
-            theme={currentTheme}
-            cardBg={cardBg}
-            onSelect={setSelectedItem}
-          />
-        )}
+        <VisualGrid
+          filtered={filteredData}
+          gridColumns={gridColumns}
+          onSelect={setSelectedItem}
+        />
       </div>
 
       {selectedItem && (
-        <DetailModal
-          item={selectedItem}
-          theme={currentTheme}
-          onClose={() => setSelectedItem(null)}
-        />
+        <DetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
       )}
     </main>
   );
 }
 
-/* ================= UI SMALL ================= */
+/* ================= UI ================= */
 
 function IconButton({ children, onClick }: any) {
   return (
     <button
       onClick={onClick}
-      className="w-9 h-9 flex items-center justify-center rounded-full border hover:bg-gray-100 dark:hover:bg-gray-800"
+      className="w-9 h-9 flex items-center justify-center rounded-full border"
     >
       {children}
     </button>
   );
 }
 
-function SettingToggle({ label, value, onChange }: any) {
-  return (
-    <button
-      onClick={onChange}
-      className="w-full px-4 py-3 flex items-center justify-between text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
-    >
-      <span>{label}</span>
-      <span
-        className={`w-9 h-5 rounded-full transition ${
-          value ? "bg-purple-600" : "bg-gray-300"
-        }`}
-      >
-        <span
-          className={`block w-4 h-4 bg-white rounded-full translate-y-0.5 transition ${
-            value ? "translate-x-4" : "translate-x-1"
-          }`}
-        />
-      </span>
-    </button>
-  );
-}
-
 /* ================= SECTIONS ================= */
 
-function BioSection({ profile, theme }: any) {
+function BioSection({ profile }: any) {
   return (
-    <section
-      className={`border rounded-2xl p-4 flex gap-4 ${
-        theme === "light"
-          ? "bg-white border-gray-200"
-          : "bg-gray-900 border-gray-800"
-      }`}
-    >
+    <section className="border rounded-2xl p-4 flex gap-4">
       <div className="w-16 h-16 rounded-full bg-gray-300" />
       <div>
         <h2 className="font-semibold">{profile.name}</h2>
-        {profile.bio && (
-          <p className="text-xs text-gray-500 mt-1">{profile.bio}</p>
-        )}
+        <p className="text-xs text-gray-500">{profile.bio}</p>
       </div>
     </section>
   );
 }
 
-function HighlightSection({ highlights, theme }: any) {
+function HighlightSection({ highlights }: any) {
   return (
-    <section
-      className={`border rounded-2xl p-4 ${
-        theme === "light"
-          ? "bg-gray-50 border-gray-200"
-          : "bg-gray-900 border-gray-800"
-      }`}
-    >
+    <section className="border rounded-2xl p-4">
       <div className="flex gap-3 overflow-x-auto">
         {highlights.map((h: any, i: number) => (
           <div key={i} className="min-w-[72px] text-center">
@@ -311,91 +234,35 @@ function HighlightSection({ highlights, theme }: any) {
 
 /* ================= GRID ================= */
 
-function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
+function VisualGrid({ filtered, gridColumns, onSelect }: any) {
   return (
     <div
       className="grid gap-4"
-      style={{
-        gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
-      }}
+      style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
     >
-      {filtered.map((item: any, i: number) => {
-        const name =
-          item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
-        const image = extractImage(item);
-        const pinned = item.properties?.Pinned?.checkbox;
-
-        return (
-          <div
-            key={i}
-            onClick={() => onSelect(item)}
-            className={`relative group  overflow-hidden aspect-[4/5] cursor-pointer hover:-translate-y-1 transition ${cardBg}`}
-          >
-            {pinned && (
-              <Pin className="absolute top-3 right-3 text-yellow-400 z-10" />
-            )}
-
-            <AutoThumbnail src={image} />
-
-            <div
-              className={`absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 transition bg-gradient-to-t ${
-                theme === "light" ? "from-black/70" : "from-black/80"
-              }`}
-            >
-              <p className="text-white text-xs">{name}</p>
-            </div>
-          </div>
-        );
-      })}
+      {filtered.map((item: any, i: number) => (
+        <div
+          key={i}
+          onClick={() => onSelect(item)}
+          className="relative aspect-[4/5] bg-gray-200 rounded-xl overflow-hidden cursor-pointer"
+        >
+          <AutoThumbnail src={extractImage(item)} />
+        </div>
+      ))}
     </div>
   );
 }
 
 /* ================= MODAL ================= */
 
-function DetailModal({ item, theme, onClose }: any) {
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, []);
-
-  const name = item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
-  const image = extractImage(item);
-
+function DetailModal({ item, onClose }: any) {
   return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur"
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-5xl rounded-2xl overflow-hidden ${
-          theme === "light" ? "bg-white" : "bg-gray-900"
-        }`}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full"
-        >
-          <X size={18} />
+    <div onClick={onClose} className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
+      <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl p-6 max-w-lg w-full">
+        <button onClick={onClose} className="absolute top-4 right-4">
+          <X />
         </button>
-
-        <div className="flex flex-col lg:flex-row">
-          <div className="lg:w-2/3 bg-black flex items-center justify-center">
-            <img src={image} alt={name} className="object-contain h-full" />
-          </div>
-
-          <div className="lg:w-1/3 p-6 space-y-4">
-            <h2 className="text-xl font-semibold">{name}</h2>
-
-            <button className="w-full bg-purple-600 text-white py-2 rounded-lg flex items-center justify-center gap-2">
-              <ExternalLink size={16} />
-              Open Original
-            </button>
-          </div>
-        </div>
+        <img src={extractImage(item)} className="w-full rounded-lg" />
       </div>
     </div>
   );
