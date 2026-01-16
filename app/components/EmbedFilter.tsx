@@ -50,7 +50,7 @@ export default function EmbedFilter() {
     if (value === defaultValue[key as keyof typeof defaultValue]) {
       newParams.delete(key);
     } else {
-      if (key === "pinned") {
+      if (key === "All Posts") {
         newParams.set(
           key,
           value === "Pinned Only"

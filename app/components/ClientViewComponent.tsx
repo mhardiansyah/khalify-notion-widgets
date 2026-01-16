@@ -55,9 +55,15 @@ export default function ClientViewComponent({
   }, [theme]);
 
   const bg =
-    currentTheme === "light" ? "bg-white text-gray-900" : "bg-black text-white";
+  currentTheme === "light"
+    ? "bg-white text-gray-900"
+    : "bg-[#1A2332] text-white";
 
-  const cardBg = currentTheme === "light" ? "bg-white" : "bg-gray-900";
+const cardBg =
+  currentTheme === "light"
+    ? "bg-white"
+    : "bg-[#1F2A3C]";
+
 
   /* ================= FILTER LOGIC ================= */
 
@@ -97,8 +103,9 @@ export default function ClientViewComponent({
       <header
         className={`sticky top-0 z-40 px-4 py-3 flex items-center justify-between border-b backdrop-blur ${
           currentTheme === "light"
-            ? "bg-white/80 border-gray-200"
-            : "bg-black/70 border-gray-800"
+  ? "bg-white/80 border-gray-200"
+  : "bg-[#1A2332]/90 border-[#2A3550]"
+
         }`}
       >
         <span className="font-semibold text-sm">khaslify</span>
@@ -121,8 +128,9 @@ export default function ClientViewComponent({
       rounded-xl border shadow-lg p-4
       ${
         currentTheme === "light"
-          ? "bg-white border-gray-200"
-          : "bg-gray-900 border-gray-800"
+  ? "bg-white border-gray-200"
+  : "bg-[#1F2A3C] border-[#2A3550]"
+
       }
     `}
               >
@@ -140,9 +148,10 @@ export default function ClientViewComponent({
       {openSetting && (
         <div
           className={`absolute right-4 top-14 z-50 w-56 rounded-xl border shadow ${
-            currentTheme === "light"
-              ? "bg-white border-gray-200"
-              : "bg-gray-900 border-gray-800"
+           currentTheme === "light"
+  ? "bg-white border-gray-200"
+  : "bg-[#1F2A3C] border-[#2A3550]"
+
           }`}
         >
           <SettingToggle
@@ -206,7 +215,9 @@ function IconButton({ children, onClick }: any) {
   return (
     <button
       onClick={onClick}
-      className="w-9 h-9 flex items-center justify-center rounded-full border hover:bg-gray-100 dark:hover:bg-gray-800"
+      className="w-9 h-9 flex items-center justify-center rounded-full border hover:bg-gray-100
+dark:hover:bg-[#24304A]
+"
     >
       {children}
     </button>
@@ -217,7 +228,8 @@ function SettingToggle({ label, value, onChange }: any) {
   return (
     <button
       onClick={onChange}
-      className="w-full px-4 py-3 flex items-center justify-between text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+      className="w-full px-4 py-3 flex items-center justify-between text-sm hover:bg-gray-100 dark:hover:bg-[#24304A]
+"
     >
       <span>{label}</span>
       <span
@@ -242,8 +254,9 @@ function BioSection({ profile, theme }: any) {
     <section
       className={`border rounded-2xl p-4 flex gap-4 ${
         theme === "light"
-          ? "bg-white border-gray-200"
-          : "bg-gray-900 border-gray-800"
+  ? "bg-white border-gray-200"
+  : "bg-[#1F2A3C] border-[#2A3550]"
+
       }`}
     >
       <div className="w-16 h-16 rounded-full bg-gray-300" />
@@ -262,8 +275,9 @@ function HighlightSection({ highlights, theme }: any) {
     <section
       className={`border rounded-2xl p-4 ${
         theme === "light"
-          ? "bg-gray-50 border-gray-200"
-          : "bg-gray-900 border-gray-800"
+  ? "bg-gray-50 border-gray-200"
+  : "bg-[#1F2A3C] border-[#2A3550]"
+
       }`}
     >
       <div className="flex gap-3 overflow-x-auto">
@@ -341,7 +355,10 @@ function DetailModal({ item, theme, onClose }: any) {
       <div
         onClick={(e) => e.stopPropagation()}
         className={`w-full max-w-5xl rounded-2xl overflow-hidden ${
-          theme === "light" ? "bg-white" : "bg-gray-900"
+         theme === "light"
+  ? "bg-gray-50 border-gray-200"
+  : "bg-[#1F2A3C] border-[#2A3550]"
+
         }`}
       >
         <button
