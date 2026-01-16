@@ -111,7 +111,7 @@ export default function ClientViewComponent({
               <div
                 className={`
       absolute right-0 top-full mt-2 z-50
-      w-[260px] sm:w-[320px] md:w-[360px]
+      w-[260px] sm:w-[320px] md:w-[520px]
       rounded-xl border shadow-lg p-4
       ${
         currentTheme === "light"
