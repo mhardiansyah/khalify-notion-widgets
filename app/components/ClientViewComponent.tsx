@@ -107,22 +107,21 @@ export default function ClientViewComponent({
             </IconButton>
 
             {/* ================= INLINE FILTER BAR ================= */}
-{showFilterBar && (
-  <div
-    className={`
-      sticky top-[56px] z-30
-      px-4 pb-4
+            {showFilterBar && (
+              <div
+                className={`
+      absolute right-0 top-full mt-2 z-50
+      w-[260px] rounded-xl border shadow-lg p-3
       ${
         currentTheme === "light"
-          ? "bg-white border-b border-gray-200"
-          : "bg-black border-gray-800"
+          ? "bg-white border-gray-200"
+          : "bg-gray-900 border-gray-800"
       }
     `}
-  >
-    <EmbedFilter />
-  </div>
-)}
-
+              >
+                <EmbedFilter />
+              </div>
+            )}
           </div>
 
           <IconButton onClick={() => setOpenSetting((s) => !s)}>
