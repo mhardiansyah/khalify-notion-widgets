@@ -104,11 +104,14 @@ export default function ClientViewComponent({
         <span className="font-semibold text-sm">khaslify</span>
 
         <div className="flex items-center gap-2">
-          <RefreshButton />
+          <RefreshButton theme={currentTheme} />
+
 
           {/* FILTER */}
           <div className="relative">
-            <IconButton onClick={() => setShowFilterBar((s) => !s)}>
+            <IconButton 
+            theme={currentTheme}
+            onClick={() => setShowFilterBar((s) => !s)}>
               <Menu size={16} />
             </IconButton>
 
@@ -130,7 +133,9 @@ export default function ClientViewComponent({
 
           {/* SETTINGS ✅ FIXED */}
           <div className="relative">
-            <IconButton onClick={() => setOpenSetting((s) => !s)}>
+            <IconButton 
+            theme={currentTheme}
+            onClick={() => setOpenSetting((s) => !s)}>
               <Settings size={16} />
             </IconButton>
 
@@ -144,16 +149,19 @@ export default function ClientViewComponent({
                 }`}
               >
                 <SettingToggle
+                  theme={currentTheme}
                   label="Show Bio"
                   value={showBio}
                   onChange={() => setShowBio(!showBio)}
                 />
                 <SettingToggle
+                  theme={currentTheme}
                   label="Show Highlight"
                   value={showHighlight}
                   onChange={() => setShowHighlight(!showHighlight)}
                 />
                 <SettingToggle
+                  theme={currentTheme}
                   label="Dark Mode"
                   value={currentTheme === "dark"}
                   onChange={() =>
