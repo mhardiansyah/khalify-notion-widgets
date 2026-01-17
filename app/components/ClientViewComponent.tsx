@@ -138,41 +138,33 @@ export default function ClientViewComponent({
         </div>
       </header>
 
-      <div className="relative">
-        <IconButton onClick={() => setOpenSetting((s) => !s)}>
-          <Settings size={16} />
-        </IconButton>
-
-        {openSetting && (
-          <div
-            className={`absolute right-0 top-full mt-2 z-50 w-56 rounded-xl border shadow
-        ${
-          currentTheme === "light"
-            ? "bg-white border-gray-200"
-            : "bg-[#1F2A3C] border-[#2A3550]"
-        }
-      `}
-          >
-            <SettingToggle
-              label="Show Bio"
-              value={showBio}
-              onChange={() => setShowBio(!showBio)}
-            />
-            <SettingToggle
-              label="Show Highlight"
-              value={showHighlight}
-              onChange={() => setShowHighlight(!showHighlight)}
-            />
-            <SettingToggle
-              label="Dark Mode"
-              value={currentTheme === "dark"}
-              onChange={() =>
-                setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
-              }
-            />
-          </div>
-        )}
-      </div>
+      {openSetting && (
+        <div
+          className={`absolute right-4 top-14 z-50 w-56 rounded-xl border shadow ${
+            currentTheme === "light"
+              ? "bg-white border-gray-200"
+              : "bg-[#1F2A3C] border-[#2A3550]"
+          }`}
+        >
+          <SettingToggle
+            label="Show Bio"
+            value={showBio}
+            onChange={() => setShowBio(!showBio)}
+          />
+          <SettingToggle
+            label="Show Highlight"
+            value={showHighlight}
+            onChange={() => setShowHighlight(!showHighlight)}
+          />
+          <SettingToggle
+            label="Dark Mode"
+            value={currentTheme === "dark"}
+            onChange={() =>
+              setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
+            }
+          />
+        </div>
+      )}
 
       {/* ================= CONTENT ================= */}
       <div className="p-5 space-y-6">
