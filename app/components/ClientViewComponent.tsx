@@ -228,7 +228,7 @@ function SettingToggle({ label, value, onChange }: any) {
   return (
     <button
       onClick={onChange}
-      className="w-full px-4 py-3 flex items-center justify-between text-sm hover:bg-gray-100 dark:hover:bg-[#24304A]
+      className="w-full px-4 py-3 flex rounded-full items-center justify-between text-sm hover:bg-gray-100 dark:hover:bg-[#24304A]
 "
     >
       <span>{label}</span>
