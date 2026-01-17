@@ -71,6 +71,8 @@ import Image from "next/image";
 
         const props = item.properties;
 
+        if (props.Hide?.checkbox === true) return false;
+
         if (platform && platform !== "All Platform") {
           if (props.Platform?.select?.name !== platform) return false;
         }
