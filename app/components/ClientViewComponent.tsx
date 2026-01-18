@@ -195,7 +195,7 @@ import Image from "next/image";
                   {/* 🔥 PRO BUTTON */}
                   <button
                     onClick={() => {
-                      alert("Upgrade to PRO version"); // nanti ganti ke modal / page pro
+                      alert("Upgrade to PRO version"); 
                     }}
                     className={`
           w-full py-3 text-sm font-semibold
