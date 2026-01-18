@@ -106,7 +106,7 @@ import Image from "next/image";
         >
           <div className="flex items-center gap-2">
   <Image
-    src="/logo-primay.png"
+    src="/logo-primary.png"
     alt="Khlasify"
     width={110}
     height={28}
