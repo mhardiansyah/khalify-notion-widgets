@@ -348,7 +348,7 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
             {pinned && (
               <div
                 className="absolute top-2.5 right-2.5 z-10
-                  w-6 h-6 rounded-full
+                  w-6 h-6 rounded-2xl
                   bg-black/40
                   flex items-center justify-center"
               >
