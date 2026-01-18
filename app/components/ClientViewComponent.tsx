@@ -211,7 +211,8 @@ export default function ClientViewComponent({
       </header>
 
       {/* ================= CONTENT ================= */}
-      <div className="p-5 space-y-6">
+      <div className="px-5 pb-5 space-y-4 sm:space-y-6">
+
         {showBio && profile && (
           <BioSection profile={profile} theme={currentTheme} />
         )}
@@ -222,19 +223,19 @@ export default function ClientViewComponent({
             theme={currentTheme}
           />
         )}
-
-        {viewMode === "visual" && (
-          <div className="-mx-5">
-            <VisualGrid
-              filtered={filteredData}
-              gridColumns={gridColumns}
-              theme={currentTheme}
-              cardBg={cardBg}
-              onSelect={setSelectedItem}
-            />
-          </div>
-        )}
       </div>
+
+      {viewMode === "visual" && (
+        <div className="-mx-5">
+          <VisualGrid
+            filtered={filteredData}
+            gridColumns={gridColumns}
+            theme={currentTheme}
+            cardBg={cardBg}
+            onSelect={setSelectedItem}
+          />
+        </div>
+      )}
 
       {selectedItem && (
         <DetailModal
