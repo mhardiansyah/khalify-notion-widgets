@@ -106,7 +106,7 @@ import Image from "next/image";
         >
           <div className="flex items-center gap-2">
   <Image
-    src="/logo-khlasify.png"
+    src="/logo-primay.png"
     alt="Khlasify"
     width={110}
     height={28}
@@ -195,7 +195,7 @@ import Image from "next/image";
                   {/* 🔥 PRO BUTTON */}
                   <button
                     onClick={() => {
-                      alert("Upgrade to PRO 🚀"); // nanti ganti ke modal / page pro
+                      alert("Upgrade to PRO version"); // nanti ganti ke modal / page pro
                     }}
                     className={`
           w-full py-3 text-sm font-semibold
@@ -289,8 +289,6 @@ import Image from "next/image";
     );
   }
 
-  /* ================= SECTIONS, GRID, MODAL, HELPERS ================= */
-  /* ⛔ TIDAK DIUBAH — SAMA PERSIS SEPERTI KODE KAMU */
 
   function BioSection({ profile, theme }: any) {
     return (
