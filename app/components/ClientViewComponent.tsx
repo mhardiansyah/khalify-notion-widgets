@@ -211,8 +211,7 @@ export default function ClientViewComponent({
       </header>
 
       {/* ================= CONTENT ================= */}
-      <div className="px-5 pb-5 space-y-4 sm:space-y-6">
-
+      <div className="px-5 pt-3 pb-5 space-y-4 sm:pt-5 sm:space-y-6">
         {showBio && profile && (
           <BioSection profile={profile} theme={currentTheme} />
         )}
