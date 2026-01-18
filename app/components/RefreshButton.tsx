@@ -28,7 +28,7 @@ export default function RefreshButton({
       title="Refresh"
       aria-label="Refresh"
       className={`
-        w-10 h-10 sm:w-9 sm:h-9
+        w-9 h-9
         flex items-center justify-center
         rounded-full border
         transition
