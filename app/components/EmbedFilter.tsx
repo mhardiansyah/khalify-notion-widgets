@@ -29,8 +29,10 @@ const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
 
 export default function EmbedFilter({
   theme = "light",
+  isPro = false,
 }: {
   theme?: "light" | "dark";
+  isPro?: boolean;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -49,6 +51,8 @@ export default function EmbedFilter({
   };
 
   const updateFilter = (key: string, value: string) => {
+    if (!isPro) return;
+
     const newParams = new URLSearchParams(params.toString());
 
     if (value === defaultValue[key as keyof typeof defaultValue]) {
@@ -61,7 +65,7 @@ export default function EmbedFilter({
             ? "true"
             : value === "Unpinned Only"
             ? "false"
-            : "all"
+            : "all",
         );
       } else {
         newParams.set(key, value);
@@ -80,6 +84,8 @@ export default function EmbedFilter({
   }, [open]);
 
   const clearAll = () => {
+    if (!isPro) return;
+
     const newParams = new URLSearchParams();
     const db = params.get("db");
     if (db) newParams.set("db", db);
@@ -101,14 +107,18 @@ export default function EmbedFilter({
             : "bg-[#1F2A3C] border-[#2A3550] text-white"
         }`}
       >
-        <div className="grid grid-cols-1 gap-2 ">
+        <div className="grid grid-cols-1 gap-2">
           {orderedKeys.map((key) => {
             const value = current[key];
 
             return (
               <div key={key} className="relative w-full">
                 <button
-                  onClick={() => setOpen(open === key ? null : key)}
+                  disabled={!isPro}
+                  onClick={() => {
+                    if (!isPro) return;
+                    setOpen(open === key ? null : key);
+                  }}
                   className={`w-full px-3 py-2 rounded-lg flex items-center gap-2 border text-sm transition
                     ${
                       isActive(key)
@@ -116,16 +126,21 @@ export default function EmbedFilter({
                           ? "bg-purple-50 border-purple-300 text-purple-700"
                           : "bg-purple-600/20 border-purple-500 text-purple-300"
                         : theme === "light"
-                        ? "bg-gray-50 border-gray-300 text-gray-700 hover:bg-[#F9FAFB]"
-                        : "bg-[#24304A] border-[#2A3550] text-gray-200 hover:bg-[#2E3A55]"
+                        ? "bg-gray-200 border-gray-300 text-gray-500"
+                        : "bg-[#2A3550] border-[#2A3550] text-gray-400"
                     }
+                    ${!isPro ? "cursor-not-allowed opacity-60" : ""}
                   `}
                 >
                   <span className="truncate flex-1">{value}</span>
-                  <ChevronDown className="w-4 h-4 shrink-0" />
+                  <ChevronDown
+                    className={`w-4 h-4 shrink-0 ${
+                      !isPro ? "opacity-50" : ""
+                    }`}
+                  />
                 </button>
 
-                {open === key && (
+                {open === key && isPro && (
                   <>
                     <div
                       className="fixed inset-0 z-40"
@@ -177,14 +192,28 @@ export default function EmbedFilter({
           })}
         </div>
 
+        {!isPro && (
+          <>
+            <div className="h-px my-3 bg-gray-200 dark:bg-[#2A3550]" />
+            <button
+              onClick={() => alert("Upgrade to PRO")}
+              className="w-full py-3 text-sm font-semibold text-purple-600 hover:bg-purple-50 transition"
+            >
+              Upgrade to PRO version
+            </button>
+          </>
+        )}
+
         {activeCount > 0 && (
           <div className="flex justify-end">
             <button
+              disabled={!isPro}
               onClick={clearAll}
               className={`text-sm ${
-                theme === "light"
+                !isPro
+                  ? "opacity-50 cursor-not-allowed"
+                  : theme === "light"
                   ? "text-gray-500 hover:text-gray-700"
-
                   : "text-gray-400 hover:text-white"
               }`}
             >
@@ -194,35 +223,37 @@ export default function EmbedFilter({
         )}
 
         {activeCount > 0 && (
-        <div className="flex flex-wrap gap-2 mt-3">
-          {orderedKeys.map(
-            (key) =>
-              isActive(key) && (
-                <div
-                  key={key}
-                  className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                    theme === "light"
-                      ? "bg-purple-100 text-purple-700"
-                      : "bg-purple-600/20 text-purple-300"
-                  }`}
-                >
-                  <span className="capitalize">{key}</span>
-                  <span className="truncate max-w-[120px]">
-                    {current[key]}
-                  </span>
-                  <button
-                    onClick={() => updateFilter(key, defaultValue[key])}
+          <div className="flex flex-wrap gap-2 mt-3">
+            {orderedKeys.map(
+              (key) =>
+                isActive(key) && (
+                  <div
+                    key={key}
+                    className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+                      theme === "light"
+                        ? "bg-purple-100 text-purple-700"
+                        : "bg-purple-600/20 text-purple-300"
+                    }`}
                   >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              )
-          )}
-        </div>
-      )}
+                    <span className="capitalize">{key}</span>
+                    <span className="truncate max-w-[120px]">
+                      {current[key]}
+                    </span>
+                    <button
+                      disabled={!isPro}
+                      onClick={() =>
+                        isPro && updateFilter(key, defaultValue[key])
+                      }
+                      className={!isPro ? "cursor-not-allowed opacity-50" : ""}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ),
+            )}
+          </div>
+        )}
       </div>
-
-      
     </div>
   );
 }
