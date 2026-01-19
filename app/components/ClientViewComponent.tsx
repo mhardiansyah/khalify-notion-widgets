@@ -106,120 +106,126 @@ export default function ClientViewComponent({
   return (
     <main className={`${bg} min-h-screen w-full overflow-x-hidden`}>
       <div className="max-w-7xl mx-auto">
-      {/* ================= HEADER ================= */}
-      <header
-        className={`sticky top-0 z-40 px-5 py-3 flex items-center justify-between border-b backdrop-blur ${
-          currentTheme === "light"
-          ? "bg-white/80 border-gray-200"
-            : "bg-[#1A2332]/90 border-[#2A3550]"
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          <Image
-            src="/logo-primary.png"
-            alt="Khlasify"
-            width={110}
-            height={28}
-            priority
-            className="select-none"
-          />
-        </div>
+        {/* ================= HEADER ================= */}
+        <header
+          className={`sticky top-0 z-40 border-b backdrop-blur
+    ${
+      currentTheme === "light"
+        ? "bg-white/80 border-gray-200"
+        : "bg-[#1A2332]/90 border-[#2A3550]"
+    }`}
+        >
+          <div className="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Image
+                src="/logo-primary.png"
+                alt="Khlasify"
+                width={110}
+                height={28}
+                priority
+                className="select-none"
+              />
+            </div>
 
-        <div className="flex items-center gap-2">
-          <RefreshButton theme={currentTheme} />
+            <div className="flex items-center gap-2">
+              <RefreshButton theme={currentTheme} />
 
-          {/* FILTER */}
-          <div className="relative">
-            <IconButton
-              theme={currentTheme}
-              onClick={() => setShowFilterBar((s) => !s)}
-            >
-              <Menu size={16} />
-            </IconButton>
+              {/* FILTER */}
+              <div className="relative">
+                <IconButton
+                  theme={currentTheme}
+                  onClick={() => setShowFilterBar((s) => !s)}
+                >
+                  <Menu size={16} />
+                </IconButton>
 
-            {showFilterBar && (
-              <div className="absolute right-0 top-full mt-2 z-50 w-56">
-                <EmbedFilter theme={currentTheme} isPro={isPro} />
+                {showFilterBar && (
+                  <div className="absolute right-0 top-full mt-2 z-50 w-56">
+                    <EmbedFilter theme={currentTheme} isPro={isPro} />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* SETTINGS ✅ FIXED */}
-          <div className="relative">
-            <IconButton
-              theme={currentTheme}
-              onClick={() => setOpenSetting((s) => !s)}
-            >
-              <Settings size={16} />
-            </IconButton>
-
-            {openSetting && (
-              <div
-                className={`absolute right-0 top-full mt-2 z-50 w-56 rounded-xl border shadow overflow-hidden
-      ${
-        currentTheme === "light"
-        ? "bg-white border-gray-200"
-          : "bg-[#1F2A3C] border-[#2A3550]"
-      }`}
-              >
-                <SettingToggle
+              {/* SETTINGS ✅ FIXED */}
+              <div className="relative">
+                <IconButton
                   theme={currentTheme}
-                  label="Show Bio"
-                  value={showBio}
-                  disabled={!isPro}
-                  onChange={() => setShowBio(!showBio)}
-                />
+                  onClick={() => setOpenSetting((s) => !s)}
+                >
+                  <Settings size={16} />
+                </IconButton>
 
-                <SettingToggle
-                  theme={currentTheme}
-                  label="Show Highlight"
-                  value={showHighlight}
-                  disabled={!isPro}
-                  onChange={() => setShowHighlight(!showHighlight)}
-                />
-
-                <SettingToggle
-                  theme={currentTheme}
-                  label="Dark Mode"
-                  value={currentTheme === "dark"}
-                  disabled={!isPro}
-                  onChange={() =>
-                    setCurrentTheme((t) => (t === "light" ? "dark" : "light"))
-                  }
-                />
-
-                {/* DIVIDER */}
-                <div
-                  className={`h-px my-1 ${
-                    currentTheme === "light" ? "bg-gray-200" : "bg-[#2A3550]"
+                {openSetting && (
+                  <div
+                    className={`absolute right-0 top-full mt-2 z-50 w-56 rounded-xl border shadow overflow-hidden
+                  ${
+                    currentTheme === "light"
+                      ? "bg-white border-gray-200"
+                      : "bg-[#1F2A3C] border-[#2A3550]"
                   }`}
-                />
+                  >
+                    <SettingToggle
+                      theme={currentTheme}
+                      label="Show Bio"
+                      value={showBio}
+                      disabled={!isPro}
+                      onChange={() => setShowBio(!showBio)}
+                    />
 
-                {/* 🔥 PRO BUTTON */}
-                {/* 🔥 PRO CTA */}
-                {isPro ? (
-                  <button
-                    onClick={() => {
-                      alert("Open customize bio");
-                    }}
-                    className={`
+                    <SettingToggle
+                      theme={currentTheme}
+                      label="Show Highlight"
+                      value={showHighlight}
+                      disabled={!isPro}
+                      onChange={() => setShowHighlight(!showHighlight)}
+                    />
+
+                    <SettingToggle
+                      theme={currentTheme}
+                      label="Dark Mode"
+                      value={currentTheme === "dark"}
+                      disabled={!isPro}
+                      onChange={() =>
+                        setCurrentTheme((t) =>
+                          t === "light" ? "dark" : "light",
+                        )
+                      }
+                    />
+
+                    {/* DIVIDER */}
+                    <div
+                      className={`h-px my-1 ${
+                        currentTheme === "light"
+                          ? "bg-gray-200"
+                          : "bg-[#2A3550]"
+                      }`}
+                    />
+
+                    {/* 🔥 PRO BUTTON */}
+                    {/* 🔥 PRO CTA */}
+                    {isPro ? (
+                      <button
+                        onClick={() => {
+                          alert("Open customize bio");
+                        }}
+                        className={`
                       w-full py-3 text-sm font-semibold
-      transition
+                      transition
       ${
         currentTheme === "light"
           ? "text-purple-600 hover:bg-[#F9FAFB]"
           : "text-purple-400 hover:bg-[#24304A]"
       }
-      `}
-                  >
-                    Click here to customize your bio
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      alert("Upgrade to PRO version");
-                    }}
-                    className={`
+          `}
+                      >
+                        Click here to customize your bio
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          alert("Upgrade to PRO version");
+                        }}
+                        className={`
       w-full py-3 text-sm font-semibold
       transition
       ${
@@ -227,96 +233,97 @@ export default function ClientViewComponent({
           ? "text-purple-600 hover:bg-[#F9FAFB]"
           : "text-purple-400 hover:bg-[#24304A]"
       }
-    `}
-                  >
-                    Upgrade to PRO version
-                  </button>
+          `}
+                      >
+                        Upgrade to PRO version
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
+            </div>
           </div>
+        </header>
+
+        {/* ================= CONTENT ================= */}
+        <div className="px-5 pb-5 space-y-4 sm:space-y-6">
+          {showBio && profile && (
+            <BioSection profile={profile} theme={currentTheme} />
+          )}
+
+          {showHighlight && profile?.highlights && (
+            <HighlightSection
+              highlights={profile.highlights}
+              theme={currentTheme}
+            />
+          )}
         </div>
-      </header>
 
-      {/* ================= CONTENT ================= */}
-      <div className="px-5 pb-5 space-y-4 sm:space-y-6">
-        {showBio && profile && (
-          <BioSection profile={profile} theme={currentTheme} />
-        )}
+        {viewMode === "visual" && (
+          <div className="relative px-5">
+            <VisualGrid
+              filtered={visibleData}
+              gridColumns={gridColumns}
+              theme={currentTheme}
+              cardBg={cardBg}
+              onSelect={(item: any) => {
+                if (!isPro) {
+                  alert("Upgrade to PRO to view widget details");
+                  return;
+                }
+                setSelectedItem(item);
+              }}
+            />
 
-        {showHighlight && profile?.highlights && (
-          <HighlightSection
-          highlights={profile.highlights}
-            theme={currentTheme}
-          />
-        )}
-      </div>
-
-      {viewMode === "visual" && (
-        <div className="relative px-5">
-          <VisualGrid
-            filtered={visibleData}
-            gridColumns={gridColumns}
-            theme={currentTheme}
-            cardBg={cardBg}
-            onSelect={(item: any) => {
-              if (!isPro) {
-                alert("Upgrade to PRO to view widget details");
-                return;
-              }
-              setSelectedItem(item);
-            }}
-          />
-
-          {/* 🔒 FREE LIMIT OVERLAY */}
-          {isLimited && (
-            <div className="pointer-events-none absolute bottom-0 left-0 w-full h-56 flex items-end justify-center">
-              {/* blur layer */}
-              <div
-                className="
+            {/* 🔒 FREE LIMIT OVERLAY */}
+            {isLimited && (
+              <div className="pointer-events-none absolute bottom-0 left-0 w-full h-56 flex items-end justify-center">
+                {/* blur layer */}
+                <div
+                  className="
       absolute inset-0
       backdrop-blur-lg
       bg-black/20
       [mask-image:linear-gradient(to_top,black,transparent)]
     "
-              />
+                />
 
-              {/* gradient layer */}
-              <div
-                className="
+                {/* gradient layer */}
+                <div
+                  className="
       absolute inset-0
       bg-gradient-to-t
       from-black/60
       via-black/30
       to-transparent
       "
-      />
+                />
 
-              {/* content */}
-              <div className="relative mb-6 text-center pointer-events-auto">
-                <p className="text-white text-sm font-semibold mb-2">
-                  You’ve reached the free limit
-                </p>
-                <button
-                  onClick={() => alert("Upgrade to PRO")}
-                  className="px-5 py-2 rounded-full bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 transition"
-                >
-                  Upgrade to PRO
-                </button>
+                {/* content */}
+                <div className="relative mb-6 text-center pointer-events-auto">
+                  <p className="text-white text-sm font-semibold mb-2">
+                    You’ve reached the free limit
+                  </p>
+                  <button
+                    onClick={() => alert("Upgrade to PRO")}
+                    className="px-5 py-2 rounded-full bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 transition"
+                  >
+                    Upgrade to PRO
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
 
-      {selectedItem && (
-        <DetailModal
-        item={selectedItem}
-        theme={currentTheme}
-        onClose={() => setSelectedItem(null)}
-        />
-      )}
-        </div>
+        {selectedItem && (
+          <DetailModal
+            item={selectedItem}
+            theme={currentTheme}
+            onClose={() => setSelectedItem(null)}
+          />
+        )}
+      </div>
     </main>
   );
 }
@@ -409,11 +416,11 @@ function HighlightSection({ highlights, theme }: any) {
 function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
   return (
     <div
-  className="grid gap-px"
-  style={{
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-  }}
->
+      className="grid gap-px"
+      style={{
+        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+      }}
+    >
       {filtered.map((item: any, i: number) => {
         const name =
           item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
