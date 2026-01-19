@@ -40,7 +40,7 @@ export default function ClientViewComponent({
   gridColumns = 3,
 }: Props) {
   const [viewMode] = useState<"visual" | "map">("visual");
-  const [showBio, setShowBio] = useState(true);
+  const [showBio, setShowBio] = useState(false);
   const [showHighlight, setShowHighlight] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<"light" | "dark">(theme);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
