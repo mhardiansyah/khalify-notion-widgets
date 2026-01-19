@@ -194,7 +194,12 @@ export default function EmbedFilter({
 
         {!isPro && (
           <>
-            <div className="h-px my-3 bg-gray-200 dark:bg-[#2A3550]" />
+            <div
+  className={`h-px my-3 ${
+    theme === "light" ? "bg-gray-200" : "bg-[#2A3550]"
+  }`}
+/>
+
             <button
               onClick={() => alert("Upgrade to PRO")}
               className="w-full py-3 text-sm font-semibold text-purple-600 hover:bg-purple-50 transition"
