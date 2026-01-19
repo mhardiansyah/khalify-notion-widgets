@@ -105,7 +105,8 @@ export default function ClientViewComponent({
 
   return (
     <main className={`${bg} min-h-screen w-full overflow-x-hidden`}>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-5">
+
         {/* ================= HEADER ================= */}
         <header
           className={`sticky top-0 z-40 border-b backdrop-blur
@@ -246,7 +247,7 @@ export default function ClientViewComponent({
         </header>
 
         {/* ================= CONTENT ================= */}
-        <div className="px-5 pb-5 space-y-4 sm:space-y-6">
+        <div className="pb-5 space-y-4 sm:space-y-6">
           {showBio && profile && (
             <BioSection profile={profile} theme={currentTheme} />
           )}
@@ -260,7 +261,7 @@ export default function ClientViewComponent({
         </div>
 
         {viewMode === "visual" && (
-          <div className="relative px-5">
+          <div className="relative">
             <VisualGrid
               filtered={visibleData}
               gridColumns={gridColumns}
