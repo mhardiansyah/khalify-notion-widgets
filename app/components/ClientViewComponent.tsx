@@ -270,40 +270,41 @@ export default function ClientViewComponent({
           {/* 🔒 FREE LIMIT OVERLAY */}
           {isLimited && (
             <div className="pointer-events-none absolute bottom-0 left-0 w-full h-56 flex items-end justify-center">
-              {/* blur layer */}
-              <div
-                className="
+  {/* blur layer */}
+  <div
+    className="
       absolute inset-0
-      backdrop-blur-md
+      backdrop-blur-lg
       bg-black/20
       [mask-image:linear-gradient(to_top,black,transparent)]
     "
-              />
+  />
 
-              {/* gradient layer */}
-              <div
-                className="
+  {/* gradient layer */}
+  <div
+    className="
       absolute inset-0
       bg-gradient-to-t
-      from-black/70
+      from-black/60
       via-black/30
       to-transparent
     "
-              />
+  />
 
-              {/* content */}
-              <div className="relative mb-6 text-center pointer-events-auto">
-                <p className="text-white text-sm font-semibold mb-2">
-                  You’ve reached the free limit
-                </p>
-                <button
-                  onClick={() => alert("Upgrade to PRO")}
-                  className="px-5 py-2 rounded-full bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 transition"
-                >
-                  Upgrade to PRO
-                </button>
-              </div>
-            </div>
+  {/* content */}
+  <div className="relative mb-6 text-center pointer-events-auto">
+    <p className="text-white text-sm font-semibold mb-2">
+      You’ve reached the free limit
+    </p>
+    <button
+      onClick={() => alert("Upgrade to PRO")}
+      className="px-5 py-2 rounded-full bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 transition"
+    >
+      Upgrade to PRO
+    </button>
+  </div>
+</div>
+
           )}
         </div>
       )}
