@@ -14,7 +14,7 @@ export default function TemplateStep({ onConfirm }: TemplateStepProps) {
 
       <div className="flex justify-center gap-4">
         <a
-          href="https://notion.so/your-template-link"
+          href="https://khlasify.myr.id/pl/content-starter"
           target="_blank"
           className="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300"
         >
