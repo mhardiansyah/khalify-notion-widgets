@@ -70,7 +70,7 @@ export default function CreateWidgetPageMerged() {
         {/* STEP INDICATOR */}
         <div className="flex justify-center mb-10">
           <div className="flex gap-8">
-            {["Setup", "Create Token & Select DB", "Finish"].map(
+            {["Start", "Setup", "Finish"].map(
               (label, i) => {
                 const id = (i + 1) as WizardStep;
                 return (
