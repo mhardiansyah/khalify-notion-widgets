@@ -10,8 +10,6 @@ export default function WelcomePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
 
-
-
   useEffect(() => {
     const token = cookies.get("login_token");
 
@@ -32,11 +30,14 @@ export default function WelcomePage() {
 
       <div className="max-w-5xl mx-auto px-12 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-16">
-          <img
-            src="/ImageWithFallback.png"
-            className="rounded-xl w-full"
-            alt="UI Preview"
-          />
+          <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm w-full aspect-video">
+            <iframe
+              src="https://khalify-notion-widgets.vercel.app/embed/998875?db=2ed1519e-69f0-801d-9d05-f41df80688e3"
+              className="w-full h-full"
+              loading="lazy"
+              allowFullScreen
+            />
+          </div>
 
           <div>
             <span className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">
@@ -63,24 +64,26 @@ export default function WelcomePage() {
 
         {/* 🌟 EASY SETUP SECTION dari kode 2 */}
         <div className="mb-12">
-          <h2 className="text-2xl text-gray-900 mb-6">Easy setups (5 mins):</h2>
+          <h2 className="text-2xl text-gray-900 mb-6">
+            Get started in 5 minutes
+          </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 step: "1",
-                title: "Setup Notion Template",
-                desc: "Create your database in Notion",
+                title: "Duplicate Content OS",
+                desc: "Create your database in Notion.",
               },
               {
                 step: "2",
-                title: "Connect Integration",
-                desc: "Link your Notion workspace",
+                title: "Connect Your Database",
+                desc: "Link your database to widget.",
               },
               {
                 step: "3",
-                title: "Embed Widget",
-                desc: "Add to your Notion page",
+                title: "Embed Preview Widget",
+                desc: "Add to your Notion page.",
               },
             ].map((item) => (
               <div
@@ -153,7 +156,7 @@ export default function WelcomePage() {
             onClick={() => router.push("/widget/create")}
             className="flex items-center gap-2 px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors shadow-lg shadow-purple-200 hover:shadow-xl"
           >
-            <span>Let&apos;s Started</span>
+            <span>Start Setup</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"

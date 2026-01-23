@@ -15,7 +15,7 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const menuItems = [
-    { id: "/home", label: "home", icon: Home },
+    { id: "/home", label: "Home", icon: Home },
     { id: "/widgets/create", label: "Setup", icon: Settings },
     { id: "/helps", label: "Help", icon: HelpCircle },
     { id: "/accounts", label: "Account", icon: User },
