@@ -120,32 +120,32 @@ export default function WelcomePage() {
 
             <ul className="space-y-2">
               <li className="text-sm text-purple-600 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" /> Setup Guide
+                <CheckCircle2 className="w-4 h-4" /> Starter Setup
               </li>
               <li className="text-sm text-purple-600 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" /> Using Pro Features
+                <CheckCircle2 className="w-4 h-4" /> PRO Setup
               </li>
             </ul>
           </div>
 
           {/* WHY USE THIS */}
           <div className="bg-white border border-gray-200 rounded-xl p-6">
-            <h3 className="text-gray-900 font-semibold mb-4">Why use this?</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">Why creators use Content OS?</h3>
 
             <ul className="space-y-3 text-sm text-gray-700">
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                <span>Plan your Instagram feed visually</span>
+                <span>Plan content visually across platforms</span>
               </li>
 
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                <span>Sync automatically with Notion database</span>
+                <span>Live previews synced with your Notion database</span>
               </li>
 
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                <span>No coding required</span>
+                <span>Clean, focused workflow — no coding needed</span>
               </li>
             </ul>
           </div>
@@ -153,7 +153,7 @@ export default function WelcomePage() {
 
         <div className="flex justify-center md:justify-end mt-6">
           <button
-            onClick={() => router.push("/widget/create")}
+            onClick={() => router.push("/widgets/create")}
             className="flex items-center gap-2 px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors shadow-lg shadow-purple-200 hover:shadow-xl"
           >
             <span>Start Setup</span>
