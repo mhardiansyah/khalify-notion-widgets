@@ -217,7 +217,7 @@ export default function AccountsPage() {
               <div className="mt-6 flex items-center justify-between">
                 <button
                   onClick={() =>
-                    (window.location.href =
+                    window.open(
                       "https://khlasify.myr.id/pl/content-pro/")
                   }
                   className="flex items-center gap-2 text-sm text-purple-600 hover:underline"
