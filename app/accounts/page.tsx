@@ -107,7 +107,7 @@ export default function AccountsPage() {
 
             if (res?.success) {
               setWidgets((prev) =>
-                prev.filter((widget) => widget.id !== widgetId)
+                prev.filter((widget) => widget.id !== widgetId),
               );
 
               toast.success("Widget berhasil dihapus");
@@ -215,7 +215,13 @@ export default function AccountsPage() {
 
               {/* ACTIONS */}
               <div className="mt-6 flex items-center justify-between">
-                <button className="flex items-center gap-2 text-sm text-purple-600 hover:underline">
+                <button
+                  onClick={() =>
+                    (window.location.href =
+                      "https://khlasify.myr.id/pl/content-pro/")
+                  }
+                  className="flex items-center gap-2 text-sm text-purple-600 hover:underline"
+                >
                   <Crown className="w-4 h-4" />
                   Upgrade to Pro
                 </button>

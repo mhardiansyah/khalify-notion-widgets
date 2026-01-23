@@ -202,7 +202,6 @@ export default function ClientViewComponent({
                       }`}
                     />
 
-                    {/* 🔥 PRO BUTTON */}
                     {/* 🔥 PRO CTA */}
                     {isPro ? (
                       <button

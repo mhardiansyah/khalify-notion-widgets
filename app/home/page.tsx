@@ -40,17 +40,15 @@ export default function WelcomePage() {
 
           <div>
             <span className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">
-              Free Tool
+              Multi-Platform Content Preview
             </span>
 
             <h1 className="text-4xl text-gray-900 font-bold mt-5">
-              Making Instagram feed planning easier by bringing your grid view
-              to Notion
+              Turn Notion into your visual content system.
             </h1>
 
             <p className="text-gray-600 text-lg mt-4 leading-relaxed">
-              Just a few steps and you’ll have a beautiful Instagram-style
-              gallery that updates automatically.
+              Plan, preview, and organize everything in one clean workspace.
             </p>
 
             {/* CTA atas tetap kode 1 */}
