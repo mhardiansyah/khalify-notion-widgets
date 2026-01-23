@@ -46,8 +46,8 @@ export default function EmbedFilter({
       params.get("pinned") === "true"
         ? "Pinned Only"
         : params.get("pinned") === "false"
-        ? "Unpinned Only"
-        : defaultValue.pinned,
+          ? "Unpinned Only"
+          : defaultValue.pinned,
   };
 
   const updateFilter = (key: string, value: string) => {
@@ -64,8 +64,8 @@ export default function EmbedFilter({
           value === "Pinned Only"
             ? "true"
             : value === "Unpinned Only"
-            ? "false"
-            : "all",
+              ? "false"
+              : "all",
         );
       } else {
         newParams.set(key, value);
@@ -126,17 +126,15 @@ export default function EmbedFilter({
                           ? "bg-purple-50 border-purple-300 text-purple-700"
                           : "bg-purple-600/20 border-purple-500 text-purple-300"
                         : theme === "light"
-                        ? "bg-gray-200 border-gray-300 text-gray-500"
-                        : "bg-[#2A3550] border-[#2A3550] text-gray-400"
+                          ? "bg-gray-200 border-gray-300 text-gray-500"
+                          : "bg-[#2A3550] border-[#2A3550] text-gray-400"
                     }
                     ${!isPro ? "cursor-not-allowed opacity-60" : ""}
                   `}
                 >
                   <span className="truncate flex-1">{value}</span>
                   <ChevronDown
-                    className={`w-4 h-4 shrink-0 ${
-                      !isPro ? "opacity-50" : ""
-                    }`}
+                    className={`w-4 h-4 shrink-0 ${!isPro ? "opacity-50" : ""}`}
                   />
                 </button>
 
@@ -175,8 +173,8 @@ export default function EmbedFilter({
                                   ? "bg-purple-50 text-purple-700"
                                   : "bg-purple-600/20 text-purple-300"
                                 : theme === "light"
-                                ? "hover:bg-[#F9FAFB]"
-                                : "hover:bg-[#24304A]"
+                                  ? "hover:bg-[#F9FAFB]"
+                                  : "hover:bg-[#24304A]"
                             }
                           `}
                         >
@@ -195,19 +193,16 @@ export default function EmbedFilter({
         {!isPro && (
           <>
             <div
-  className={`h-px my-3 ${
-    theme === "light" ? "bg-gray-200" : "bg-[#2A3550]"
-  }`}
-/>
+              className={`h-px my-3 ${
+                theme === "light" ? "bg-gray-200" : "bg-[#2A3550]"
+              }`}
+            />
 
             <button
               onClick={() => {
-                window.open(
-                            "https://khlasify.myr.id/pl/content-pro",
-                            "_blank",
-                          );
+                window.open("https://khlasify.myr.id/pl/content-pro", "_blank");
               }}
-              className="w-full py-3 text-sm font-semibold text-purple-600 hover:bg-purple-50 transition"
+              className="w-full py-3 text-sm font-semibold text-purple-600 hover:bg-purple-50 transition rounded-2xl"
             >
               Upgrade to PRO version
             </button>
@@ -223,8 +218,8 @@ export default function EmbedFilter({
                 !isPro
                   ? "opacity-50 cursor-not-allowed"
                   : theme === "light"
-                  ? "text-gray-500 hover:text-gray-700"
-                  : "text-gray-400 hover:text-white"
+                    ? "text-gray-500 hover:text-gray-700"
+                    : "text-gray-400 hover:text-white"
               }`}
             >
               Clear all
