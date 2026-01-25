@@ -74,12 +74,12 @@ export default function FinishStep({
         )}
 
         {/* BACK BUTTON */}
-        <button
+        {/* <button
           onClick={onBack}
           className="w-full px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
         >
           Back
-        </button>
+        </button> */}
       </div>
 
       <LivePreviewBox token={token} db={db} embedUrl={embedUrl ?? undefined} />
