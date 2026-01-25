@@ -60,17 +60,20 @@ export default function Navbar() {
           </div>
 
           {/* NAV MENU */}
-          <nav className="flex justify-center">
-            <ul className="grid grid-cols-2 gap-2 md:flex md:gap-4">
+          <nav className="flex justify-center overflow-hidden">
+            <ul className="flex flex-nowrap items-center gap-1 md:gap-4">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname.startsWith(item.id);
 
                 return (
-                  <li key={item.id}>
+                  <li key={item.id} className="shrink-0">
                     <Link
                       href={item.id}
-                      className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm transition-all whitespace-nowrap
+                      className={`flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-2
+              px-2 py-1 md:px-4 md:py-2
+              rounded-lg transition-all
+              text-[11px] md:text-sm
               ${
                 isActive
                   ? "bg-purple-50 text-purple-600 ring-1 ring-purple-200"
@@ -78,11 +81,11 @@ export default function Navbar() {
               }`}
                     >
                       <Icon
-                        className={`w-5 h-5 ${
+                        className={`w-4 h-4 md:w-5 md:h-5 ${
                           isActive ? "text-purple-600" : "text-gray-400"
                         }`}
                       />
-                      <span>{item.label}</span>
+                      <span className="leading-none">{item.label}</span>
                     </Link>
                   </li>
                 );
