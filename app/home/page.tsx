@@ -34,7 +34,7 @@ export default function WelcomePage() {
           <div className="lg:col-span-2 rounded-3xl overflow-hidden border bg-white/70 backdrop-blur shadow-sm p-4">
             <div className="w-full h-[420px] rounded-2xl overflow-hidden border">
               <iframe
-                src="https://widget.khlasify.com/embed/573971?db=2f3fcca5-aa8d-8011-a9ac-f0df1d797d62"
+                src="https://widget.khlasify.com/embed/873472?db=2ed1519e-69f0-801d-9d05-f41df80688e3"
                 className="w-full h-full"
                 loading="lazy"
                 allowFullScreen
