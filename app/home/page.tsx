@@ -29,22 +29,34 @@ export default function WelcomePage() {
       <Navbar />
 
       <div className="max-w-5xl mx-auto px-12 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-16">
-          <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm w-full aspect-video">
-            <iframe
-              src="https://khalify-notion-widgets.vercel.app/embed/998875?db=2ed1519e-69f0-801d-9d05-f41df80688e3"
-              className="w-full h-full"
-              loading="lazy"
-              allowFullScreen
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-center mb-16">
+          {/* PREVIEW CARD */}
+          <div className="lg:col-span-2 rounded-3xl overflow-hidden border bg-white/70 backdrop-blur shadow-sm p-4">
+            <div className="w-full h-[420px] rounded-2xl overflow-hidden border">
+              <iframe
+                src="https://khalify-notion-widgets.vercel.app/embed/998875?db=2ed1519e-69f0-801d-9d05-f41df80688e3"
+                className="w-full h-full"
+                loading="lazy"
+                allowFullScreen
+              />
+            </div>
+
+            {/* OPTIONAL CAPTION */}
+            <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
+              <span>Live Widget Preview</span>
+              <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs">
+                Auto-synced from Notion
+              </span>
+            </div>
           </div>
 
+          {/* TEXT SIDE */}
           <div>
             <span className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">
               Multi-Platform Content Preview
             </span>
 
-            <h1 className="text-4xl text-gray-900 font-bold mt-5">
+            <h1 className="text-4xl text-gray-900 font-bold mt-5 leading-tight">
               Turn Notion into your visual content system.
             </h1>
 
@@ -52,10 +64,9 @@ export default function WelcomePage() {
               Plan, preview, and organize everything in one clean workspace.
             </p>
 
-            {/* CTA atas tetap kode 1 */}
             <button
               onClick={() => router.push("/widgets/create")}
-              className="mt-6 bg-purple-600 text-white px-6 py-3 rounded-lg shadow hover:bg-purple-700 transition"
+              className="mt-6 bg-purple-600 text-white px-7 py-3 rounded-xl shadow hover:bg-purple-700 transition"
             >
               Get Started →
             </button>
@@ -130,7 +141,9 @@ export default function WelcomePage() {
 
           {/* WHY USE THIS */}
           <div className="bg-white border border-gray-200 rounded-xl p-6">
-            <h3 className="text-gray-900 font-semibold mb-4">Why creators use Content OS?</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">
+              Why creators use Content OS?
+            </h3>
 
             <ul className="space-y-3 text-sm text-gray-700">
               <li className="flex items-start gap-2">
