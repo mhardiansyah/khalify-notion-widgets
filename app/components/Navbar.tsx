@@ -43,9 +43,10 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 backdrop-blur-md bg-white/80">
       <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex items-center">
-          {/* LEFT */}
-          <div className="flex items-center">
+        {/* WRAPPER */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          {/* LEFT - LOGO */}
+          <div className="flex justify-center md:justify-start">
             <Link href="/home" className="flex items-center">
               <Image
                 src="/logo-primary.png"
@@ -59,8 +60,8 @@ export default function Navbar() {
           </div>
 
           {/* NAV MENU */}
-          <nav className="absolute left-1/2 -translate-x-1/2">
-            <ul className="flex items-center gap-4">
+          <nav className="flex justify-center">
+            <ul className="flex flex-wrap justify-center gap-2 md:gap-4">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname.startsWith(item.id);
@@ -69,12 +70,12 @@ export default function Navbar() {
                   <li key={item.id}>
                     <Link
                       href={item.id}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all
-                        ${
-                          isActive
-                            ? "bg-purple-50 text-purple-600 ring-1 ring-purple-200"
-                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                        }`}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all whitespace-nowrap
+                      ${
+                        isActive
+                          ? "bg-purple-50 text-purple-600 ring-1 ring-purple-200"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      }`}
                     >
                       <Icon
                         className={`w-5 h-5 ${
@@ -88,12 +89,6 @@ export default function Navbar() {
               })}
             </ul>
           </nav>
-
-          {/* FOOTER */}
-          {/* <div className="text-right leading-tight">
-            <p className="text-xs text-gray-500">Made with ❤️ by</p>
-            <p className="text-sm text-gray-900 font-semibold">@rainbowgrow</p>
-          </div> */}
         </div>
       </div>
     </header>
