@@ -196,7 +196,9 @@ export default function Helps() {
         <div className="mt-12 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-8 text-center">
           <h3 className="text-xl text-gray-900 mb-2">Still need help?</h3>
           <p className="text-gray-600 mb-6">Our team is ready to assist you</p>
-          <button className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors shadow-lg shadow-purple-200">
+          <button
+            onClick={() => window.open("https://khlasify.super.site/support", "_blank")}
+            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors shadow-lg shadow-purple-200">
             Contact Support
           </button>
         </div>
