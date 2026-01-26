@@ -49,7 +49,7 @@ export default function ClientViewComponent({
   const [openSetting, setOpenSetting] = useState(false);
 
   const params = useSearchParams();
-  const isPro = true; //  ganti true kalau akun PRO
+  const isPro = false; //  ganti true kalau akun PRO
 
   useEffect(() => {
     setCurrentTheme(theme);
