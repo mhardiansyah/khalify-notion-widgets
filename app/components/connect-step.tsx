@@ -36,10 +36,10 @@ const requiredProperties = [
   { name: "Name", type: "Title" },
   { name: "Publish Date", type: "Date" },
   { name: "Attachment", type: "Files & Media" },
-  { name: "Pinned", type: "Checkbox" },
+  { name: "Pin", type: "Checkbox" },
   { name: "Platform", type: "Select" },
   { name: "Status", type: "Select" },
-  { name: "Content Pillar", type: "Select" },
+  { name: "Pillar", type: "Select" },
 ];
 
 export function ConnectStep({
