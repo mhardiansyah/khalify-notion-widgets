@@ -64,7 +64,10 @@ export default function Navbar() {
             <ul className="flex flex-nowrap items-center gap-1 md:gap-4">
               {menuItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname.startsWith(item.id);
+                const isActive =
+                  item.id === "/"
+                    ? pathname === "/"
+                    : pathname.startsWith(item.id);
 
                 return (
                   <li key={item.id} className="shrink-0">
