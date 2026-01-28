@@ -1,200 +1,167 @@
 "use client";
 
-import Image from "next/image";
-import LoginPage from "./auth/login/page";
 import { useEffect, useState } from "react";
-import cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import cookies from "js-cookie";
 import Navbar from "./components/Navbar";
+import {
+  Sparkles,
+  ArrowRight,
+  CheckCircle2,
+  Play,
+} from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
 
-  // useEffect(() => {
-  //   const token = cookies.get("login_token");
-
-  //   if (!token) {
-  //     router.replace("/auth/login");
-  //     return;
-  //   }
-
-  //   setUser({ token });
-  //   cookies.remove("login_email");
-  // }, []);
-
   useEffect(() => {
-  const token = cookies.get("login_token");
-  if (token) {
-    setUser({ token });
-  }
-}, []);
-
-
-  // if (!user) return <div>Loading...</div>;
+    const token = cookies.get("login_token");
+    if (token) setUser({ token });
+  }, []);
 
   return (
     <>
       <Navbar />
 
-      <div className="max-w-5xl mx-auto px-12 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-center mb-16">
-          {/* PREVIEW CARD */}
-          <div className="lg:col-span-2 rounded-3xl overflow-hidden border bg-white/70 backdrop-blur shadow-sm p-4">
-            <div className="w-full h-[420px] rounded-2xl overflow-hidden border">
-              <iframe
-                src="https://widget.khlasify.com/embed/873472?db=2ed1519e-69f0-801d-9d05-f41df80688e3"
-                className="w-full h-full"
-                loading="lazy"
-                allowFullScreen
-              />
-            </div>
+      <div className="bg-gray-50 py-16">
+        <div className="max-w-[1440px] mx-auto px-6">
 
-            {/* OPTIONAL CAPTION */}
-            <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
-              <span>Live Widget Preview</span>
-              <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs">
-                Auto-synced from Notion
-              </span>
-            </div>
-          </div>
+          {/* ================= HERO SECTION ================= */}
+          <div className="flex flex-col lg:flex-row gap-14 items-start justify-center">
 
-          {/* TEXT SIDE */}
-          <div>
-            <span className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">
-              Multi-Platform Content Preview
-            </span>
+            {/* ===== LEFT : PREVIEW MOCKUP ===== */}
+            <div className="relative w-full lg:w-[700px]">
+              {/* blur bg */}
+              <div className="absolute -top-10 -left-10 w-[480px] h-[600px] bg-purple-400/20 blur-[80px] rounded-3xl" />
 
-            <h1 className="text-4xl text-gray-900 font-bold mt-5 leading-tight">
-              Turn Notion into your visual content system.
-            </h1>
-
-            <p className="text-gray-600 text-lg mt-4 leading-relaxed">
-              Plan, preview, and organize everything in one clean workspace.
-            </p>
-
-            <button
-              onClick={() => router.push("/widgets/create")}
-              className="mt-6 bg-purple-600 text-white px-7 py-3 rounded-xl shadow hover:bg-purple-700 transition"
-            >
-              Get Started →
-            </button>
-          </div>
-        </div>
-
-        {/* 🌟 EASY SETUP SECTION dari kode 2 */}
-        <div className="mb-12">
-          <h2 className="text-2xl text-gray-900 mb-6">
-            Get started in 5 minutes
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                step: "1",
-                title: "Duplicate Content OS",
-                desc: "Create your database in Notion.",
-              },
-              {
-                step: "2",
-                title: "Connect Your Database",
-                desc: "Link your database to widget.",
-              },
-              {
-                step: "3",
-                title: "Embed Preview Widget",
-                desc: "Add to your Notion page.",
-              },
-            ].map((item) => (
-              <div
-                key={item.step}
-                className="bg-white border border-gray-200 rounded-xl p-6 hover:border-purple-300 transition-colors"
-              >
-                <div className="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center mb-4">
-                  {item.step}
+              {/* browser frame */}
+              <div className="relative bg-white rounded-2xl border shadow-sm overflow-hidden">
+                {/* browser header */}
+                <div className="flex items-center gap-2 px-4 h-12 bg-gray-100 border-b">
+                  <span className="w-3 h-3 rounded-full bg-red-400" />
+                  <span className="w-3 h-3 rounded-full bg-yellow-400" />
+                  <span className="w-3 h-3 rounded-full bg-green-400" />
+                  <span className="ml-4 text-xs text-gray-500">
+                    https://widget.khlasify.com
+                  </span>
                 </div>
-                <h3 className="text-gray-900 font-semibold mb-2">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-gray-600">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          {/* VIDEO CARD */}
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-4 h-4 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
-                </svg>
+                {/* iframe preview */}
+                <div className="h-[520px]">
+                  <iframe
+                    src="https://widget.khlasify.com/embed/873472?db=2ed1519e-69f0-801d-9d05-f41df80688e3"
+                    className="w-full h-full"
+                    loading="lazy"
+                  />
+                </div>
               </div>
-              <h3 className="text-gray-900 font-semibold">Video Tutorials</h3>
             </div>
 
-            <ul className="space-y-2">
-              <li className="text-sm text-purple-600 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" /> Starter Setup
-              </li>
-              <li className="text-sm text-purple-600 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" /> PRO Setup
-              </li>
-            </ul>
+            {/* ===== RIGHT : CONTENT ===== */}
+            <div className="flex flex-col gap-8 w-full lg:w-[580px]">
+
+              {/* badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 border border-purple-200 w-fit">
+                <Sparkles className="w-4 h-4 text-purple-600" />
+                <span className="text-purple-700 text-sm">
+                  Multi-Platform Content Preview
+                </span>
+              </div>
+
+              {/* title */}
+              <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                Turn Notion into your visual content system.
+              </h1>
+
+              {/* subtitle */}
+              <p className="text-lg text-gray-600">
+                Plan, preview, and organize everything in one clean workspace.
+              </p>
+
+              {/* CTA */}
+              <button
+                onClick={() => router.push("/widgets/create")}
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-7 py-4 rounded-xl w-fit shadow-lg shadow-purple-200 transition"
+              >
+                Get Started
+                <ArrowRight className="w-5 h-5" />
+              </button>
+
+              {/* ===== STEPS ===== */}
+              <div className="mt-6">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                  Get started in 5 minutes
+                </h2>
+
+                <div className="flex flex-col gap-4">
+                  {[
+                    ["1", "Duplicate Content OS", "Create your database in Notion"],
+                    ["2", "Connect Your Database", "Link your database to widget"],
+                    ["3", "Embed Preview Widget", "Add to your Notion page"],
+                  ].map(([step, title, desc]) => (
+                    <div
+                      key={step}
+                      className="relative bg-white border rounded-2xl p-6"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold mb-4">
+                        {step}
+                      </div>
+                      <h3 className="font-semibold text-gray-900">{title}</h3>
+                      <p className="text-gray-600 text-sm mt-1">{desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* WHY USE THIS */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6">
-            <h3 className="text-gray-900 font-semibold mb-4">
-              Why creators use Content OS?
-            </h3>
+          {/* ================= BOTTOM SECTION ================= */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-20 max-w-[1300px] mx-auto">
 
-            <ul className="space-y-3 text-sm text-gray-700">
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                <span>Plan content visually across platforms</span>
-              </li>
+            {/* VIDEO */}
+            <div className="bg-purple-50 border border-purple-200 rounded-2xl p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center">
+                  <Play className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="font-semibold text-lg">Video Tutorials</h3>
+              </div>
 
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                <span>Live previews synced with your Notion database</span>
-              </li>
+              <ul className="space-y-3">
+                <li className="flex items-center gap-2 text-purple-600">
+                  <CheckCircle2 className="w-5 h-5" />
+                  Starter Setup
+                </li>
+                <li className="flex items-center gap-2 text-purple-600">
+                  <CheckCircle2 className="w-5 h-5" />
+                  PRO Setup
+                </li>
+              </ul>
+            </div>
 
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                <span>Clean, focused workflow — no coding needed</span>
-              </li>
-            </ul>
+            {/* WHY */}
+            <div className="bg-white border rounded-2xl p-8">
+              <h3 className="font-semibold text-lg mb-4">
+                Why creators use Content OS?
+              </h3>
+
+              <ul className="space-y-4 text-gray-700">
+                <li className="flex gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                  Plan content visually across platforms
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                  Live previews synced with Notion database
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                  Clean, focused workflow — no coding needed
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
-
-        <div className="flex justify-center md:justify-end mt-6">
-          <button
-            onClick={() => router.push("/widgets/create")}
-            className="flex items-center gap-2 px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors shadow-lg shadow-purple-200 hover:shadow-xl"
-          >
-            <span>Start Setup</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              stroke="currentColor"
-              className="w-5 h-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17.25 12l-6.75 6.75M17.25 12l-6.75-6.75M17.25 12H3"
-              />
-            </svg>
-          </button>
         </div>
       </div>
     </>
