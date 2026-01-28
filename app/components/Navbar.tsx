@@ -47,7 +47,7 @@ export default function Navbar() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {/* LEFT - LOGO */}
           <div className="flex justify-center md:justify-start">
-            <Link href="/home" className="flex items-center">
+            <Link href="/" className="flex items-center">
               <Image
                 src="/logo-primary.png"
                 alt="Logo"
