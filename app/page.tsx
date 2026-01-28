@@ -48,7 +48,7 @@ export default function Home() {
                 </div>
 
                 {/* iframe preview */}
-                <div className="h-[520px]">
+                <div className="h-[680px] lg:h-[760px]">
                   <iframe
                     src="https://widget.khlasify.com/embed/873472?db=2ed1519e-69f0-801d-9d05-f41df80688e3"
                     className="w-full h-full"
