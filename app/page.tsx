@@ -4,12 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import cookies from "js-cookie";
 import Navbar from "./components/Navbar";
-import {
-  Sparkles,
-  ArrowRight,
-  CheckCircle2,
-  Play,
-} from "lucide-react";
+import { Sparkles, ArrowRight, CheckCircle2, Play } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -24,11 +19,10 @@ export default function Home() {
     <>
       <Navbar />
 
-      <div className="bg-gray-50 py-16">
-        <div className="max-w-[1440px] mx-auto px-6">
-
+      <div className="bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6 py-12">
           {/* ================= HERO SECTION ================= */}
-          <div className="flex flex-col lg:flex-row gap-14 items-start justify-center">
+          <div className="flex flex-col lg:flex-row gap-10 items-start">
 
             {/* ===== LEFT : PREVIEW MOCKUP ===== */}
             <div className="relative w-full lg:w-[700px]">
@@ -59,7 +53,7 @@ export default function Home() {
             </div>
 
             {/* ===== RIGHT : CONTENT ===== */}
-            <div className="flex flex-col gap-8 w-full lg:w-[580px]">
+            <div className="flex flex-col gap-8 w-full lg:max-w-xl">
 
               {/* badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 border border-purple-200 w-fit">
@@ -96,8 +90,16 @@ export default function Home() {
 
                 <div className="flex flex-col gap-4">
                   {[
-                    ["1", "Duplicate Content OS", "Create your database in Notion"],
-                    ["2", "Connect Your Database", "Link your database to widget"],
+                    [
+                      "1",
+                      "Duplicate Content OS",
+                      "Create your database in Notion",
+                    ],
+                    [
+                      "2",
+                      "Connect Your Database",
+                      "Link your database to widget",
+                    ],
                     ["3", "Embed Preview Widget", "Add to your Notion page"],
                   ].map(([step, title, desc]) => (
                     <div
@@ -117,8 +119,7 @@ export default function Home() {
           </div>
 
           {/* ================= BOTTOM SECTION ================= */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-20 max-w-[1300px] mx-auto">
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16 max-w-7xl mx-auto">
             {/* VIDEO */}
             <div className="bg-purple-50 border border-purple-200 rounded-2xl p-8">
               <div className="flex items-center gap-3 mb-6">
