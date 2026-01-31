@@ -9,23 +9,33 @@ interface CreateTokenStepProps {
 export default function CreateTokenStep({ onNext }: CreateTokenStepProps) {
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Create Notion Integration</h2>
+      <h2 className="text-xl font-semibold">Connect Your Database</h2>
 
       <ol className="list-decimal pl-5 text-gray-600 space-y-2">
-        <li>Open Notion → Settings → Integrations</li>
+        <li>
+          <a
+            href="https://www.notion.so/my-integrations"
+            target="_blank"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Go to Notion Integrations
+          </a>
+        </li>
         <li>Create a new integration</li>
-        <li>Copy token starting with <code>ntn_</code></li>
-        <li>Share your database to the integration</li>
+        <li>
+          Copy token starting with <code>ntn_</code>
+        </li>
+        <li>Connect your Content OS to the integration</li>
       </ol>
 
-      <a
+      {/* <a
         href="https://www.notion.so/my-integrations"
         target="_blank"
         className="inline-flex items-center gap-2 text-purple-600"
       >
         <ExternalLink className="w-4 h-4" />
         Go to Notion Integrations
-      </a>
+      </a> */}
 
       <button
         onClick={onNext}
