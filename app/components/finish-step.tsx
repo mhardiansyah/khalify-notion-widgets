@@ -30,7 +30,8 @@ export default function FinishStep({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
       {/* LEFT PANEL */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+      <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 shadow-sm">
+
         <h2 className="text-xl font-bold mb-4">Widget Created</h2>
 
         {/* DB ID */}
