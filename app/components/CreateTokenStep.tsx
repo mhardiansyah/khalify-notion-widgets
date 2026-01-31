@@ -16,6 +16,7 @@ export default function CreateTokenStep({ onNext }: CreateTokenStepProps) {
           <a
             href="https://www.notion.so/my-integrations"
             target="_blank"
+            className="inline-flex items-center gap-2 text-purple-600"
           >
             Go to Notion Integrations
           </a>
