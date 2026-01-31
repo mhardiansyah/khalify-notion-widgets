@@ -97,7 +97,8 @@ export default function ClientViewComponent({
 
   const LIMIT_FREE = 9;
 
-  const isLimited = !isPro && filteredData.length > LIMIT_FREE;
+  const isOverLimit = !isPro && filteredData.length > LIMIT_FREE;
+  const isExactlyLimit = !isPro && filteredData.length === LIMIT_FREE;
 
   const visibleData = isPro ? filteredData : filteredData.slice(0, LIMIT_FREE);
 
@@ -276,44 +277,53 @@ export default function ClientViewComponent({
                 setSelectedItem(item);
               }}
             />
+            {/* 🔒 FREE LIMIT INFO (PAS 9) */}
+            {isExactlyLimit && (
+              <div className="mt-4 text-center">
+                <p className="text-xs text-gray-500">
+                  You’ve reached your free limit of 9 posts.
+                </p>
+              </div>
+            )}
 
-            {/* 🔒 FREE LIMIT OVERLAY */}
-            {isLimited && (
+            {/* 🔒 FREE LIMIT OVERLAY (LEBIH DARI 9) */}
+            {isOverLimit && (
               <div className="pointer-events-none absolute bottom-0 left-0 w-full h-56 flex items-end justify-center">
-                {/* blur layer */}
+                {/* blur */}
                 <div
                   className="
-      absolute inset-0
-      backdrop-blur-lg
-      bg-black/20
-      [mask-image:linear-gradient(to_top,black,transparent)]
-    "
+        absolute inset-0
+        backdrop-blur-lg
+        bg-black/20
+        [mask-image:linear-gradient(to_top,black,transparent)]
+      "
                 />
 
-                {/* gradient layer */}
+                {/* gradient */}
                 <div
                   className="
-      absolute inset-0
-      bg-gradient-to-t
-      from-black/60
-      via-black/30
-      to-transparent
+        absolute inset-0
+        bg-gradient-to-t
+        from-black/60
+        via-black/30
+        to-transparent
       "
                 />
 
                 {/* content */}
-                <div className="relative mb-4.5 text-center pointer-events-auto">
-                  <p className="text-white text-[12px] font-medium mb-1">
-                    You’ve reached the free limit
+                <div className="relative mb-5 text-center pointer-events-auto">
+                  <p className="text-white text-xs font-medium mb-2">
+                    You’ve reached your free limit of 9 posts.
                   </p>
+
                   <button
-                    onClick={() => {
+                    onClick={() =>
                       window.open(
                         "https://khlasify.myr.id/pl/content-pro",
                         "_blank",
-                      );
-                    }}
-                    className="px-4 py-1.25 rounded-full bg-purple-600 text-white text-[12px] font-semibold hover:bg-purple-700 transition"
+                      )
+                    }
+                    className="px-4 py-1.5 rounded-full bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700 transition"
                   >
                     Upgrade to PRO
                   </button>
