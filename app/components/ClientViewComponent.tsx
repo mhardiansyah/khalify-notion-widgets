@@ -237,7 +237,7 @@ export default function ClientViewComponent({
       }
           `}
                       >
-                        Upgrade to PRO version
+                        Upgrade to PRO
                       </button>
                     )}
                   </div>

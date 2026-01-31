@@ -205,7 +205,7 @@ export default function EmbedFilter({
               }}
               className="w-full py-3 text-sm font-semibold text-purple-600 hover:bg-purple-50 transition rounded-2xl"
             >
-              Upgrade to PRO version
+              Upgrade to PRO
             </button>
           </>
         )}
