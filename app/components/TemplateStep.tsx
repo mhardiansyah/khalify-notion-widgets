@@ -18,7 +18,7 @@ export default function TemplateStep({ onConfirm }: TemplateStepProps) {
           target="_blank"
           className="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300"
         >
-          Use Template
+          Get Template
         </a>
 
         <button
