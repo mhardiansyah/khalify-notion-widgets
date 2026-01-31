@@ -7,7 +7,7 @@ interface TemplateStepProps {
 export default function TemplateStep({ onConfirm }: TemplateStepProps) {
   return (
     <div className="text-center space-y-6">
-      <h1 className="text-2xl font-bold">Setup Your Widget</h1>
+      <h1 className="text-2xl font-bold">Duplicate Content OS</h1>
       {/* <p className="text-gray-500">
         You can use our Notion template or your own database
       </p> */}
