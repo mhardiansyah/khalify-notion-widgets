@@ -8,10 +8,8 @@ import cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 
 import {
-  Edit2,
   Eye,
   EyeOff,
-  MoreVertical,
   ExternalLink,
   Crown,
   User as UserIcon,
@@ -33,9 +31,6 @@ interface Widget {
 
 type JwtPayload = {
   email?: string;
-  sub?: string;
-  iat?: number;
-  exp?: number;
 };
 
 export default function AccountsPage() {
@@ -43,11 +38,20 @@ export default function AccountsPage() {
 
   const [user, setUser] = useState<{ email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [showTokens, setShowTokens] = useState<Record<string, boolean>>({});
   const [openDetails, setOpenDetails] = useState<Record<string, boolean>>({});
 
+  /* ================= PRO / FREE LOGIC ================= */
+  const isPro = false; // nanti ambil dari backend / JWT
+  const FREE_WIDGET_LIMIT = 1;
+
+  const isWidgetPaused = (index: number) =>
+    !isPro && index >= FREE_WIDGET_LIMIT;
+
+  const disabledClass = "opacity-50 pointer-events-none select-none";
+
+  /* ================= AUTH ================= */
   useEffect(() => {
     const token = cookies.get("login_token");
     if (!token) {
@@ -58,12 +62,14 @@ export default function AccountsPage() {
     try {
       const decoded = jwtDecode<JwtPayload>(token);
       setUser({ email: decoded.email });
-    } catch (e) {
+    } catch {
       router.replace("/auth/login");
     } finally {
       setLoading(false);
     }
   }, [router]);
+
+  /* ================= LOAD WIDGETS ================= */
   useEffect(() => {
     const loadWidgets = async () => {
       try {
@@ -71,9 +77,7 @@ export default function AccountsPage() {
         if (!jwt) return;
 
         const res = await getWidgetsByUser(jwt);
-        if (res?.success) {
-          setWidgets(res.data);
-        }
+        if (res?.success) setWidgets(res.data);
       } catch (e) {
         console.error("LOAD WIDGET ERROR:", e);
       }
@@ -82,19 +86,12 @@ export default function AccountsPage() {
     loadWidgets();
   }, []);
 
-  const toggleTokenVisibility = (id: string) => {
-    setShowTokens((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
+  /* ================= HANDLERS ================= */
+  const toggleTokenVisibility = (id: string) =>
+    setShowTokens((p) => ({ ...p, [id]: !p[id] }));
 
-  const toggleDetails = (id: string) => {
-    setOpenDetails((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
+  const toggleDetails = (id: string) =>
+    setOpenDetails((p) => ({ ...p, [id]: !p[id] }));
 
   const handleDeleteWidget = (widgetId: string) => {
     toast.warning("Hapus widget?", {
@@ -102,56 +99,28 @@ export default function AccountsPage() {
       action: {
         label: "Hapus",
         onClick: async () => {
-          try {
-            const res = await deleteWidget(widgetId);
-
-            if (res?.success) {
-              setWidgets((prev) =>
-                prev.filter((widget) => widget.id !== widgetId),
-              );
-
-              toast.success("Widget berhasil dihapus");
-            }
-          } catch (err) {
-            console.error("DELETE WIDGET ERROR:", err);
-            toast.error("Gagal menghapus widget");
+          const res = await deleteWidget(widgetId);
+          if (res?.success) {
+            setWidgets((p) => p.filter((w) => w.id !== widgetId));
+            toast.success("Widget berhasil dihapus");
           }
         },
       },
-      cancel: {
-        label: "Batal",
-        onClick: () => {},
-      },
+      cancel: { label: "Batal", onClick: () => {} },
     });
   };
 
   const handleLogout = () => {
     toast.warning("Yakin logout?", {
-      description: "Kamu perlu login lagi untuk mengakses dashboard.",
       action: {
         label: "Logout",
         onClick: () => {
-          cookies.remove("access_token");
           cookies.remove("login_token");
-          cookies.remove("login_email");
-
-          toast.success("Berhasil logout 👋");
-
-          setTimeout(() => {
-            router.replace("/auth/login");
-          }, 800);
+          cookies.remove("access_token");
+          router.replace("/auth/login");
         },
       },
-      cancel: {
-        label: "Batal",
-        onClick: () => {},
-      },
     });
-  };
-
-  const license = {
-    key: "e90d011-2302-dc51-8805-f18409C33F",
-    expiredAt: "Nov 2, 2025",
   };
 
   if (loading) return <div className="p-10">Loading...</div>;
@@ -159,235 +128,167 @@ export default function AccountsPage() {
   return (
     <>
       <Navbar />
+      <Toaster richColors />
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 overflow-x-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-10">
-          {/* ===== TOP SUMMARY ===== */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* ACCOUNT */}
-            <div className="md:col-span-2 rounded-3xl p-6 bg-white/70 backdrop-blur border shadow-sm">
-              {/* USER HEADER */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
-                  <UserIcon />
-                </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50">
+        <div className="max-w-7xl mx-auto px-6 py-12 space-y-10">
 
-                <div className="flex-1">
-                  <p className="text-sm text-slate-500">Signed in as</p>
-                  <p className="font-medium text-slate-900">{user?.email}</p>
-                </div>
-
-                <span className="px-4 py-1 rounded-full text-xs bg-purple-100 text-purple-700 w-fit">
-                  Basic Account
-                </span>
+          {/* ===== HEADER ===== */}
+          <div className="rounded-3xl p-6 bg-white border shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
+                <UserIcon />
               </div>
-
-              {/* LICENSE */}
-              <div className="mt-6 rounded-2xl bg-purple-50 border border-purple-100 p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm">
-                    🔑
-                  </div>
-
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-900">
-                      Your License
-                    </p>
-                    <p className="text-xs text-slate-500">Basic License Key</p>
-                  </div>
-
-                  <span className="text-[11px] px-2 py-1 rounded-full bg-white text-purple-600 border">
-                    Active
-                  </span>
-                </div>
-
-                <div className="bg-white rounded-xl px-4 py-3 border">
-                  <p className="text-[11px] text-slate-500 mb-1 flex justify-between">
-                    <span>Activated</span>
-                    <span className="text-slate-400">{license.expiredAt}</span>
-                  </p>
-
-                  <p className="font-mono text-xs text-slate-800 truncate">
-                    {license.key}
-                  </p>
-                </div>
+              <div className="flex-1">
+                <p className="text-sm text-slate-500">Signed in as</p>
+                <p className="font-medium">{user?.email}</p>
               </div>
-
-              {/* ACTIONS */}
-              <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-
-                <button
-                  onClick={() =>
-                    window.open("https://khlasify.myr.id/pl/content-pro/")
-                  }
-                  className="flex items-center gap-2 text-sm text-purple-600 hover:underline"
-                >
-                  <Crown className="w-4 h-4" />
-                  Upgrade to PRO
-                </button>
-
-                <button
-                  onClick={handleLogout}
-                  className="text-sm text-red-500 hover:underline"
-                >
-                  Logout
-                </button>
-              </div>
-            </div>
-
-            {/* STATS */}
-            <div className="rounded-3xl p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-md">
-              <p className="text-sm opacity-80">Your Stats</p>
-
-              <div className="mt-6 space-y-3">
-                <div>
-                  <p className="text-3xl font-semibold">{widgets.length}</p>
-                  <p className="text-xs opacity-80">Active Widgets</p>
-                </div>
-                <div>
-                  <p className="text-3xl font-semibold">∞</p>
-                  <p className="text-xs opacity-80">API Calls</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ===== WIDGET LIST ===== */}
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold text-slate-900">
-                Your Widgets
-              </h2>
-
-              <span className="px-4 py-1 rounded-full text-sm bg-purple-100 text-purple-700">
-                {widgets.length} Active
+              <span className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">
+                Basic Account
               </span>
             </div>
 
-            {/* GRID */}
+            <div className="mt-6 flex justify-between">
+              <button
+                onClick={() =>
+                  window.open("https://khlasify.myr.id/pl/content-pro/")
+                }
+                className="flex items-center gap-2 text-sm text-purple-600 hover:underline"
+              >
+                <Crown className="w-4 h-4" />
+                Upgrade to PRO
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="text-sm text-red-500 hover:underline"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+
+          {/* ===== WIDGETS ===== */}
+          <div>
+            <h2 className="text-2xl font-semibold mb-6">Your Widgets</h2>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {widgets.map((widget) => (
-                <div
-                  key={widget.id}
-                  className="rounded-2xl border bg-white shadow-sm hover:shadow-md transition"
-                >
-                  {/* HEADER */}
-                  <div className="flex items-start justify-between p-5 gap-3">
+              {widgets.map((widget, index) => {
+                const paused = isWidgetPaused(index);
 
-                    <div>
-                      <p className="text-sm font-medium text-slate-900 break-all">
-                        Widget #{widget.id.slice(0, 6).toUpperCase()}
-                      </p>
-                      <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full mt-1">
-                        ● Active
-                      </span>
-                    </div>
-
-                    {/* <MoreVertical className="w-5 h-5 text-slate-400 cursor-pointer" /> */}
-                    <button
-                      onClick={() => handleDeleteWidget(widget.id)}
-                      className="p-2 rounded-lg hover:bg-red-50 transition group"
-                    >
-                      <Trash2Icon className="w-5 h-5 text-slate-400 group-hover:text-red-500" />
-                    </button>
-                  </div>
-
-                  {/* EMBED LINK */}
-                  <div className="px-5 pb-4">
-                    <p className="text-xs text-slate-500 mb-1">Embed Link</p>
-
-                    <div className="flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-xl px-3 py-2">
-                      <p className="text-xs font-mono truncate flex-1 text-slate-700">
-                        {widget.link}
-                      </p>
+                return (
+                  <div
+                    key={widget.id}
+                    className={`rounded-2xl border bg-white transition ${
+                      paused ? "opacity-70" : "hover:shadow-md"
+                    }`}
+                  >
+                    {/* HEADER */}
+                    <div className="flex justify-between p-5">
+                      <div>
+                        <p className="font-medium">
+                          Widget #{widget.id.slice(0, 6).toUpperCase()}
+                        </p>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full mt-1 inline-block ${
+                            paused
+                              ? "bg-orange-50 text-orange-600"
+                              : "bg-green-50 text-green-600"
+                          }`}
+                        >
+                          ● {paused ? "Paused" : "Active"}
+                        </span>
+                      </div>
 
                       <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(widget.link);
-                          toast.success("Link copied");
-                        }}
-                        className="flex items-center gap-1 text-xs bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700"
+                        onClick={() => handleDeleteWidget(widget.id)}
+                        className="p-2 rounded-lg hover:bg-red-50"
                       >
-                        Copy
+                        <Trash2Icon className="w-5 h-5 text-slate-400 hover:text-red-500" />
                       </button>
                     </div>
 
-                    <a
-                      href={widget.link}
-                      target="_blank"
-                      className="inline-flex items-center gap-1 text-xs text-purple-600 mt-2"
-                    >
-                      Open in new tab
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-
-                  {/* ADVANCED TOGGLE */}
-                  <button
-                    onClick={() => toggleDetails(widget.id)}
-                    className={`w-full flex items-center justify-between px-5 py-3 text-xs text-slate-500 border-t
-  hover:bg-slate-50 transition
-  ${!openDetails[widget.id] ? "rounded-b-2xl" : ""}`}
-                  >
-                    Show Advanced Details
-                    {openDetails[widget.id] ? "▲" : "▼"}
-                  </button>
-
-                  {/* ADVANCED DETAILS */}
-                  {openDetails[widget.id] && (
-                    <div className="px-5 pb-5 space-y-3 text-xs rounded-b-2xl">
-                      {/* Widget ID */}
-                      <div>
-                        <p className="text-slate-500 mb-1">Widget ID</p>
-                        <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
-                          <span className="font-mono flex-1 truncate">
-                            {widget.id}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* TOKEN */}
-                      <div>
-                        <p className="text-slate-500 mb-1">Integration Token</p>
-                        <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
-                          <span className="font-mono flex-1 truncate">
-                            {showTokens[widget.id]
-                              ? widget.token
-                              : "••••••••••••••••••"}
-                          </span>
-
-                          <button
-                            onClick={() => toggleTokenVisibility(widget.id)}
-                          >
-                            {showTokens[widget.id] ? (
-                              <EyeOff className="w-4 h-4 text-slate-400" />
-                            ) : (
-                              <Eye className="w-4 h-4 text-slate-400" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* DB */}
-                      <div>
-                        <p className="text-slate-500 mb-1">Database ID</p>
-                        <div className="bg-slate-50 rounded-lg px-3 py-2 font-mono truncate">
-                          {widget.dbID}
-                        </div>
-                      </div>
-
-                      {/* DELETE */}
-                      {/* <button
-                        onClick={() => handleDeleteWidget(widget.id)}
-                        className="flex items-center gap-2 text-red-500 hover:underline mt-2"
+                    {/* EMBED */}
+                    <div className="px-5 pb-4">
+                      <div
+                        className={`flex gap-2 bg-purple-50 border rounded-xl px-3 py-2 ${
+                          paused ? disabledClass : ""
+                        }`}
                       >
-                        <Trash2Icon className="w-4 h-4" />
-                        Delete Widget
-                      </button> */}
+                        <p className="text-xs font-mono truncate flex-1">
+                          {widget.link}
+                        </p>
+                        <button
+                          disabled={paused}
+                          onClick={() => {
+                            navigator.clipboard.writeText(widget.link);
+                            toast.success("Link copied");
+                          }}
+                          className="text-xs bg-purple-600 text-white px-3 py-1.5 rounded-lg"
+                        >
+                          Copy
+                        </button>
+                      </div>
+
+                      {!paused && (
+                        <a
+                          href={widget.link}
+                          target="_blank"
+                          className="inline-flex gap-1 text-xs text-purple-600 mt-2"
+                        >
+                          Open in new tab
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
                     </div>
-                  )}
-                </div>
-              ))}
+
+                    {/* ADVANCED */}
+                    <button
+                      disabled={paused}
+                      onClick={() => toggleDetails(widget.id)}
+                      className={`w-full px-5 py-3 text-xs border-t flex justify-between ${
+                        paused ? disabledClass : "hover:bg-slate-50"
+                      }`}
+                    >
+                      Show Advanced Details
+                      {openDetails[widget.id] ? "▲" : "▼"}
+                    </button>
+
+                    {openDetails[widget.id] && !paused && (
+                      <div className="px-5 pb-5 space-y-3 text-xs">
+                        <div>
+                          <p className="text-slate-500 mb-1">Token</p>
+                          <div className="flex gap-2 bg-slate-50 px-3 py-2 rounded-lg">
+                            <span className="font-mono truncate flex-1">
+                              {showTokens[widget.id]
+                                ? widget.token
+                                : "••••••••••••"}
+                            </span>
+                            <button
+                              onClick={() =>
+                                toggleTokenVisibility(widget.id)
+                              }
+                            >
+                              {showTokens[widget.id] ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-slate-500 mb-1">Database ID</p>
+                          <div className="bg-slate-50 px-3 py-2 rounded-lg font-mono truncate">
+                            {widget.dbID}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

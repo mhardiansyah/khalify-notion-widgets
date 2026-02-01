@@ -136,7 +136,6 @@ export default function InputTokenStep({
                   <div>
                     <p className="font-medium">{db.name}</p>
                     <p className="text-xs text-gray-500 break-all">{db.id}</p>
-
                   </div>
                 </div>
               </button>
@@ -148,9 +147,9 @@ export default function InputTokenStep({
       {/* CREATE WIDGET BUTTON */}
       {selectedDb && (
         <button
-  onClick={handleCreateWidget}
-  disabled={loadingCreate}
-  className="
+          onClick={handleCreateWidget}
+          disabled={loadingCreate}
+          className="
     w-full
     flex items-center justify-center gap-2
     py-3
@@ -161,8 +160,7 @@ export default function InputTokenStep({
     disabled:opacity-60 disabled:cursor-not-allowed
     text-sm sm:text-base
   "
->
-
+        >
           {loadingCreate ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
