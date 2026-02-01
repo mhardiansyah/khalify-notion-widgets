@@ -19,15 +19,18 @@ export default function Home() {
     <>
       <Navbar />
 
-      <div className="bg-gray-50">
+      <div className="bg-gray-50 overflow-x-hidden">
+
         <div className="max-w-7xl mx-auto px-6 py-12">
           {/* ================= HERO SECTION ================= */}
           <div className="flex flex-col lg:flex-row gap-10 items-start">
 
             {/* ===== LEFT : PREVIEW MOCKUP ===== */}
-            <div className="relative w-full lg:w-[700px]">
+            <div className="relative w-full lg:w-[700px] max-w-full overflow-hidden">
+
               {/* blur bg */}
-              <div className="absolute -top-10 -left-10 w-[480px] h-[600px] bg-purple-400/20 blur-[80px] rounded-3xl" />
+              <div className="hidden lg:block absolute -top-10 -left-10 w-[480px] h-[600px] bg-purple-400/20 blur-[80px] rounded-3xl" />
+
 
               {/* browser frame */}
               <div className="relative bg-white rounded-2xl border shadow-sm overflow-hidden">
