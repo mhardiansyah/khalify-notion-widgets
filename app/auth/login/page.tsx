@@ -39,8 +39,8 @@ export default function LoginPage() {
           <Image
               src="/LogoDanNama.png"
               alt="Logo"
-              width={56}
-              height={56}
+              width={128}
+              height={128}
               className="object-cover"
             />
         </div>
