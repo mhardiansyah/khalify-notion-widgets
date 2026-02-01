@@ -38,7 +38,7 @@ export default function LoginPage() {
         <div className="flex justify-center mb-4">
           <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200">
             <Image
-              src="/logo-bulat.png"
+              src="/LogoDanNama.png"
               alt="Logo"
               width={56}
               height={56}
@@ -47,10 +47,10 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Brand */}
+        {/* Brand
         <h2 className="text-lg font-semibold text-gray-900 mb-6">
           khlasify
-        </h2>
+        </h2> */}
 
         {/* Title */}
         <h1 className="text-xl font-semibold text-gray-900 mb-6">
