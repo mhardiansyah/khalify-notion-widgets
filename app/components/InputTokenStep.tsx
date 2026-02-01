@@ -83,11 +83,19 @@ export default function InputTokenStep({
           value={token}
           onChange={(e) => setToken(e.target.value.trim())}
           placeholder="ntn_xxxxxxxxx"
-          className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+          className="
+      w-full
+      px-4 py-3
+      pr-12
+      text-sm sm:text-base
+      border rounded-lg
+      focus:ring-2 focus:ring-purple-500
+      outline-none
+    "
         />
 
         {token && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
             ) : error ? (
@@ -112,9 +120,7 @@ export default function InputTokenStep({
             return (
               <button
                 key={db.id}
-                onClick={() =>
-                  setSelectedDb({ id: db.id, name: db.name })
-                }
+                onClick={() => setSelectedDb({ id: db.id, name: db.name })}
                 disabled={loadingCreate}
                 className={`w-full p-4 border rounded-lg text-left transition-all
                   ${
@@ -129,7 +135,8 @@ export default function InputTokenStep({
                   <Folder className="w-5 h-5 text-yellow-500 mt-0.5" />
                   <div>
                     <p className="font-medium">{db.name}</p>
-                    <p className="text-xs text-gray-500">{db.id}</p>
+                    <p className="text-xs text-gray-500 break-all">{db.id}</p>
+
                   </div>
                 </div>
               </button>
@@ -141,13 +148,21 @@ export default function InputTokenStep({
       {/* CREATE WIDGET BUTTON */}
       {selectedDb && (
         <button
-          onClick={handleCreateWidget}
-          disabled={loadingCreate}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl
-            bg-purple-600 text-white font-semibold
-            hover:bg-purple-700 transition-all
-            disabled:opacity-60 disabled:cursor-not-allowed"
-        >
+  onClick={handleCreateWidget}
+  disabled={loadingCreate}
+  className="
+    w-full
+    flex items-center justify-center gap-2
+    py-3
+    rounded-xl
+    bg-purple-600 text-white font-semibold
+    hover:bg-purple-700
+    transition
+    disabled:opacity-60 disabled:cursor-not-allowed
+    text-sm sm:text-base
+  "
+>
+
           {loadingCreate ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
