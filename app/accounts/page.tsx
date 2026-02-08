@@ -125,6 +125,7 @@ export default function AccountsPage() {
       setIsSyncing(true); 
       
       const res = await getPaymentLink();
+      console.log("📊 Payment Link Response:", res);
       console.log("🔗 Mayar Link Generated:", res.paymentLink);
       window.open(res.paymentLink, "_blank");
 
