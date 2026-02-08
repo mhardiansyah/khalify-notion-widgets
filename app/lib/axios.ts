@@ -9,14 +9,13 @@ export const api = axios.create({
     },
 });
 
-// Tambahkan interceptor ini agar setiap request membawa token terbaru
 api.interceptors.request.use((config) => {
-    // Ambil token dari cookie 'login_token'
     const token = Cookies.get("login_token");
     
     if (token) {
-        // Tempelkan ke header Authorization seperti standar Postman
-        config.headers.Authorization = `Bearer ${token}`;
+        // PAKAI TEMPLATE LITERAL DAN TRIM BIAR BERSIH CUK
+        config.headers.Authorization = `Bearer ${token.trim()}`;
+        console.log("Header Set:", config.headers.Authorization);
     }
     
     return config;
