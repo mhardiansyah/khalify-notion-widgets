@@ -59,8 +59,11 @@ export default function AccountsPage() {
   const disabledClass = "opacity-50 pointer-events-none select-none";
 
   // 1. Inisialisasi Auth & Status PRO
+  // 1. Inisialisasi Auth & Status PRO
   useEffect(() => {
     const token = cookies.get("login_token");
+    console.log("🔍 Checking login_token:", token ? "Token Found" : "No Token");
+
     if (!token) {
       router.replace("/auth/login");
       return;
@@ -68,16 +71,25 @@ export default function AccountsPage() {
 
     try {
       const decoded = jwtDecode<any>(token);
+      console.log("👤 Decoded User Data:", decoded);
       setUser({ email: decoded.email, name: decoded.name });
       
-      // Ambil status PRO dari database saat pertama kali masuk
       const initStatus = async () => {
+        console.log("📡 Initializing Payment Status Check...");
         const res = await checkPaymentStatus();
-        if (res.isPro) setIsPro(true);
+        console.log("💳 Payment Status Response:", res);
+        
+        if (res.isPro) {
+          console.log("✅ User is PRO");
+          setIsPro(true);
+        } else {
+          console.log("❌ User is STARTER");
+        }
       };
       initStatus();
 
     } catch (e) {
+      console.error("🚨 Auth Initialization Error:", e);
       router.replace("/auth/login");
     } finally {
       setLoading(false);
@@ -91,52 +103,60 @@ export default function AccountsPage() {
         const jwt = cookies.get("login_token");
         if (!jwt) return;
 
+        console.log("📦 Fetching Widgets...");
         const res = await getWidgetsByUser(jwt);
+        console.log("📊 Widgets Loaded:", res.data);
+        
         if (res?.success) {
           setWidgets(res.data);
         }
       } catch (e) {
-        console.error("LOAD WIDGET ERROR:", e);
+        console.error("🚨 LOAD WIDGET ERROR:", e);
       }
     };
 
     loadWidgets();
   }, []);
 
-  // 3. LOGIC UPGRADE & POLLING (KUNCI UTAMA)
+  // 3. LOGIC UPGRADE & POLLING
   const handleUpgrade = async () => {
     try {
-      setIsSyncing(true); // Tampilkan overlay "Menunggu Pembayaran"
+      console.log("🚀 Starting Upgrade Process...");
+      setIsSyncing(true); 
       
-      // A. Minta Link Mayar ke Backend
       const res = await getPaymentLink();
+      console.log("🔗 Mayar Link Generated:", res.paymentLink);
       window.open(res.paymentLink, "_blank");
 
       toast.info("Silahkan selesaikan pembayaran di tab baru...");
 
-      // B. Mulai Polling Check ke Backend tiap 5 detik
+      console.log("⏲️ Polling Started: Checking Notion every 5 seconds...");
       const interval = setInterval(async () => {
         try {
           const check = await checkPaymentStatus();
+          console.log("🔄 Polling Status:", check.status, "| isPro:", check.isPro);
           
           if (check.isPro) {
-            clearInterval(interval); // Berhenti polling
-            setIsPro(true); // Update UI jadi PRO
-            setIsSyncing(false); // Hilangkan overlay
+            console.log("🎉 Payment Verified! Switching to PRO mode.");
+            clearInterval(interval);
+            setIsPro(true);
+            setIsSyncing(false);
             toast.success("Upgrade Berhasil! Akun Anda sudah PRO.");
           }
         } catch (err) {
-          console.error("Polling error:", err);
+          console.error("🚨 Polling API Error:", err);
         }
       }, 5000);
 
-      // C. Safety Timeout: Stop polling setelah 10 menit jika tidak ada aksi
+      // C. Safety Timeout
       setTimeout(() => {
+        console.log("🛑 Polling Timeout: Stopped after 10 minutes.");
         clearInterval(interval);
         setIsSyncing(false);
       }, 600000);
 
     } catch (error) {
+      console.error("🚨 Upgrade Error:", error);
       setIsSyncing(false);
       toast.error("Gagal memproses pembayaran, coba lagi nanti.");
     }
