@@ -101,6 +101,7 @@ export default function AccountsPage() {
     const loadWidgets = async () => {
       try {
         const jwt = cookies.get("login_token");
+        console.log("🔍 Checking login_token:", jwt ? "Token Found" : "No Token");
         if (!jwt) return;
 
         console.log("📦 Fetching Widgets...");
