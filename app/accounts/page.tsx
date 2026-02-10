@@ -21,7 +21,7 @@ import {
 
 import { deleteWidget, getWidgetsByUser } from "../lib/widget.api";
 // Pastikan fungsi ini sudah ada di lib lo (sesuai contoh sebelumnya)
-import { getPaymentLink, checkPaymentStatus } from "../lib/payment.api"; 
+import { getPaymentLink, checkPaymentStatus } from "../lib/payment.api";
 import { toast, Toaster } from "sonner";
 
 interface Widget {
@@ -44,7 +44,9 @@ type JwtPayload = {
 export default function AccountsPage() {
   const router = useRouter();
 
-  const [user, setUser] = useState<{ email?: string; name?: string } | null>(null);
+  const [user, setUser] = useState<{ email?: string; name?: string } | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
 
   const [widgets, setWidgets] = useState<Widget[]>([]);
@@ -54,14 +56,15 @@ export default function AccountsPage() {
   const [isPro, setIsPro] = useState(false); // State PRO sekarang dinamis
   const FREE_WIDGET_LIMIT = 1;
 
-  const isWidgetPaused = (index: number) => !isPro && index >= FREE_WIDGET_LIMIT;
+  const isWidgetPaused = (index: number) =>
+    !isPro && index >= FREE_WIDGET_LIMIT;
   const disabledClass = "opacity-50 pointer-events-none select-none";
 
   // 1. Inisialisasi Auth & Status PRO
   // 1. Inisialisasi Auth & Status PRO
   useEffect(() => {
     const token = cookies.get("login_token");
-    
+
     if (!token) {
       router.replace("/auth/login");
       return;
@@ -73,19 +76,21 @@ export default function AccountsPage() {
       setUser({ email: userEmail, name: decoded.name });
 
       // --- LOGIC BARU: CEK STATUS SAAT LOAD HALAMAN ---
+      // --- LOGIC BARU: CEK STATUS SAAT LOAD HALAMAN ---
       const performStatusCheck = async () => {
         if (!userEmail) return;
-        
         console.log("📡 First Load: Checking Payment Status for", userEmail);
         try {
-          // Panggil API dengan parameter email
           const res = await checkPaymentStatus(userEmail);
           console.log("💳 Status Response:", res);
 
-          if (res.isPro) {
+          // PERBAIKAN: Akses res.data.isPro atau res.isPro (tergantung helper response Anda)
+          // Berdasarkan log Anda, isPro ada di dalam res.data
+          if (res.data && res.data.isPro) {
             setIsPro(true);
-            // Opsional: Toast notifikasi kecil
-            // toast.success("Status PRO Aktif");
+            console.log("✅ Status Updated to PRO");
+          } else {
+            console.log("❌ Status remains FREE");
           }
         } catch (err) {
           console.error("Gagal cek status:", err);
@@ -94,7 +99,6 @@ export default function AccountsPage() {
 
       // Jalankan pengecekan
       performStatusCheck();
-
     } catch (e) {
       router.replace("/auth/login");
     } finally {
@@ -107,13 +111,16 @@ export default function AccountsPage() {
     const loadWidgets = async () => {
       try {
         const jwt = cookies.get("login_token");
-        console.log("🔍 Checking login_token:", jwt ? "Token Found" : "No Token");
+        console.log(
+          "🔍 Checking login_token:",
+          jwt ? "Token Found" : "No Token",
+        );
         if (!jwt) return;
 
         console.log("📦 Fetching Widgets...");
         const res = await getWidgetsByUser(jwt);
         console.log("📊 Widgets Loaded:", res.data);
-        
+
         if (res?.success) {
           setWidgets(res.data);
         }
@@ -130,7 +137,7 @@ export default function AccountsPage() {
     try {
       // Tidak ada overlay loading, cukup toast sederhana
       toast.loading("Membuka halaman pembayaran...");
-      
+
       const res = await getPaymentLink();
       toast.dismiss();
 
@@ -192,11 +199,9 @@ export default function AccountsPage() {
       <Toaster position="top-center" richColors />
 
       {/* OVERLAY LOADING SAAT POLLING */}
-      
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 overflow-x-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-10">
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 rounded-3xl p-6 bg-white/70 backdrop-blur border shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -207,16 +212,22 @@ export default function AccountsPage() {
                   <p className="text-sm text-slate-500">Signed in as</p>
                   <p className="font-medium text-slate-900">{user?.email}</p>
                 </div>
-                <span className={`px-4 py-1 rounded-full text-xs font-bold ${isPro ? "bg-green-100 text-green-700" : "bg-purple-100 text-purple-700"}`}>
+                <span
+                  className={`px-4 py-1 rounded-full text-xs font-bold ${isPro ? "bg-green-100 text-green-700" : "bg-purple-100 text-purple-700"}`}
+                >
                   {isPro ? "Pro" : "Starter"}
                 </span>
               </div>
 
               <div className="mt-6 rounded-2xl bg-purple-50 border border-purple-100 p-4">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm">🔑</div>
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm">
+                    🔑
+                  </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-900">Your License</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      Your License
+                    </p>
                     <p className="text-xs text-slate-500">Basic License Key</p>
                   </div>
                 </div>
@@ -225,27 +236,32 @@ export default function AccountsPage() {
                     <span>Activated</span>
                     <span className="text-slate-400">{license.expiredAt}</span>
                   </p>
-                  <p className="font-mono text-xs text-slate-800 truncate">{license.key}</p>
+                  <p className="font-mono text-xs text-slate-800 truncate">
+                    {license.key}
+                  </p>
                 </div>
               </div>
 
               <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 {/* TOMBOL UPGRADE DINAMIS */}
                 {!isPro ? (
-                   <button
-                   onClick={handleUpgrade}
-                   className="flex items-center gap-2 text-sm font-semibold text-purple-600 bg-purple-50 px-4 py-2 rounded-xl hover:bg-purple-100 transition"
-                 >
-                   <Crown className="w-4 h-4" />
-                   Upgrade to PRO
-                 </button>
+                  <button
+                    onClick={handleUpgrade}
+                    className="flex items-center gap-2 text-sm font-semibold text-purple-600 bg-purple-50 px-4 py-2 rounded-xl hover:bg-purple-100 transition"
+                  >
+                    <Crown className="w-4 h-4" />
+                    Upgrade to PRO
+                  </button>
                 ) : (
                   <span className="text-sm text-green-600 font-medium flex items-center gap-1">
                     <Crown className="w-4 h-4" /> Anda sudah berlangganan PRO
                   </span>
                 )}
 
-                <button onClick={handleLogout} className="text-sm text-red-500 hover:underline">
+                <button
+                  onClick={handleLogout}
+                  className="text-sm text-red-500 hover:underline"
+                >
                   Logout
                 </button>
               </div>
@@ -268,7 +284,9 @@ export default function AccountsPage() {
 
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold text-slate-900">Your Widgets</h2>
+              <h2 className="text-2xl font-semibold text-slate-900">
+                Your Widgets
+              </h2>
               <span className="px-4 py-1 rounded-full text-sm bg-purple-100 text-purple-700">
                 {widgets.length} Active
               </span>
@@ -278,27 +296,41 @@ export default function AccountsPage() {
               {widgets.map((widget, index) => {
                 const paused = isWidgetPaused(index);
                 return (
-                  <div key={widget.id} className={`rounded-2xl border bg-white shadow-sm transition ${paused ? "opacity-70 grayscale-[0.5]" : "hover:shadow-md"}`}>
+                  <div
+                    key={widget.id}
+                    className={`rounded-2xl border bg-white shadow-sm transition ${paused ? "opacity-70 grayscale-[0.5]" : "hover:shadow-md"}`}
+                  >
                     <div className="flex items-start justify-between p-5 gap-3">
                       <div>
                         <p className="text-sm font-medium text-slate-900 break-all">
                           Widget #{widget.id.slice(0, 6).toUpperCase()}
                         </p>
                         {paused ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full mt-1">● Paused (Upgrade Pro)</span>
+                          <span className="inline-flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full mt-1">
+                            ● Paused (Upgrade Pro)
+                          </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full mt-1">● Active</span>
+                          <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full mt-1">
+                            ● Active
+                          </span>
                         )}
                       </div>
-                      <button onClick={() => handleDeleteWidget(widget.id)} className="p-2 rounded-lg hover:bg-red-50 transition group">
+                      <button
+                        onClick={() => handleDeleteWidget(widget.id)}
+                        className="p-2 rounded-lg hover:bg-red-50 transition group"
+                      >
                         <Trash2Icon className="w-5 h-5 text-slate-400 group-hover:text-red-500" />
                       </button>
                     </div>
 
                     <div className="px-5 pb-4">
                       <p className="text-xs text-slate-500 mb-1">Embed Link</p>
-                      <div className={`flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-xl px-3 py-2 ${paused ? disabledClass : ""}`}>
-                        <p className="text-xs font-mono truncate flex-1 text-slate-700">{widget.link}</p>
+                      <div
+                        className={`flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-xl px-3 py-2 ${paused ? disabledClass : ""}`}
+                      >
+                        <p className="text-xs font-mono truncate flex-1 text-slate-700">
+                          {widget.link}
+                        </p>
                         <button
                           disabled={paused}
                           onClick={() => {
@@ -311,7 +343,11 @@ export default function AccountsPage() {
                         </button>
                       </div>
                       {!paused && (
-                        <a href={widget.link} target="_blank" className="inline-flex items-center gap-1 text-xs text-purple-600 mt-2">
+                        <a
+                          href={widget.link}
+                          target="_blank"
+                          className="inline-flex items-center gap-1 text-xs text-purple-600 mt-2"
+                        >
                           Open in new tab <ExternalLink className="w-3 h-3" />
                         </a>
                       )}
@@ -330,21 +366,37 @@ export default function AccountsPage() {
                         <div>
                           <p className="text-slate-500 mb-1">Widget ID</p>
                           <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
-                            <span className="font-mono flex-1 truncate">{widget.id}</span>
+                            <span className="font-mono flex-1 truncate">
+                              {widget.id}
+                            </span>
                           </div>
                         </div>
                         <div>
-                          <p className="text-slate-500 mb-1">Integration Token</p>
+                          <p className="text-slate-500 mb-1">
+                            Integration Token
+                          </p>
                           <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
-                            <span className="font-mono flex-1 truncate">{showTokens[widget.id] ? widget.token : "••••••••••••••••••"}</span>
-                            <button onClick={() => toggleTokenVisibility(widget.id)}>
-                              {showTokens[widget.id] ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
+                            <span className="font-mono flex-1 truncate">
+                              {showTokens[widget.id]
+                                ? widget.token
+                                : "••••••••••••••••••"}
+                            </span>
+                            <button
+                              onClick={() => toggleTokenVisibility(widget.id)}
+                            >
+                              {showTokens[widget.id] ? (
+                                <EyeOff className="w-4 h-4 text-slate-400" />
+                              ) : (
+                                <Eye className="w-4 h-4 text-slate-400" />
+                              )}
                             </button>
                           </div>
                         </div>
                         <div>
                           <p className="text-slate-500 mb-1">Database ID</p>
-                          <div className="bg-slate-50 rounded-lg px-3 py-2 font-mono truncate">{widget.dbID}</div>
+                          <div className="bg-slate-50 rounded-lg px-3 py-2 font-mono truncate">
+                            {widget.dbID}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -356,5 +408,5 @@ export default function AccountsPage() {
         </div>
       </div>
     </>
-  ); 
+  );
 }
