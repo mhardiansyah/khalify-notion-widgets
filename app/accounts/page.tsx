@@ -46,7 +46,6 @@ export default function AccountsPage() {
 
   const [user, setUser] = useState<{ email?: string; name?: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false); // State untuk overlay polling
 
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [showTokens, setShowTokens] = useState<Record<string, boolean>>({});
@@ -62,8 +61,7 @@ export default function AccountsPage() {
   // 1. Inisialisasi Auth & Status PRO
   useEffect(() => {
     const token = cookies.get("login_token");
-    console.log("🔍 Checking login_token:", token ? "Token Found" : "No Token");
-
+    
     if (!token) {
       router.replace("/auth/login");
       return;
@@ -71,25 +69,33 @@ export default function AccountsPage() {
 
     try {
       const decoded = jwtDecode<any>(token);
-      console.log("👤 Decoded User Data:", decoded);
-      setUser({ email: decoded.email, name: decoded.name });
-      
-      const initStatus = async () => {
-        console.log("📡 Initializing Payment Status Check...");
-        const res = await checkPaymentStatus();
-        console.log("💳 Payment Status Response:", res);
+      const userEmail = decoded.email;
+      setUser({ email: userEmail, name: decoded.name });
+
+      // --- LOGIC BARU: CEK STATUS SAAT LOAD HALAMAN ---
+      const performStatusCheck = async () => {
+        if (!userEmail) return;
         
-        if (res.isPro) {
-          console.log("✅ User is PRO");
-          setIsPro(true);
-        } else {
-          console.log("❌ User is STARTER");
+        console.log("📡 First Load: Checking Payment Status for", userEmail);
+        try {
+          // Panggil API dengan parameter email
+          const res = await checkPaymentStatus(userEmail);
+          console.log("💳 Status Response:", res);
+
+          if (res.isPro) {
+            setIsPro(true);
+            // Opsional: Toast notifikasi kecil
+            // toast.success("Status PRO Aktif");
+          }
+        } catch (err) {
+          console.error("Gagal cek status:", err);
         }
       };
-      initStatus();
+
+      // Jalankan pengecekan
+      performStatusCheck();
 
     } catch (e) {
-      console.error("🚨 Auth Initialization Error:", e);
       router.replace("/auth/login");
     } finally {
       setLoading(false);
@@ -122,45 +128,19 @@ export default function AccountsPage() {
   // 3. LOGIC UPGRADE & POLLING
   const handleUpgrade = async () => {
     try {
-      console.log("🚀 Starting Upgrade Process...");
-      setIsSyncing(true); 
+      // Tidak ada overlay loading, cukup toast sederhana
+      toast.loading("Membuka halaman pembayaran...");
       
       const res = await getPaymentLink();
-      console.log("📊 Payment Link Response:", res);
-      console.log("🔗 Mayar Link Generated:", res.paymentLink);
-      window.open(res.paymentLink, "_blank");
+      toast.dismiss();
 
-      toast.info("Silahkan selesaikan pembayaran di tab baru...");
-
-      console.log("⏲️ Polling Started: Checking Notion every 5 seconds...");
-      const interval = setInterval(async () => {
-        try {
-          const check = await checkPaymentStatus();
-          console.log("🔄 Polling Status:", check.status, "| isPro:", check.isPro);
-          
-          if (check.isPro) {
-            console.log("🎉 Payment Verified! Switching to PRO mode.");
-            clearInterval(interval);
-            setIsPro(true);
-            setIsSyncing(false);
-            toast.success("Upgrade Berhasil! Akun Anda sudah PRO.");
-          }
-        } catch (err) {
-          console.error("🚨 Polling API Error:", err);
-        }
-      }, 5000);
-
-      // C. Safety Timeout
-      setTimeout(() => {
-        console.log("🛑 Polling Timeout: Stopped after 10 minutes.");
-        clearInterval(interval);
-        setIsSyncing(false);
-      }, 600000);
-
+      if (res?.paymentLink) {
+        window.open(res.paymentLink, "_blank");
+        toast.info("Silakan selesaikan pembayaran, lalu refresh halaman ini.");
+      }
     } catch (error) {
-      console.error("🚨 Upgrade Error:", error);
-      setIsSyncing(false);
-      toast.error("Gagal memproses pembayaran, coba lagi nanti.");
+      toast.dismiss();
+      toast.error("Gagal membuka pembayaran.");
     }
   };
 
@@ -212,16 +192,7 @@ export default function AccountsPage() {
       <Toaster position="top-center" richColors />
 
       {/* OVERLAY LOADING SAAT POLLING */}
-      {isSyncing && (
-        <div className="fixed inset-0 z-[999] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center">
-          <Loader2 className="w-12 h-12 text-purple-600 animate-spin mb-4" />
-          <h2 className="text-xl font-bold text-slate-900">Sinkronisasi Pembayaran...</h2>
-          <p className="text-slate-500 mt-2 text-center px-6">
-            Kami sedang mengecek status transaksi Anda di Notion. <br/>
-            Halaman ini akan otomatis diperbarui.
-          </p>
-        </div>
-      )}
+      
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 overflow-x-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-10">

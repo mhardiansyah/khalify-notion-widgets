@@ -8,8 +8,14 @@ export const getPaymentLink = async () => {
   return res.data;
 };
 
-export const checkPaymentStatus = async () => {
-  // INI JUGA, JANGAN ADA HEADER MANUAL LAGI
-  const res = await api.get("/payment/check-status");
+// export const checkPaymentStatus = async () => {
+//   // INI JUGA, JANGAN ADA HEADER MANUAL LAGI
+//   const res = await api.get("/payment/check-status");
+//   return res.data;
+// };
+export const checkPaymentStatus = async (email: string) => {
+  // Hasilnya: /payment/sync-status?email=user@example.com
+  const res = await api.get(`/payment/sync-status?email=${email}`);
   return res.data;
 };
+
