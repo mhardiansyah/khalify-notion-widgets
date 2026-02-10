@@ -36,6 +36,8 @@ export default async function EmbedPage(props: EmbedPageProps) {
       `https://khalify-be.vercel.app/widgets/detail/${dbID}`
     );
 
+
+
     if (!widgetRes.data?.success || !widgetRes.data?.data?.length) {
       return (
         <p className="text-red-500 text-center mt-10">
@@ -44,7 +46,12 @@ export default async function EmbedPage(props: EmbedPageProps) {
       );
     }
 
-    const token = widgetRes.data.data[0].token;
+    const widgetData = widgetRes.data.data[0];
+    const token = widgetData.token;
+
+    const isOwnerPro = widgetData.profile?.isPro || false;
+
+    // const token = widgetRes.data.data[0].token;
 
     // 🔥 query notion
     const notionData = await queryDatabase(token, dbID);
@@ -54,6 +61,7 @@ export default async function EmbedPage(props: EmbedPageProps) {
         filtered={notionData}
         profile={null}
         theme="light"
+        isPro={isOwnerPro}
       />
     );
   } catch (err) {

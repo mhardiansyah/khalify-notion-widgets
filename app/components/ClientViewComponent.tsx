@@ -29,6 +29,7 @@ interface Props {
   profile?: Profile | null;
   theme?: "light" | "dark";
   gridColumns?: number;
+  isPro?: boolean;
 }
 
 /* ================= MAIN ================= */
@@ -38,6 +39,7 @@ export default function ClientViewComponent({
   profile,
   theme = "light",
   gridColumns = 3,
+  isPro = false,
 }: Props) {
   const [viewMode] = useState<"visual" | "map">("visual");
   const [showBio, setShowBio] = useState(false);
@@ -49,7 +51,6 @@ export default function ClientViewComponent({
   const [openSetting, setOpenSetting] = useState(false);
 
   const params = useSearchParams();
-  const isPro = false; //  ganti true kalau akun PRO
 
   useEffect(() => {
     setCurrentTheme(theme);

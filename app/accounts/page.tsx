@@ -84,8 +84,6 @@ export default function AccountsPage() {
           const res = await checkPaymentStatus(userEmail);
           console.log("💳 Status Response:", res);
 
-          // PERBAIKAN: Akses res.data.isPro atau res.isPro (tergantung helper response Anda)
-          // Berdasarkan log Anda, isPro ada di dalam res.data
           if (res.data && res.data.isPro) {
             setIsPro(true);
             console.log("✅ Status Updated to PRO");
