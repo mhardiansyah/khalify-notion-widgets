@@ -21,7 +21,7 @@ const filterOptions = {
 const defaultValue = {
   platform: "All Platform",
   status: "All Status",
-  pillar: "All Pillars",
+  pillar: "All Pillars",  
   pinned: "All Posts",
 };
 
