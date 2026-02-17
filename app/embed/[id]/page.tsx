@@ -45,8 +45,8 @@ export default async function EmbedPage(props: EmbedPageProps) {
     // Karena di response JSON backend, isPro ada di luar, sejajar dengan token/dbID
     const isOwnerPro = widgetData.isPro === true; 
 
-    // console.log("DEBUG Widget Data:", widgetData);
-    // console.log("DEBUG isOwnerPro:", isOwnerPro);
+    console.log("DEBUG Widget Data:", widgetData);
+    console.log("DEBUG isOwnerPro:", isOwnerPro);
 
     const notionData = await queryDatabase(token, dbID);
 
