@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Pin, X, ExternalLink, Settings, Menu, Link as LinkIcon } from "lucide-react";
+import { Pin, X, ExternalLink, Settings, Menu } from "lucide-react";
 import AutoThumbnail from "@/app/components/AutoThumbnail";
 import EmbedFilter from "@/app/components/EmbedFilter";
 import RefreshButton from "@/app/components/RefreshButton";
@@ -21,7 +21,6 @@ type Profile = {
   username?: string;
   avatarUrl?: string;
   bio?: string;
-  link?: string; // Tambahan untuk link di bawah bio
   highlights?: Highlight[];
 };
 
@@ -33,16 +32,6 @@ interface Props {
   isPro?: boolean;
 }
 
-/* ================= DUMMY DATA ================= */
-// Dummy data ini akan dipakai jika props 'profile' tidak ada isinya
-const dummyProfile: Profile = {
-  username: "username",
-  name: "Your Name",
-  avatarUrl: "/dummy-avatar.png", // Ganti dengan path ilustrasi avatar jika ada
-  bio: "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template!👇",
-  link: "khlasify.notion.site",
-};
-
 /* ================= MAIN ================= */
 
 export default function ClientViewComponent({
@@ -53,8 +42,7 @@ export default function ClientViewComponent({
   isPro = false,
 }: Props) {
   const [viewMode] = useState<"visual" | "map">("visual");
-  // Default showBio diset true sementara untuk testing tampilan dummy
-  const [showBio, setShowBio] = useState(true); 
+  const [showBio, setShowBio] = useState(false);
   const [showHighlight, setShowHighlight] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<"light" | "dark">(theme);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
@@ -63,9 +51,6 @@ export default function ClientViewComponent({
   const [openSetting, setOpenSetting] = useState(false);
 
   const params = useSearchParams();
-
-  // Gunakan profile asli jika ada, jika tidak gunakan dummyProfile
-  const currentProfile = profile || dummyProfile;
 
   useEffect(() => {
     setCurrentTheme(theme);
@@ -163,7 +148,7 @@ export default function ClientViewComponent({
                 )}
               </div>
 
-              {/* SETTINGS */}
+              {/* SETTINGS ✅ FIXED */}
               <div className="relative">
                 <IconButton
                   theme={currentTheme}
@@ -265,15 +250,14 @@ export default function ClientViewComponent({
         </header>
 
         {/* ================= CONTENT ================= */}
-        <div className="pb-5 pt-6 space-y-4 sm:space-y-6 max-w-sm mx-auto">
-          {/* Menggunakan currentProfile yang berisi dummy data */}
+        <div className="pb-5 space-y-4 sm:space-y-6">
           {showBio && (
-            <BioSection profile={currentProfile} theme={currentTheme} />
+            <BioSection profile={profile} theme={currentTheme} />
           )}
 
-          {showHighlight && currentProfile?.highlights && (
+          {showHighlight && profile?.highlights && (
             <HighlightSection
-              highlights={currentProfile.highlights}
+              highlights={profile.highlights}
               theme={currentTheme}
             />
           )}
@@ -402,57 +386,41 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
   );
 }
 
-// Komponen BioSection diperbarui agar mirip desain referensi
-function BioSection({ profile, theme }: { profile: Profile; theme: string }) {
-  // Fungsi helper untuk merender bio yang mengandung line breaks (\n)
-  const renderBio = (bioText?: string) => {
-    if (!bioText) return null;
-    return bioText.split('\n').map((line, index) => (
-      <span key={index} className="block mb-1">
-        {line}
-      </span>
-    ));
-  };
+function BioSection({ profile, theme }: any) {
+  // Gunakan data profile atau fallback ke dummy data jika kosong
+  const username = profile?.username || "username";
+  const name = profile?.name || "Your Name";
+  const bioText = profile?.bio || "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template!👇";
+  const link = "khlasify.notion.site";
 
   return (
-    <section className="flex flex-col items-center justify-center text-center">
-      {/* Username (Atas Avatar) */}
-      <h1 className={`text-2xl font-bold mb-4 ${theme === "light" ? "text-slate-900" : "text-white"}`}>
-        {profile.username || "username"}
-      </h1>
-
-      {/* Avatar */}
-      <div className={`w-24 h-24 mb-4 rounded-full border border-gray-200 overflow-hidden flex items-center justify-center bg-gray-50`}>
-         {/* Jika ada ilustrasi, gunakan Image. Sementara pakai placeholder ikon */}
-        {profile.avatarUrl ? (
-             <img src={profile.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
-        ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center text-4xl">👨‍💻</div>
-        )}
+    <section className="flex flex-col items-start gap-4 p-4 mt-6">
+      <h1 className="text-xl font-bold">{username}</h1>
+      
+      {/* Avatar Container */}
+      <div className="w-20 h-20 rounded-full border-2 border-gray-200 overflow-hidden bg-gray-100 flex items-center justify-center">
+         {profile?.avatarUrl ? (
+            <img src={profile.avatarUrl} alt={name} className="w-full h-full object-cover" />
+         ) : (
+            // Fallback ilustrasi dari gambar yang kamu kasih
+            <img src="/logo-primary.png" alt="Avatar" className="w-12 h-12 object-contain grayscale" /> 
+         )}
       </div>
 
-      {/* Name */}
-      <h2 className={`text-lg font-medium mb-3 ${theme === "light" ? "text-slate-800" : "text-gray-100"}`}>
-        {profile.name || "Your Name"}
-      </h2>
-
-      {/* Bio */}
-      <div className={`text-sm mb-4 leading-relaxed ${theme === "light" ? "text-slate-600" : "text-gray-300"}`}>
-        {renderBio(profile.bio)}
-      </div>
-
-      {/* External Link */}
-      {profile.link && (
-        <a 
-          href={`https://${profile.link}`} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-purple-600 transition"
-        >
-          <LinkIcon size={14} />
-          <span>{profile.link}</span>
+      <div className="flex flex-col gap-1 w-full text-left">
+        <h2 className="text-base font-semibold">{name}</h2>
+        
+        {/* Render bio text, handling newlines */}
+        <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+            {bioText}
+        </div>
+        
+        {/* Link Section */}
+        <a href={`https://${link}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium flex items-center gap-1 mt-1 hover:underline">
+            <ExternalLink size={14} className="text-gray-500" />
+            {link}
         </a>
-      )}
+      </div>
     </section>
   );
 }
