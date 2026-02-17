@@ -26,9 +26,9 @@ export default async function EmbedPage(props: EmbedPageProps) {
 
     // 🔥 PERBAIKAN: Gunakan native fetch() bawaan Next.js dengan cache: 'no-store'
     const response = await fetch(
-      `https://khalify-be.vercel.app/widgets/detail/${dbID}`,
+      `https://khlasify-widget-be.vercel.app/widgets/detail/${dbID}`, 
       { 
-        cache: 'no-store', // Memaksa Next.js untuk selalu tembak API baru, JANGAN ambil dari cache
+        cache: 'no-store',
       } 
     );
 
