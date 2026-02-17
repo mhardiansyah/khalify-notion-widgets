@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 // 🔥 Tambahkan Link2 di sini untuk icon link di bio
-import { Pin, X, ExternalLink, Settings, Menu, Link2 } from "lucide-react"; 
+import { Pin, X, ExternalLink, Settings, Menu, Link2 } from "lucide-react";
 import AutoThumbnail from "@/app/components/AutoThumbnail";
 import EmbedFilter from "@/app/components/EmbedFilter";
 import RefreshButton from "@/app/components/RefreshButton";
@@ -252,6 +252,7 @@ export default function ClientViewComponent({
 
         {/* ================= CONTENT ================= */}
         <div className="pb-5 space-y-4 sm:space-y-6 pt-6">
+          {/* 🔥 Hapus '&& profile' agar dummy selalu muncul ketika toggle dinyalakan */}
           {showBio && (
             <BioSection profile={profile} theme={currentTheme} />
           )}
@@ -387,7 +388,7 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
   );
 }
 
-// 🔥 BIO SECTION YANG SUDAH DI-UPDATE RATA KIRI + DUMMY DATA SESUAI FOTO
+// 🔥 BIO SECTION YANG SUDAH DI-UPDATE RATA KIRI + DUMMY DATA
 function BioSection({ profile, theme }: any) {
   return (
     <section
