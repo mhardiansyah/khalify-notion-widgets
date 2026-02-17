@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import ClientViewComponent from "@/app/components/ClientViewComponent";
 import { queryDatabase } from "@/app/lib/notion-server";
+import axios from "axios"; // 🔥 Jangan lupa import axios
 
 interface EmbedPageProps {
   params: Promise<{ id: string }>;
@@ -24,15 +25,20 @@ export default async function EmbedPage(props: EmbedPageProps) {
       );
     }
 
-    // 🔥 PERBAIKAN: Gunakan native fetch() bawaan Next.js dengan cache: 'no-store'
-    const response = await fetch(
+    // 🔥 PERBAIKAN: Menggunakan axios dengan header anti-cache
+    const response = await axios.get(
       `https://khlasify-widget-be.vercel.app/widgets/detail/${dbID}`, 
       { 
-        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
       } 
     );
 
-    const widgetRes = await response.json(); // Parse JSON-nya
+    // Axios otomatis mem-parse JSON, jadi tinggal panggil response.data
+    const widgetRes = response.data; 
 
     if (!widgetRes?.success || !widgetRes?.data?.length) {
       return (
@@ -45,7 +51,7 @@ export default async function EmbedPage(props: EmbedPageProps) {
     const widgetData = widgetRes.data[0];
     const token = widgetData.token;
 
-    // Sekarang widgetData PASTI adalah data paling fresh dari database
+    // Data dari database
     const isOwnerPro = widgetData.isPro === true; 
 
     console.log("DEBUG Widget Data Fresh:", widgetData);
