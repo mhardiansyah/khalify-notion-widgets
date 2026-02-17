@@ -76,7 +76,6 @@ export default function AccountsPage() {
       setUser({ email: userEmail, name: decoded.name });
 
       // --- LOGIC BARU: CEK STATUS SAAT LOAD HALAMAN ---
-      // --- LOGIC BARU: CEK STATUS SAAT LOAD HALAMAN ---
       const performStatusCheck = async () => {
         if (!userEmail) return;
         console.log("📡 First Load: Checking Payment Status for", userEmail);
