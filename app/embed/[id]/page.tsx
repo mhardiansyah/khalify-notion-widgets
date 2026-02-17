@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import ClientViewComponent from "@/app/components/ClientViewComponent";
 import { queryDatabase } from "@/app/lib/notion-server";
-import axios from "axios";
 
 interface EmbedPageProps {
   params: Promise<{ id: string }>;
@@ -25,12 +24,17 @@ export default async function EmbedPage(props: EmbedPageProps) {
       );
     }
 
-    const widgetRes = await axios.get(
+    // 🔥 PERBAIKAN: Gunakan native fetch() bawaan Next.js dengan cache: 'no-store'
+    const response = await fetch(
       `https://khalify-be.vercel.app/widgets/detail/${dbID}`,
-      { headers: { 'Cache-Control': 'no-store' } } 
+      { 
+        cache: 'no-store', // Memaksa Next.js untuk selalu tembak API baru, JANGAN ambil dari cache
+      } 
     );
 
-    if (!widgetRes.data?.success || !widgetRes.data?.data?.length) {
+    const widgetRes = await response.json(); // Parse JSON-nya
+
+    if (!widgetRes?.success || !widgetRes?.data?.length) {
       return (
         <p className="text-red-500 text-center mt-10">
           Widget not found
@@ -38,15 +42,14 @@ export default async function EmbedPage(props: EmbedPageProps) {
       );
     }
 
-    const widgetData = widgetRes.data.data[0];
+    const widgetData = widgetRes.data[0];
     const token = widgetData.token;
 
-    // 🔥 PERBAIKAN: Ambil isPro langsung dari widgetData
-    // Karena di response JSON backend, isPro ada di luar, sejajar dengan token/dbID
+    // Sekarang widgetData PASTI adalah data paling fresh dari database
     const isOwnerPro = widgetData.isPro === true; 
 
-    console.log("DEBUG Widget Data:", widgetData);
-    console.log("DEBUG isOwnerPro:", isOwnerPro);
+    console.log("DEBUG Widget Data Fresh:", widgetData);
+    console.log("DEBUG isOwnerPro Fresh:", isOwnerPro);
 
     const notionData = await queryDatabase(token, dbID);
 
@@ -55,7 +58,7 @@ export default async function EmbedPage(props: EmbedPageProps) {
         filtered={notionData}
         profile={null}
         theme="light"
-        isPro={isOwnerPro} // Kirim status yang sudah diperbaiki ke ClientViewComponent
+        isPro={isOwnerPro} 
       />
     );
   } catch (err) {
