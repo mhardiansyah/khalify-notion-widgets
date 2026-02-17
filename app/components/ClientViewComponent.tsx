@@ -2,7 +2,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Pin, X, ExternalLink, Settings, Menu } from "lucide-react";
+// 🔥 Tambahkan Link2 di sini untuk icon link di bio
+import { Pin, X, ExternalLink, Settings, Menu, Link2 } from "lucide-react"; 
 import AutoThumbnail from "@/app/components/AutoThumbnail";
 import EmbedFilter from "@/app/components/EmbedFilter";
 import RefreshButton from "@/app/components/RefreshButton";
@@ -250,7 +251,7 @@ export default function ClientViewComponent({
         </header>
 
         {/* ================= CONTENT ================= */}
-        <div className="pb-5 space-y-4 sm:space-y-6">
+        <div className="pb-5 space-y-4 sm:space-y-6 pt-6">
           {showBio && (
             <BioSection profile={profile} theme={currentTheme} />
           )}
@@ -386,41 +387,50 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
   );
 }
 
+// 🔥 BIO SECTION YANG SUDAH DI-UPDATE RATA KIRI + DUMMY DATA SESUAI FOTO
 function BioSection({ profile, theme }: any) {
-  // Gunakan data profile atau fallback ke dummy data jika kosong
-  const username = profile?.username || "username";
-  const name = profile?.name || "Your Name";
-  const bioText = profile?.bio || "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template!👇";
-  const link = "khlasify.notion.site";
-
   return (
-    <section className="flex flex-col items-start gap-4 p-4 mt-6">
-      <h1 className="text-xl font-bold">{username}</h1>
-      
-      {/* Avatar Container */}
-      <div className="w-20 h-20 rounded-full border-2 border-gray-200 overflow-hidden bg-gray-100 flex items-center justify-center">
-         {profile?.avatarUrl ? (
-            <img src={profile.avatarUrl} alt={name} className="w-full h-full object-cover" />
-         ) : (
-            // Fallback ilustrasi dari gambar yang kamu kasih
-            <img src="/logo-primary.png" alt="Avatar" className="w-12 h-12 object-contain grayscale" /> 
-         )}
+    <section
+      className={`flex flex-col items-start text-left w-full px-1 ${
+        theme === "light" ? "text-gray-900" : "text-white"
+      }`}
+    >
+      {/* Username */}
+      <h2 className="text-[22px] font-extrabold mb-4 tracking-tight">
+        {profile?.username || "username"}
+      </h2>
+
+      {/* Avatar Bulat */}
+      <div className="w-[84px] h-[84px] rounded-full overflow-hidden border border-gray-200 mb-3 bg-white shrink-0">
+        <img 
+          src={profile?.avatarUrl || "https://api.dicebear.com/7.x/notionists/svg?seed=khlasify"} 
+          alt="Profile Avatar" 
+          className="w-full h-full object-cover"
+        />
       </div>
 
-      <div className="flex flex-col gap-1 w-full text-left">
-        <h2 className="text-base font-semibold">{name}</h2>
-        
-        {/* Render bio text, handling newlines */}
-        <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-            {bioText}
-        </div>
-        
-        {/* Link Section */}
-        <a href={`https://${link}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium flex items-center gap-1 mt-1 hover:underline">
-            <ExternalLink size={14} className="text-gray-500" />
-            {link}
-        </a>
+      {/* Name */}
+      <h3 className="font-semibold text-[15px] mb-2">
+        {profile?.name || "Your Name"}
+      </h3>
+
+      {/* Dummy Bio (Rata Kiri, Pake Emoji) */}
+      <div className="text-sm space-y-1 mb-3 opacity-90">
+        <p>🚀 Build efficient & friendly Notion workspaces.</p>
+        <p>🔥 Minimalist setup, maximal productivity.</p>
+        <p>🎁 FREE Notion Template! 👇</p>
       </div>
+
+      {/* Tautan Link (Khlasify.notion.site) */}
+      <a 
+        href="https://khlasify.notion.site" 
+        target="_blank" 
+        rel="noreferrer"
+        className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-800 transition-colors"
+      >
+        <Link2 size={14} />
+        khlasify.notion.site
+      </a>
     </section>
   );
 }
