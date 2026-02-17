@@ -4,7 +4,7 @@ import { api } from "@/app/lib/axios";
 import { useState } from "react";
 import cookies from "js-cookie";
 import { toast } from "sonner";
-
+import Image from "next/image";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -22,7 +22,7 @@ export default function LoginPage() {
 
       cookies.set("login_email", email, { expires: 1 / 24 });
 
-      toast.success("Magic link terkirim  Cek email lo");
+      toast.success("Magic link terkirim. Cek email lo 👀");
     } catch (err: any) {
       toast.error("Gagal kirim magic link 😵");
       console.error(err);
@@ -32,46 +32,62 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-white px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-purple-600 flex items-center justify-center text-white font-bold text-xl">
-            K
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Welcome back
-          </h1>
-          <p className="text-gray-500 mt-2 text-sm">
-            Login pake magic link, tanpa password
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-white px-4">
+      <div className="w-full max-w-md border border-gray-200 rounded-2xl p-10 text-center">
+        {/* Logo */}
+        <div className="flex justify-center mb-4">
+          <Image
+              src="/LogoDanNama.png"
+              alt="Logo"
+              width={128}
+              height={128}
+              className="object-cover"
+            />
         </div>
 
-        {/* Form */}
-        <div className="space-y-4">
-          <input
-            type="email"
-            placeholder="you@example.com"
-            className="w-full rounded-xl border border-gray-200 px-4 py-3 
-                       focus:outline-none focus:ring-2 focus:ring-purple-500
-                       text-sm"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+        {/* Brand
+        <h2 className="text-lg font-semibold text-gray-900 mb-6">
+          khlasify
+        </h2> */}
 
-          <button
-            onClick={handleLogin}
-            disabled={loading}
-            className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 
-                       disabled:bg-purple-300 text-white py-3 font-medium
-                       transition-all"
-          >
-            {loading ? "Ngirim magic link..." : "Send Magic Link →"}
-          </button>
-        </div>
+        {/* Title */}
+        <h1 className="text-xl font-semibold text-gray-900 mb-6">
+          Login to your account
+        </h1>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
-          By continuing, you agree to our Terms & Privacy Policy
+        {/* Input */}
+        <input
+          type="email"
+          placeholder="Enter your email address..."
+          className="w-full rounded-lg border border-gray-300 px-4 py-3 
+                     focus:outline-none focus:ring-2 focus:ring-purple-500
+                     text-sm mb-4"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        {/* Button */}
+        <button
+          onClick={handleLogin}
+          disabled={loading}
+          className="w-full rounded-lg bg-purple-500 hover:bg-purple-600 
+                     disabled:bg-purple-300 text-white py-3 font-medium
+                     transition-all mb-4"
+        >
+          {loading ? "Ngirim magic link..." : "Send Magic Link →"}
+        </button>
+
+        {/* Terms */}
+        <p className="text-xs text-gray-400">
+          By continuing, you agree to our <span>
+            <a href="https://khlasify.super.site/terms-of-service"  className="underline hover:text-purple-600">
+              
+              Terms of Service
+            </a>
+            </span> & <span>
+            <a href="https://khlasify.super.site/privacy-policy" className="underline hover:text-purple-600">
+              Privacy Policy</a>
+          </span>
         </p>
       </div>
     </div>

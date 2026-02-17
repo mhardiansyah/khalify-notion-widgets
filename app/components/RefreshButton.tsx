@@ -4,7 +4,11 @@ import { useRouter } from "next/navigation";
 import { RotateCw } from "lucide-react";
 import { useState } from "react";
 
-export default function RefreshButton() {
+export default function RefreshButton({
+  theme = "light",
+}: {
+  theme?: "light" | "dark";
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -24,14 +28,16 @@ export default function RefreshButton() {
       title="Refresh"
       aria-label="Refresh"
       className={`
-        w-10 h-10 sm:w-9 sm:h-9
+        w-9 h-9
         flex items-center justify-center
         rounded-full border
         transition
         ${
           loading
             ? "opacity-60 cursor-not-allowed"
-            : "hover:bg-gray-100 dark:hover:bg-gray-800"
+            : theme === "light"
+            ? "hover:bg-[#F9FAFB]"
+            : "hover:bg-[#24304A]"
         }
       `}
     >

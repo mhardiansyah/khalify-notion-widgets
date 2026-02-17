@@ -2,7 +2,7 @@
 
 import { ChevronDown, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const filterOptions = {
   platform: ["All Platform", "Instagram", "Tiktok", "Others"],
@@ -15,26 +15,28 @@ const filterOptions = {
     "Other",
     "Behind the Scenes",
   ],
-  pinned: ["Pinned", "Pinned Only", "Unpinned Only"],
+  pinned: ["All Posts", "Pinned Only", "Unpinned Only"],
 };
 
 const defaultValue = {
   platform: "All Platform",
   status: "All Status",
-  pillar: "All Pillars",
-  pinned: "Pinned",
+  pillar: "All Pillars",  
+  pinned: "All Posts",
 };
 
 const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
 
-export default function EmbedFilter() {
+export default function EmbedFilter({
+  theme = "light",
+  isPro = false,
+}: {
+  theme?: "light" | "dark";
+  isPro?: boolean;
+}) {
   const router = useRouter();
   const params = useSearchParams();
-  type FilterKey = keyof typeof filterOptions;
-  const [open, setOpen] = useState<FilterKey | null>(null);
-
-  const [position, setPosition] = useState<"top" | "bottom">("bottom");
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
 
   const current = {
     platform: params.get("platform") ?? defaultValue.platform,
@@ -44,11 +46,13 @@ export default function EmbedFilter() {
       params.get("pinned") === "true"
         ? "Pinned Only"
         : params.get("pinned") === "false"
-        ? "Unpinned Only"
-        : defaultValue.pinned,
+          ? "Unpinned Only"
+          : defaultValue.pinned,
   };
 
   const updateFilter = (key: string, value: string) => {
+    if (!isPro) return;
+
     const newParams = new URLSearchParams(params.toString());
 
     if (value === defaultValue[key as keyof typeof defaultValue]) {
@@ -60,8 +64,8 @@ export default function EmbedFilter() {
           value === "Pinned Only"
             ? "true"
             : value === "Unpinned Only"
-            ? "false"
-            : "all"
+              ? "false"
+              : "all",
         );
       } else {
         newParams.set(key, value);
@@ -80,6 +84,8 @@ export default function EmbedFilter() {
   }, [open]);
 
   const clearAll = () => {
+    if (!isPro) return;
+
     const newParams = new URLSearchParams();
     const db = params.get("db");
     if (db) newParams.set("db", db);
@@ -94,159 +100,166 @@ export default function EmbedFilter() {
 
   return (
     <div className="w-full">
-      <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 space-y-3">
-        {/* 🔥 MOBILE = 1 COL | DESKTOP = GRID */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div
+        className={`rounded-xl p-3 sm:p-4 space-y-3 border ${
+          theme === "light"
+            ? "bg-white border-gray-200"
+            : "bg-[#1F2A3C] border-[#2A3550] text-white"
+        }`}
+      >
+        <div className="grid grid-cols-1 gap-2">
           {orderedKeys.map((key) => {
             const value = current[key];
 
             return (
               <div key={key} className="relative w-full">
-                {/* ===== DESKTOP BUTTON (TETAP) ===== */}
                 <button
-                  ref={triggerRef}
+                  disabled={!isPro}
                   onClick={() => {
-                    if (!triggerRef.current) return;
-                    const rect = triggerRef.current.getBoundingClientRect();
-                    const spaceBelow = window.innerHeight - rect.bottom;
-                    const spaceAbove = rect.top;
-
-                    setPosition(
-                      spaceBelow < 260 && spaceAbove > spaceBelow
-                        ? "top"
-                        : "bottom"
-                    );
+                    if (!isPro) return;
                     setOpen(open === key ? null : key);
                   }}
-                  className={`
-                    hidden sm:flex
-                    w-full px-4 py-2 rounded-lg
-                    items-center justify-between
-                    border text-sm transition
+                  className={`w-full px-3 py-2 rounded-lg flex items-center gap-2 border text-sm transition
                     ${
                       isActive(key)
-                        ? "bg-purple-50 border-purple-300 text-purple-700"
-                        : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
+                        ? theme === "light"
+                          ? "bg-purple-50 border-purple-300 text-purple-700"
+                          : "bg-purple-600/20 border-purple-500 text-purple-300"
+                        : theme === "light"
+                          ? "bg-gray-200 border-gray-300 text-gray-500"
+                          : "bg-[#2A3550] border-[#2A3550] text-gray-400"
                     }
+                    ${!isPro ? "cursor-not-allowed opacity-60" : ""}
                   `}
                 >
-                  <span className="truncate">{value}</span>
-                  <ChevronDown className="w-4 h-4" />
+                  <span className="truncate flex-1">{value}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 shrink-0 ${!isPro ? "opacity-50" : ""}`}
+                  />
                 </button>
 
-                {/* ===== MOBILE CARD ===== */}
-                <button
-                  onClick={() => setOpen(key)}
-                  className={`
-                    sm:hidden
-                    w-full px-4 py-3 rounded-xl
-                    flex items-center justify-between
-                    border
-                    ${
-                      isActive(key)
-                        ? "bg-purple-50 border-purple-300 text-purple-700"
-                        : "bg-gray-50 border-gray-300"
-                    }
-                  `}
-                >
-                  <span className="font-medium truncate">{value}</span>
-                  <ChevronDown className="w-4 h-4 opacity-60" />
-                </button>
+                {open === key && isPro && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setOpen(null)}
+                    />
 
-                {/* ===== DESKTOP DROPDOWN ===== */}
-                {open === key && (
-                  <div
-                    className={`
-                      hidden sm:block
-                      absolute z-50 w-full
-                      bg-white rounded-xl shadow-xl
-                      max-h-[260px] overflow-y-auto
-                      ${
-                        position === "bottom"
-                          ? "mt-2 top-full"
-                          : "mb-2 bottom-full"
-                      }
-                    `}
-                  >
-                    {filterOptions[key].map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => updateFilter(key, opt)}
-                        className={`w-full px-4 py-2 text-left text-sm ${
-                          value === opt
-                            ? "bg-purple-50 text-purple-700"
-                            : "hover:bg-gray-100"
+                    <div
+                      className={`absolute z-50 mt-2 w-56 rounded-xl border shadow-lg overflow-hidden ${
+                        theme === "light"
+                          ? "bg-white border-gray-200"
+                          : "bg-[#1F2A3C] border-[#2A3550]"
+                      }`}
+                    >
+                      <div
+                        className={`px-4 py-2 text-xs font-semibold border-b ${
+                          theme === "light"
+                            ? "text-gray-400 border-gray-200"
+                            : "text-gray-400 border-[#2A3550]"
                         }`}
                       >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
+                        {key.toUpperCase()}
+                      </div>
+
+                      {filterOptions[key].map((opt) => (
+                        <button
+                          key={opt}
+                          onClick={() => updateFilter(key, opt)}
+                          className={`w-full px-4 py-3 flex items-center justify-between text-sm
+                            ${
+                              value === opt
+                                ? theme === "light"
+                                  ? "bg-purple-50 text-purple-700"
+                                  : "bg-purple-600/20 text-purple-300"
+                                : theme === "light"
+                                  ? "hover:bg-[#F9FAFB]"
+                                  : "hover:bg-[#24304A]"
+                            }
+                          `}
+                        >
+                          <span>{opt}</span>
+                          {value === opt && <span className="text-xs">✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
             );
           })}
         </div>
+        
+
+        {!isPro && (
+          <>
+            <div
+              className={`h-px my-3 ${
+                theme === "light" ? "bg-gray-200" : "bg-[#2A3550]"
+              }`}
+            />
+
+            <button
+              onClick={() => {
+                window.open("https://khlasify.myr.id/pl/content-pro", "_blank");
+              }}
+              className="w-full py-3 text-sm font-semibold text-purple-600 hover:bg-purple-50 transition rounded-2xl"
+            >
+              Upgrade to PRO
+            </button>
+          </>
+        )}
 
         {activeCount > 0 && (
           <div className="flex justify-end">
             <button
+              disabled={!isPro}
               onClick={clearAll}
-              className="text-sm text-gray-500 hover:text-gray-900"
+              className={`text-sm ${
+                !isPro
+                  ? "opacity-50 cursor-not-allowed"
+                  : theme === "light"
+                    ? "text-gray-500 hover:text-gray-700"
+                    : "text-gray-400 hover:text-white"
+              }`}
             >
               Clear all
             </button>
           </div>
         )}
-      </div>
 
-      {/* ===== MOBILE BOTTOM SHEET ===== */}
-      {open && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/40 z-40 sm:hidden"
-            onClick={() => setOpen(null)}
-          />
-
-          <div className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto sm:hidden">
-            <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4" />
-
-            <h3 className="text-sm font-semibold capitalize mb-3">
-              {open}
-            </h3>
-
-            {filterOptions[open].map((opt) => (
-              <button
-                key={opt}
-                onClick={() => updateFilter(open, opt)}
-                className="w-full px-4 py-3 rounded-lg text-left hover:bg-gray-100"
-              >
-                {opt}
-              </button>
-            ))}
+        {activeCount > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {orderedKeys.map(
+              (key) =>
+                isActive(key) && (
+                  <div
+                    key={key}
+                    className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+                      theme === "light"
+                        ? "bg-purple-100 text-purple-700"
+                        : "bg-purple-600/20 text-purple-300"
+                    }`}
+                  >
+                    <span className="capitalize">{key}</span>
+                    <span className="truncate max-w-[120px]">
+                      {current[key]}
+                    </span>
+                    <button
+                      disabled={!isPro}
+                      onClick={() =>
+                        isPro && updateFilter(key, defaultValue[key])
+                      }
+                      className={!isPro ? "cursor-not-allowed opacity-50" : ""}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ),
+            )}
           </div>
-        </>
-      )}
-
-      {activeCount > 0 && (
-        <div className="flex flex-wrap gap-2 mt-3">
-          {orderedKeys.map(
-            (key) =>
-              isActive(key) && (
-                <div
-                  key={key}
-                  className="flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm"
-                >
-                  <span className="capitalize">{key}</span>
-                  <span className="truncate max-w-[120px]">{current[key]}</span>
-                  <button onClick={() => updateFilter(key, defaultValue[key])}>
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              )
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
