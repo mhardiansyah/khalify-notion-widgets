@@ -21,7 +21,8 @@ import {
   AlignLeft,
   Image as ImageIcon,
   AtSign,
-  Loader2
+  Loader2,
+  Lock // Tambah icon Lock untuk overlay
 } from "lucide-react";
 
 import { deleteWidget, getWidgetsByUser, updateWidgetBranding } from "../lib/widget.api";
@@ -349,7 +350,7 @@ export default function AccountsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            {/* ... (KODE USER PROFILE & LICENSE BOX TETAP SAMA) ... */}
+            {/* ... (KODE USER PROFILE & LICENSE BOX) ... */}
             <div className="md:col-span-2 rounded-3xl p-6 bg-white/70 backdrop-blur border shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
@@ -464,12 +465,24 @@ export default function AccountsPage() {
                       
                       {/* ACTION BUTTONS */}
                       <div className="flex items-center gap-1">
-                        {/* TOMBOL EDIT (Hanya aktif jika tidak paused & PRO) */}
+                        {/* 🔥 EDIT BUTTON: Disabled kalau bukan PRO atau Paused */}
                         <button
-                          onClick={() => openEditModal(widget)}
+                          onClick={() => {
+                            if (!isPro) {
+                              toast.info("Upgrade to PRO to customize widget bio", {
+                                icon: '👑',
+                              });
+                              return;
+                            }
+                            openEditModal(widget);
+                          }}
                           disabled={paused}
-                          className="p-2 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition group"
-                          title="Edit Bio"
+                          className={`p-2 rounded-lg transition group ${
+                            isPro 
+                              ? "hover:bg-blue-50 text-slate-400 hover:text-blue-600 cursor-pointer" 
+                              : "text-slate-300 cursor-not-allowed opacity-60"
+                          }`}
+                          title={isPro ? "Edit Bio" : "Pro Feature Only"}
                         >
                           <Edit2 className="w-5 h-5" />
                         </button>
@@ -522,45 +535,69 @@ export default function AccountsPage() {
                       Show Advanced Details {openDetails[widget.id] ? "▲" : "▼"}
                     </button>
 
-                    {openDetails[widget.id] && !paused && (
-                      <div className="px-5 pb-5 space-y-3 text-xs rounded-b-2xl">
-                        <div>
-                          <p className="text-slate-500 mb-1">Widget ID</p>
-                          <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
-                            <span className="font-mono flex-1 truncate">
-                              {widget.id}
-                            </span>
+                    {/* 🔥 WRAPPER RELATIVE UNTUK ADVANCED DETAILS & OVERLAY */}
+                    <div className="relative">
+                      {openDetails[widget.id] && !paused && (
+                        <div className={`px-5 pb-5 space-y-3 text-xs rounded-b-2xl ${!isPro ? "blur-[3px] select-none pointer-events-none" : ""}`}>
+                          <div>
+                            <p className="text-slate-500 mb-1">Widget ID</p>
+                            <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                              <span className="font-mono flex-1 truncate">
+                                {widget.id}
+                              </span>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 mb-1">
+                              Integration Token
+                            </p>
+                            <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                              <span className="font-mono flex-1 truncate">
+                                {showTokens[widget.id]
+                                  ? widget.token
+                                  : "••••••••••••••••••"}
+                              </span>
+                              <button
+                                onClick={() => toggleTokenVisibility(widget.id)}
+                              >
+                                {showTokens[widget.id] ? (
+                                  <EyeOff className="w-4 h-4 text-slate-400" />
+                                ) : (
+                                  <Eye className="w-4 h-4 text-slate-400" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 mb-1">Database ID</p>
+                            <div className="bg-slate-50 rounded-lg px-3 py-2 font-mono truncate">
+                              {widget.dbID}
+                            </div>
                           </div>
                         </div>
-                        <div>
-                          <p className="text-slate-500 mb-1">
-                            Integration Token
-                          </p>
-                          <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
-                            <span className="font-mono flex-1 truncate">
-                              {showTokens[widget.id]
-                                ? widget.token
-                                : "••••••••••••••••••"}
-                            </span>
+                      )}
+
+                      {/* 🔥 OVERLAY JIKA BUKAN PRO */}
+                      {openDetails[widget.id] && !paused && !isPro && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/40 rounded-b-2xl pb-4">
+                          <div className="bg-white px-4 py-3 rounded-xl shadow-lg border border-purple-100 flex flex-col items-center text-center">
+                            <Lock className="w-6 h-6 text-purple-500 mb-2" />
+                            <p className="text-sm font-bold text-slate-800 mb-1">PRO Feature</p>
+                            <p className="text-[11px] text-slate-500 mb-3 px-2">
+                              Upgrade to access advanced API tokens and database IDs.
+                            </p>
                             <button
-                              onClick={() => toggleTokenVisibility(widget.id)}
+                              onClick={handleUpgrade}
+                              className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition flex items-center gap-1.5"
                             >
-                              {showTokens[widget.id] ? (
-                                <EyeOff className="w-4 h-4 text-slate-400" />
-                              ) : (
-                                <Eye className="w-4 h-4 text-slate-400" />
-                              )}
+                              <Crown className="w-3.5 h-3.5" /> Upgrade Now
                             </button>
                           </div>
                         </div>
-                        <div>
-                          <p className="text-slate-500 mb-1">Database ID</p>
-                          <div className="bg-slate-50 rounded-lg px-3 py-2 font-mono truncate">
-                            {widget.dbID}
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+                    {/* END WRAPPER */}
+
                   </div>
                 );
               })}
