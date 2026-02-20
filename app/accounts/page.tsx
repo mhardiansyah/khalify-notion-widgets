@@ -11,19 +11,24 @@ import {
   Edit2,
   Eye,
   EyeOff,
-  MoreVertical,
   ExternalLink,
   Crown,
   User as UserIcon,
   Trash2Icon,
-  Loader2, // Tambah icon loading
+  X,
+  Save,
+  Link as LinkIcon,
+  AlignLeft,
+  Image as ImageIcon,
+  AtSign,
+  Loader2
 } from "lucide-react";
 
-import { deleteWidget, getWidgetsByUser } from "../lib/widget.api";
-// Pastikan fungsi ini sudah ada di lib lo (sesuai contoh sebelumnya)
+import { deleteWidget, getWidgetsByUser, updateWidgetBranding } from "../lib/widget.api";
 import { getPaymentLink, checkPaymentStatus } from "../lib/payment.api";
 import { toast, Toaster } from "sonner";
 
+// Update Interface biar support data branding dari Backend
 interface Widget {
   id: string;
   token: string;
@@ -32,6 +37,12 @@ interface Widget {
   profileId: string;
   name: string;
   link: string;
+  // Field Custom Branding
+  customName?: string;
+  customUsername?: string;
+  customBio?: string;
+  customAvatar?: string;
+  customLink?: string;
 }
 
 type JwtPayload = {
@@ -44,23 +55,29 @@ type JwtPayload = {
 export default function AccountsPage() {
   const router = useRouter();
 
-  const [user, setUser] = useState<{ email?: string; name?: string } | null>(
-    null,
-  );
+  const [user, setUser] = useState<{ email?: string; name?: string } | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [showTokens, setShowTokens] = useState<Record<string, boolean>>({});
   const [openDetails, setOpenDetails] = useState<Record<string, boolean>>({});
+  const [isPro, setIsPro] = useState(false);
 
-  const [isPro, setIsPro] = useState(false); // State PRO sekarang dinamis
+  // --- STATE UNTUK MODAL EDIT ---
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    customName: "",
+    customUsername: "",
+    customBio: "",
+    customAvatar: "",
+    customLink: ""
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
   const FREE_WIDGET_LIMIT = 1;
-
-  const isWidgetPaused = (index: number) =>
-    !isPro && index >= FREE_WIDGET_LIMIT;
+  const isWidgetPaused = (index: number) => !isPro && index >= FREE_WIDGET_LIMIT;
   const disabledClass = "opacity-50 pointer-events-none select-none";
 
-  // 1. Inisialisasi Auth & Status PRO
   // 1. Inisialisasi Auth & Status PRO
   useEffect(() => {
     const token = cookies.get("login_token");
@@ -75,26 +92,17 @@ export default function AccountsPage() {
       const userEmail = decoded.email;
       setUser({ email: userEmail, name: decoded.name });
 
-      // --- LOGIC BARU: CEK STATUS SAAT LOAD HALAMAN ---
       const performStatusCheck = async () => {
         if (!userEmail) return;
-        console.log("📡 First Load: Checking Payment Status for", userEmail);
         try {
           const res = await checkPaymentStatus(userEmail);
-          console.log("💳 Status Response:", res);
-
           if (res.data && res.data.isPro) {
             setIsPro(true);
-            console.log("✅ Status Updated to PRO");
-          } else {
-            console.log("❌ Status remains FREE");
           }
         } catch (err) {
           console.error("Gagal cek status:", err);
         }
       };
-
-      // Jalankan pengecekan
       performStatusCheck();
     } catch (e) {
       router.replace("/auth/login");
@@ -108,16 +116,8 @@ export default function AccountsPage() {
     const loadWidgets = async () => {
       try {
         const jwt = cookies.get("login_token");
-        console.log(
-          "🔍 Checking login_token:",
-          jwt ? "Token Found" : "No Token",
-        );
         if (!jwt) return;
-
-        console.log("📦 Fetching Widgets...");
         const res = await getWidgetsByUser(jwt);
-        console.log("📊 Widgets Loaded:", res.data);
-
         if (res?.success) {
           setWidgets(res.data);
         }
@@ -125,22 +125,62 @@ export default function AccountsPage() {
         console.error("🚨 LOAD WIDGET ERROR:", e);
       }
     };
-
     loadWidgets();
   }, []);
 
-  // 3. LOGIC UPGRADE & POLLING
+  // --- LOGIC EDIT MODAL ---
+  const openEditModal = (widget: Widget) => {
+    if (!isPro) {
+      toast.error("Fitur Custom Branding hanya untuk akun PRO!");
+      return;
+    }
+    setEditingWidgetId(widget.id);
+    setEditFormData({
+      customName: widget.customName || "",
+      customUsername: widget.customUsername || "",
+      customBio: widget.customBio || "",
+      customAvatar: widget.customAvatar || "",
+      customLink: widget.customLink || ""
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveBranding = async () => {
+    if (!editingWidgetId) return;
+    setIsSaving(true);
+
+    try {
+      const res = await updateWidgetBranding(editingWidgetId, editFormData);
+      
+      if (res?.success) {
+        toast.success("Widget branding berhasil diupdate!");
+        
+        // Update state lokal biar gak perlu refresh
+        setWidgets(prev => prev.map(w => 
+          w.id === editingWidgetId 
+            ? { ...w, ...editFormData } 
+            : w
+        ));
+        setIsEditModalOpen(false);
+      } else {
+        toast.error("Gagal update widget");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Terjadi kesalahan saat menyimpan");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // --- EXISTING LOGIC ---
   const handleUpgrade = async () => {
     try {
-      // Tidak ada overlay loading, cukup toast sederhana
       toast.loading("Membuka halaman pembayaran...");
-
       const res = await getPaymentLink();
       toast.dismiss();
-
       if (res?.paymentLink) {
         window.location.href = res.paymentLink;
-        toast.info("Silakan selesaikan pembayaran, lalu refresh halaman ini.");
       }
     } catch (error) {
       toast.dismiss();
@@ -195,11 +235,121 @@ export default function AccountsPage() {
       <Navbar />
       <Toaster position="top-center" richColors />
 
-      {/* OVERLAY LOADING SAAT POLLING */}
+      {/* --- MODAL EDIT POPUP --- */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="px-6 py-4 border-b flex items-center justify-between bg-gray-50">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <Edit2 className="w-5 h-5 text-purple-600" />
+                Customize Widget Bio
+              </h3>
+              <button 
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-2 hover:bg-gray-200 rounded-full transition"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
+                    <UserIcon className="w-3 h-3" /> Display Name
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition"
+                    placeholder="e.g. Naufal Dev"
+                    value={editFormData.customName}
+                    onChange={(e) => setEditFormData({ ...editFormData, customName: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
+                    <AtSign className="w-3 h-3" /> Username
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition"
+                    placeholder="@naufal"
+                    value={editFormData.customUsername}
+                    onChange={(e) => setEditFormData({ ...editFormData, customUsername: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
+                  <ImageIcon className="w-3 h-3" /> Avatar URL
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition"
+                  placeholder="https://imgur.com/..."
+                  value={editFormData.customAvatar}
+                  onChange={(e) => setEditFormData({ ...editFormData, customAvatar: e.target.value })}
+                />
+                <p className="text-[10px] text-gray-400">Paste direct image link (jpg/png)</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
+                  <AlignLeft className="w-3 h-3" /> Bio / Description
+                </label>
+                <textarea
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition resize-none h-24"
+                  placeholder="Tell something about your notion page..."
+                  value={editFormData.customBio}
+                  onChange={(e) => setEditFormData({ ...editFormData, customBio: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
+                  <LinkIcon className="w-3 h-3" /> External Link
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition"
+                  placeholder="https://mysite.com"
+                  value={editFormData.customLink}
+                  onChange={(e) => setEditFormData({ ...editFormData, customLink: e.target.value })}
+                />
+              </div>
+
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-xl transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveBranding}
+                disabled={isSaving}
+                className="px-5 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-xl transition shadow-md shadow-purple-200 flex items-center gap-2 disabled:opacity-70"
+              >
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 overflow-x-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* ... (KODE USER PROFILE & LICENSE BOX TETAP SAMA) ... */}
             <div className="md:col-span-2 rounded-3xl p-6 bg-white/70 backdrop-blur border shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
@@ -240,7 +390,6 @@ export default function AccountsPage() {
               </div>
 
               <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                {/* TOMBOL UPGRADE DINAMIS */}
                 {!isPro ? (
                   <button
                     onClick={handleUpgrade}
@@ -312,12 +461,27 @@ export default function AccountsPage() {
                           </span>
                         )}
                       </div>
-                      <button
-                        onClick={() => handleDeleteWidget(widget.id)}
-                        className="p-2 rounded-lg hover:bg-red-50 transition group"
-                      >
-                        <Trash2Icon className="w-5 h-5 text-slate-400 group-hover:text-red-500" />
-                      </button>
+                      
+                      {/* ACTION BUTTONS */}
+                      <div className="flex items-center gap-1">
+                        {/* TOMBOL EDIT (Hanya aktif jika tidak paused & PRO) */}
+                        <button
+                          onClick={() => openEditModal(widget)}
+                          disabled={paused}
+                          className="p-2 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition group"
+                          title="Edit Bio"
+                        >
+                          <Edit2 className="w-5 h-5" />
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteWidget(widget.id)}
+                          className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition group"
+                          title="Delete"
+                        >
+                          <Trash2Icon className="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="px-5 pb-4">

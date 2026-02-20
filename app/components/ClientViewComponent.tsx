@@ -68,7 +68,7 @@ export default function ClientViewComponent({
 
   const filteredData = filtered
     .filter((item) => {
-      const platform = params.get("platform");
+      const platform = params.get("platform");`  `
       const status = params.get("status");
       const pinned = params.get("pinned");
 
@@ -556,4 +556,6 @@ function hasAttachment(item: any) {
 
   const first = files[0];
   return !!(first?.file?.url || first?.external?.url);
-}
+} 
+
+ 

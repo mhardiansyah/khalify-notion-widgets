@@ -1,5 +1,6 @@
 // lib/widget.api.ts
 import { api } from "./axios";
+import Cookies from "js-cookie";
 // import { CreateWidgetDto } from "./dto/create-widget.dto"; // Nyalain kalo filenya ada
 
 export const getNotionDatabases = async (token: string) => {
@@ -30,3 +31,14 @@ export const deleteWidget = async(id: string) => {
   const res = await api.delete(`/widgets/delete/${id}`);
   return res.data;
 }
+
+export const updateWidgetBranding = async (id: string, payload: any) => {
+  const token = Cookies.get("login_token"); // Ambil token buat Auth
+  
+  const res = await api.patch(`/widgets/bio/${id}`, payload, {
+    headers: {
+      Authorization: `Bearer ${token}` // Backend butuh ini (JwtAuthGuard)
+    }
+  });
+  return res.data;
+};
