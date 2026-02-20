@@ -22,6 +22,7 @@ type Profile = {
   username?: string;
   avatarUrl?: string;
   bio?: string;
+  link?: string; // 🔥 PERBAIKAN: Tambahkan ini agar tidak error Type
   highlights?: Highlight[];
 };
 
@@ -390,6 +391,23 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
 
 // 🔥 BIO SECTION YANG SUDAH DI-UPDATE RATA KIRI + DUMMY DATA
 function BioSection({ profile, theme }: any) {
+  // Kalau profil kosong, kita kasih default dummy
+  const safeProfile = profile || {
+    username: "username",
+    name: "Your Name",
+    avatarUrl: "https://api.dicebear.com/7.x/notionists/svg?seed=khlasify",
+    bio: "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
+    link: "https://khlasify.notion.site",
+  };
+
+  // Fungsi buat bikin bio bisa pake enter (newline \n)
+  const formatBio = (bioText: string) => {
+    if (!bioText) return null;
+    return bioText.split('\n').map((line, i) => (
+      <p key={i}>{line}</p>
+    ));
+  };
+
   return (
     <section
       className={`flex flex-col items-start text-left w-full px-1 ${
@@ -398,40 +416,40 @@ function BioSection({ profile, theme }: any) {
     >
       {/* Username */}
       <h2 className="text-[22px] font-extrabold mb-4 tracking-tight">
-        {profile?.username || "username"}
+        {safeProfile.username}
       </h2>
 
       {/* Avatar Bulat */}
       <div className="w-[84px] h-[84px] rounded-full overflow-hidden border border-gray-200 mb-3 bg-white shrink-0">
-        <img 
-          src={profile?.avatarUrl || "https://api.dicebear.com/7.x/notionists/svg?seed=khlasify"} 
-          alt="Profile Avatar" 
+        <img
+          src={safeProfile.avatarUrl}
+          alt="Profile Avatar"
           className="w-full h-full object-cover"
         />
       </div>
 
       {/* Name */}
       <h3 className="font-semibold text-[15px] mb-2">
-        {profile?.name || "Your Name"}
+        {safeProfile.name}
       </h3>
 
-      {/* Dummy Bio (Rata Kiri, Pake Emoji) */}
+      {/* Bio yang sudah diformat */}
       <div className="text-sm space-y-1 mb-3 opacity-90">
-        <p>🚀 Build efficient & friendly Notion workspaces.</p>
-        <p>🔥 Minimalist setup, maximal productivity.</p>
-        <p>🎁 FREE Notion Template! 👇</p>
+        {formatBio(safeProfile.bio)}
       </div>
 
-      {/* Tautan Link (Khlasify.notion.site) */}
-      <a 
-        href="https://khlasify.notion.site" 
-        target="_blank" 
-        rel="noreferrer"
-        className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-800 transition-colors"
-      >
-        <Link2 size={14} />
-        khlasify.notion.site
-      </a>
+      {/* Tautan Link (Hanya render jika ada link) */}
+      {safeProfile.link && (
+        <a
+          href={safeProfile.link.startsWith("http") ? safeProfile.link : `https://${safeProfile.link}`}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-800 transition-colors"
+        >
+          <Link2 size={14} />
+          {safeProfile.link.replace(/^https?:\/\//, '')} {/* Buang https:// buat display */}
+        </a>
+      )}
     </section>
   );
 }
