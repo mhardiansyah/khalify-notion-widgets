@@ -105,6 +105,8 @@ export default function ClientViewComponent({
 
   const visibleData = isPro ? filteredData : filteredData.slice(0, LIMIT_FREE);
 
+  const displayUsername = profile?.username || "username";
+
   /* ================= RENDER ================= */
 
   return (
@@ -121,14 +123,20 @@ export default function ClientViewComponent({
         >
           <div className="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Image
-                src="/logo-primary.png"
-                alt="Khlasify"
-                width={110}
-                height={28}
-                priority
-                className="select-none"
-              />
+              {isPro ? (
+                <span className="font-bold text-lg tracking-tight truncate max-w-[150px] sm:max-w-[200px]">
+                  {displayUsername}
+                </span>
+              ) : (
+                <Image
+                  src="/logo-primary.png"
+                  alt="Khlasify"
+                  width={110}
+                  height={28}
+                  priority
+                  className="select-none"
+                />
+              )}
             </div>
 
             <div className="flex items-center gap-2">
