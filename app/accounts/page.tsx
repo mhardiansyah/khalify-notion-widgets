@@ -449,9 +449,13 @@ export default function AccountsPage() {
                   >
                     <div className="flex items-start justify-between p-5 gap-3">
                       <div>
+                        {/* 🔥 LOGIC PERUBAHAN NAMA WIDGET */}
                         <p className="text-sm font-medium text-slate-900 break-all">
-                          Widget #{widget.id.slice(0, 6).toUpperCase()}
+                          {isPro && widget.customUsername
+                            ? widget.customUsername
+                            : `Widget #${widget.id.slice(0, 6).toUpperCase()}`}
                         </p>
+
                         {paused ? (
                           <span className="inline-flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full mt-1">
                             ● Paused (Upgrade Pro)
@@ -465,7 +469,6 @@ export default function AccountsPage() {
                       
                       {/* ACTION BUTTONS */}
                       <div className="flex items-center gap-1">
-                        {/* 🔥 EDIT BUTTON: Disabled kalau bukan PRO atau Paused */}
                         <button
                           onClick={() => {
                             if (!isPro) {
@@ -535,7 +538,7 @@ export default function AccountsPage() {
                       Show Advanced Details {openDetails[widget.id] ? "▲" : "▼"}
                     </button>
 
-                    {/* 🔥 WRAPPER RELATIVE UNTUK ADVANCED DETAILS & OVERLAY */}
+                    {/* WRAPPER RELATIVE UNTUK ADVANCED DETAILS & OVERLAY */}
                     <div className="relative">
                       {openDetails[widget.id] && !paused && (
                         <div className={`px-5 pb-5 space-y-3 text-xs rounded-b-2xl ${!isPro ? "blur-[3px] select-none pointer-events-none" : ""}`}>
@@ -577,7 +580,7 @@ export default function AccountsPage() {
                         </div>
                       )}
 
-                      {/* 🔥 OVERLAY JIKA BUKAN PRO */}
+                      {/* OVERLAY JIKA BUKAN PRO */}
                       {openDetails[widget.id] && !paused && !isPro && (
                         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/40 rounded-b-2xl pb-4">
                           <div className="bg-white px-4 py-3 rounded-xl shadow-lg border border-purple-100 flex flex-col items-center text-center">
@@ -596,7 +599,6 @@ export default function AccountsPage() {
                         </div>
                       )}
                     </div>
-                    {/* END WRAPPER */}
 
                   </div>
                 );
