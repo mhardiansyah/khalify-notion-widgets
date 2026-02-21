@@ -15,17 +15,17 @@ const filterOptions = {
     "Other",
     "Behind the Scenes",
   ],
-  pinned: ["All Posts", "Pinned Only", "Unpinned Only"],
+  post: ["All Posts", "Pinned Only", "Unpinned Only"],
 };
 
 const defaultValue = {
   platform: "All Platform",
   status: "All Status",
   pillar: "All Pillars",  
-  pinned: "All Posts",
+  post: "All Posts",
 };
 
-const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
+const orderedKeys = ["platform", "status", "pillar", "post"] as const;
 
 export default function EmbedFilter({
   theme = "light",
@@ -42,13 +42,14 @@ export default function EmbedFilter({
     platform: params.get("platform") ?? defaultValue.platform,
     status: params.get("status") ?? defaultValue.status,
     pillar: params.get("pillar") ?? defaultValue.pillar,
-    pinned:
+    post:
       params.get("pinned") === "true"
         ? "Pinned Only"
         : params.get("pinned") === "false"
           ? "Unpinned Only"
-          : defaultValue.pinned,
+          : defaultValue.post,
   };
+
 
   const updateFilter = (key: string, value: string) => {
     if (!isPro) return;
