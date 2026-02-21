@@ -107,6 +107,13 @@ export default function ClientViewComponent({
 
   const displayUsername = profile?.username || "username";
 
+  const dummyHighlights = [
+    { title: "Highlight" },
+    { title: "Highlight" },
+    { title: "Highlight" },
+    { title: "Highlight" },
+  ];
+
   /* ================= RENDER ================= */
 
   return (
@@ -266,12 +273,14 @@ export default function ClientViewComponent({
             <BioSection profile={profile} theme={currentTheme} />
           )}
 
-          {showHighlight && profile?.highlights && (
+          {showHighlight && (
             <HighlightSection
-              highlights={profile.highlights}
+              highlights={profile?.highlights}
               theme={currentTheme}
             />
           )}
+
+
         </div>
 
         {viewMode === "visual" && (
@@ -463,19 +472,40 @@ function BioSection({ profile, theme }: any) {
 }
 
 function HighlightSection({ highlights, theme }: any) {
+  // Jika highlights undefined atau array kosong, gunakan dummy data
+  const displayHighlights = (!highlights || highlights.length === 0) 
+    ? [
+        { title: "Highlight", image: "" },
+        { title: "Highlight", image: "" },
+        { title: "Highlight", image: "" },
+        { title: "Highlight", image: "" }
+      ]
+    : highlights;
+
   return (
     <section
       className={`border rounded-2xl p-4 ${
         theme === "light"
-          ? "bg-gray-50 border-gray-200"
-          : "bg-[#1F2A3C] border-[#2A3550]"
+          ? "bg-gray-50 border-gray-200 text-gray-900"
+          : "bg-[#1F2A3C] border-[#2A3550] text-gray-300"
       }`}
     >
-      <div className="flex gap-3 overflow-x-auto">
-        {highlights.map((h: any, i: number) => (
-          <div key={i} className="min-w-[72px] text-center">
-            <div className="w-14 h-14 rounded-full bg-gray-300 mx-auto mb-1" />
-            <p className="text-[11px]">{h.title}</p>
+      <div className="flex gap-4 overflow-x-auto pb-1 items-center">
+        {displayHighlights.map((h: any, i: number) => (
+          <div key={i} className="min-w-[64px] flex flex-col items-center gap-2">
+            {/* Lingkaran Highlight */}
+            <div 
+              className={`w-16 h-16 rounded-full border-2 overflow-hidden flex items-center justify-center shrink-0 ${
+                 theme === "light" ? "bg-gray-100 border-gray-200" : "bg-[#2A3550] border-gray-600"
+              }`}
+            >
+               {/* Jika ada image, render image. Jika tidak (dummy), biarkan warna solid */}
+               {h.image && (
+                 <img src={h.image} alt={h.title} className="w-full h-full object-cover" />
+               )}
+            </div>
+            {/* Judul Highlight */}
+            <p className="text-[12px] font-medium text-center truncate w-full px-1">{h.title}</p>
           </div>
         ))}
       </div>
