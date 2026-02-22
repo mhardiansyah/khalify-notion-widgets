@@ -51,14 +51,14 @@ export default async function EmbedPage(props: EmbedPageProps) {
     // Kita cek dulu, kalau isPro true, baru kita pakai custom datanya.
     // Kalau belum diset (kosong), pakai default fallback.
     const widgetProfile = isOwnerPro ? {
-      name: widgetData.customName || "Your Name",
-      username: widgetData.customUsername || "username",
-      avatarUrl: widgetData.customAvatar || "https://api.dicebear.com/7.x/notionists/svg?seed=khlasify",
-      bio: widgetData.customBio || "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
-      link: widgetData.customLink || "https://khlasify.notion.site",
-      highlights: [] // Jika kamu belum punya highlight di backend, biarkan array kosong
-    } : null; // Jika bukan Pro, atau kalau mau tetap ditampilin dummy, ganti null dengan default object.
-
+      name: widgetData.customName ?? "Your Name",
+      username: widgetData.customUsername ?? "username",
+      // Berikan fallback gambar default jika customAvatar kosong
+      avatarUrl: widgetData.customAvatar ? widgetData.customAvatar : "https://api.dicebear.com/7.x/notionists/svg?seed=khlasify",
+      bio: widgetData.customBio ?? "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
+      link: widgetData.customLink ?? "https://khlasify.notion.site",
+      highlights: [] 
+    } : null;
     const notionData = await queryDatabase(token, dbID);
 
     return (
