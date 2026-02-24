@@ -41,14 +41,14 @@ export default function EmbedFilter({
   const [open, setOpen] = useState<string | null>(null);
 
   const current = {
-    platform: params.get("platform") ?? defaultValue.platform,
-    status: params.get("status") ?? defaultValue.status,
-    pillar: params.get("pillar") ?? defaultValue.pillar,
+    platform: params.get("Platform") ?? defaultValue.platform,
+    status: params.get("Status") ?? defaultValue.status,
+    pillar: params.get("Pillar") ?? defaultValue.pillar,
     // Logic ini sekarang akan berfungsi karena key-nya sudah "pinned"
     pinned:
-      params.get("pinned") === "true"
+      params.get("Pin") === "true"
         ? "Pinned Only"
-        : params.get("pinned") === "false"
+        : params.get("Pin") === "false"
           ? "Unpinned Only"
           : defaultValue.pinned,
   };
@@ -61,7 +61,7 @@ export default function EmbedFilter({
     if (value === defaultValue[key as keyof typeof defaultValue]) {
       newParams.delete(key);
     } else {
-      if (key === "pinned") {
+      if (key === "pin") {
         newParams.set(
           key,
           value === "Pinned Only"
