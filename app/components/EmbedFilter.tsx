@@ -4,11 +4,13 @@ import { ChevronDown, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+// 🔥 PERBAIKAN: Gunakan format dictionary dengan keys lowercase (camelCase)
+// Nilai string disesuaikan dengan ejaan di screenshot
 const filterLabels = {
   platform: {
     all: "All Platform",
     instagram: "Instagram",
-    tiktok: "Tiktok",
+    tiktok: "TikTok",      // Disesuaikan dengan screenshot ("TikTok" bukan "Tiktok")
     youtube: "YouTube",
     others: "Others",
   },
@@ -58,7 +60,7 @@ export default function EmbedFilter({
   const params = useSearchParams();
   const [open, setOpen] = useState<string | null>(null);
 
-  // 🔥 Mengambil value berdasarkan lowercase
+  // 🔥 Mengambil value berdasarkan lowercase param URL
   const current = {
     platform: params.get("platform") ?? defaultValue.platform,
     status: params.get("status") ?? defaultValue.status,
@@ -165,7 +167,8 @@ export default function EmbedFilter({
                             : "text-gray-400 border-[#2A3550]"
                         }`}
                       >
-                        {key.toUpperCase()}
+                        {/* Menampilkan Title Dropdown menggunakan format default key yang dirapikan */}
+                        {key === "pinned" ? "POSTS" : key.toUpperCase()}
                       </div>
 
                       {/* Looping dari filterLabels object */}
@@ -247,7 +250,7 @@ export default function EmbedFilter({
                         : "bg-purple-600/20 text-purple-300"
                     }`}
                   >
-                    <span className="capitalize">{key}</span>
+                    <span className="capitalize">{key === "pinned" ? "post" : key}</span>
                     <span className="truncate max-w-[120px]">
                       {/* @ts-ignore */}
                       {filterLabels[key]?.[current[key]] || current[key]}

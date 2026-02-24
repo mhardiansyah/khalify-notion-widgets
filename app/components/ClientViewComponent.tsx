@@ -624,4 +624,3 @@ function hasAttachment(item: any) {
   return !!(first?.file?.url || first?.external?.url);
 } 
 
-// 🔥 PERBAIKAN: Gunakan format dictionary dengan keys lowercase (camelCase)
