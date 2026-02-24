@@ -3,11 +3,11 @@
 
 import { useState, useEffect } from "react";
 // 🔥 Tambahkan Link2 di sini untuk icon link di bio
-import { Pin, X, ExternalLink, Settings, Menu, Link2 } from "lucide-react";
+import { Pin, X, ExternalLink, Settings, Menu, Link2, ChevronDown } from "lucide-react";
 import AutoThumbnail from "@/app/components/AutoThumbnail";
 import EmbedFilter from "@/app/components/EmbedFilter";
 import RefreshButton from "@/app/components/RefreshButton";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 /* ================= TYPES ================= */
@@ -69,10 +69,11 @@ export default function ClientViewComponent({
 
   const filteredData = filtered
     .filter((item) => {
-      const platform = params.get("Platform");
-      const status = params.get("status");
-      const pinned = params.get("pinned");
-      const pillar = params.get("pillar"); // 🔥 1. Ambil param pillar
+      // 🔥 Menggunakan camelCase untuk URL parameters
+      const platformParam = params.get("platform");
+      const statusParam = params.get("status");
+      const pillarParam = params.get("pillar");
+      const pinnedParam = params.get("pinned");
 
       const props = item.properties;
 
@@ -80,21 +81,24 @@ export default function ClientViewComponent({
 
       if (!hasAttachment(item)) return false;
 
-      if (platform && platform !== "All Platform") {
-        if (props.Platform?.select?.name !== platform) return false;
+      // Pencocokan dilakukan dengan mengabaikan besar/kecil huruf (toLowerCase)
+      if (platformParam && platformParam !== "all") {
+        const itemPlatform = props.Platform?.select?.name?.toLowerCase();
+        if (itemPlatform !== platformParam.toLowerCase()) return false;
       }
 
-      if (status && status !== "All Status") {
-        if (props.Status?.select?.name !== status) return false;
+      if (statusParam && statusParam !== "all") {
+        const itemStatus = props.Status?.select?.name?.toLowerCase();
+        if (itemStatus !== statusParam.toLowerCase()) return false;
       }
 
-      // 🔥 2. Tambahkan logic filter untuk Pillar
-      if (pillar && pillar !== "All Pillars") {
-        if (props.Pillar?.select?.name !== pillar) return false;
+      if (pillarParam && pillarParam !== "all") {
+        const itemPillar = props.Pillar?.select?.name?.toLowerCase();
+        if (itemPillar !== pillarParam.toLowerCase()) return false;
       }
 
-      if (pinned === "true" && props.Pinned?.checkbox !== true) return false;
-      if (pinned === "false" && props.Pinned?.checkbox !== false) return false;
+      if (pinnedParam === "true" && props.Pinned?.checkbox !== true) return false;
+      if (pinnedParam === "false" && props.Pinned?.checkbox !== false) return false;
 
       return true;
     })
@@ -620,4 +624,4 @@ function hasAttachment(item: any) {
   return !!(first?.file?.url || first?.external?.url);
 } 
 
- 
+// 🔥 PERBAIKAN: Gunakan format dictionary dengan keys lowercase (camelCase)

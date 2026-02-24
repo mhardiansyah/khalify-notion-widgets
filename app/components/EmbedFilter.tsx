@@ -4,29 +4,47 @@ import { ChevronDown, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const filterOptions = {
-  platform: ["All Platform", "Instagram", "Tiktok", "Others"],
-  status: ["All Status", "Not started", "In progress", "Done"],
-  pillar: [
-    "All Pillars",
-    "Tips and How to",
-    "Client Wins",
-    "Offer and Service",
-    "Other",
-    "Behind the Scenes",
-  ],
-  // 🔥 PERBAIKAN: Ubah "post" menjadi "pinned"
-  pinned: ["All Posts", "Pinned Only", "Unpinned Only"], 
+const filterLabels = {
+  platform: {
+    all: "All Platform",
+    instagram: "Instagram",
+    tiktok: "Tiktok",
+    youtube: "YouTube",
+    others: "Others",
+  },
+  status: {
+    all: "All Status",
+    idea: "Idea",
+    scripting: "Scripting",
+    editing: "Editing",
+    review: "Review",
+    revision: "Revision",
+    upload: "Upload",
+    completed: "Completed"
+  },
+  pillar: {
+    all: "All Pillars",
+    education: "Education",
+    entertainment: "Entertainment",
+    promotional: "Promotional",
+    "story telling": "Story Telling",
+    bts: "BTS",
+    testimonial: "Testimonial"
+  },
+  pinned: {
+    all: "All Posts",
+    true: "Pinned Only",
+    false: "Unpinned Only"
+  }
 };
 
 const defaultValue = {
-  platform: "All Platform",
-  status: "All Status",
-  pillar: "All Pillars",  
-  pinned: "All Posts", // 🔥 Ubah di sini juga
+  platform: "all",
+  status: "all",
+  pillar: "all",  
+  pinned: "all",
 };
 
-// 🔥 PERBAIKAN: Ubah "post" menjadi "pinned"
 const orderedKeys = ["platform", "status", "pillar", "pinned"] as const; 
 
 export default function EmbedFilter({
@@ -40,39 +58,23 @@ export default function EmbedFilter({
   const params = useSearchParams();
   const [open, setOpen] = useState<string | null>(null);
 
+  // 🔥 Mengambil value berdasarkan lowercase
   const current = {
-    platform: params.get("Platform") ?? defaultValue.platform,
-    status: params.get("Status") ?? defaultValue.status,
-    pillar: params.get("Pillar") ?? defaultValue.pillar,
-    // Logic ini sekarang akan berfungsi karena key-nya sudah "pinned"
-    pinned:
-      params.get("Pin") === "true"
-        ? "Pinned Only"
-        : params.get("Pin") === "false"
-          ? "Unpinned Only"
-          : defaultValue.pinned,
+    platform: params.get("platform") ?? defaultValue.platform,
+    status: params.get("status") ?? defaultValue.status,
+    pillar: params.get("pillar") ?? defaultValue.pillar,
+    pinned: params.get("pinned") ?? defaultValue.pinned,
   };
 
-  const updateFilter = (key: string, value: string) => {
+  const updateFilter = (key: string, rawValue: string) => {
     if (!isPro) return;
 
     const newParams = new URLSearchParams(params.toString());
 
-    if (value === defaultValue[key as keyof typeof defaultValue]) {
+    if (rawValue === "all") {
       newParams.delete(key);
     } else {
-      if (key === "pin") {
-        newParams.set(
-          key,
-          value === "Pinned Only"
-            ? "true"
-            : value === "Unpinned Only"
-              ? "false"
-              : "all",
-        );
-      } else {
-        newParams.set(key, value);
-      }
+      newParams.set(key, rawValue);
     }
 
     router.push(`?${newParams.toString()}`);
@@ -95,9 +97,8 @@ export default function EmbedFilter({
     router.push(`?${newParams.toString()}`);
   };
 
-  const isActive = (key: string) =>
-    current[key as keyof typeof current] !==
-    defaultValue[key as keyof typeof defaultValue];
+  const isActive = (key: keyof typeof current) =>
+    current[key] !== defaultValue[key];
 
   const activeCount = orderedKeys.filter(isActive).length;
 
@@ -112,7 +113,9 @@ export default function EmbedFilter({
       >
         <div className="grid grid-cols-1 gap-2">
           {orderedKeys.map((key) => {
-            const value = current[key];
+            const currentRawValue = current[key];
+            // @ts-ignore
+            const displayValue = filterLabels[key]?.[currentRawValue] || currentRawValue;
 
             return (
               <div key={key} className="relative w-full">
@@ -135,7 +138,7 @@ export default function EmbedFilter({
                     ${!isPro ? "cursor-not-allowed opacity-60" : ""}
                   `}
                 >
-                  <span className="truncate flex-1">{value}</span>
+                  <span className="truncate flex-1">{displayValue}</span>
                   <ChevronDown
                     className={`w-4 h-4 shrink-0 ${!isPro ? "opacity-50" : ""}`}
                   />
@@ -165,13 +168,14 @@ export default function EmbedFilter({
                         {key.toUpperCase()}
                       </div>
 
-                      {filterOptions[key].map((opt) => (
+                      {/* Looping dari filterLabels object */}
+                      {Object.entries(filterLabels[key]).map(([optKey, optLabel]) => (
                         <button
-                          key={opt}
-                          onClick={() => updateFilter(key, opt)}
+                          key={optKey}
+                          onClick={() => updateFilter(key, optKey)}
                           className={`w-full px-4 py-3 flex items-center justify-between text-sm
                             ${
-                              value === opt
+                              currentRawValue === optKey
                                 ? theme === "light"
                                   ? "bg-purple-50 text-purple-700"
                                   : "bg-purple-600/20 text-purple-300"
@@ -181,8 +185,8 @@ export default function EmbedFilter({
                             }
                           `}
                         >
-                          <span>{opt}</span>
-                          {value === opt && <span className="text-xs">✓</span>}
+                          <span>{optLabel}</span>
+                          {currentRawValue === optKey && <span className="text-xs">✓</span>}
                         </button>
                       ))}
                     </div>
@@ -245,12 +249,13 @@ export default function EmbedFilter({
                   >
                     <span className="capitalize">{key}</span>
                     <span className="truncate max-w-[120px]">
-                      {current[key]}
+                      {/* @ts-ignore */}
+                      {filterLabels[key]?.[current[key]] || current[key]}
                     </span>
                     <button
                       disabled={!isPro}
                       onClick={() =>
-                        isPro && updateFilter(key, defaultValue[key])
+                        isPro && updateFilter(key, "all")
                       }
                       className={!isPro ? "cursor-not-allowed opacity-50" : ""}
                     >
