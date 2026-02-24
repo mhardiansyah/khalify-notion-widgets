@@ -69,7 +69,7 @@ export default function ClientViewComponent({
 
   const filteredData = filtered
     .filter((item) => {
-      const platform = params.get("platform");
+      const platform = params.get("Platform");
       const status = params.get("status");
       const pinned = params.get("pinned");
       const pillar = params.get("pillar"); // 🔥 1. Ambil param pillar
