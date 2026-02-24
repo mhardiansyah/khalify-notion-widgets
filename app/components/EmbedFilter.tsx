@@ -15,17 +15,19 @@ const filterOptions = {
     "Other",
     "Behind the Scenes",
   ],
-  post: ["All Posts", "Pinned Only", "Unpinned Only"],
+  // 🔥 PERBAIKAN: Ubah "post" menjadi "pinned"
+  pinned: ["All Posts", "Pinned Only", "Unpinned Only"], 
 };
 
 const defaultValue = {
   platform: "All Platform",
   status: "All Status",
   pillar: "All Pillars",  
-  post: "All Posts",
+  pinned: "All Posts", // 🔥 Ubah di sini juga
 };
 
-const orderedKeys = ["platform", "status", "pillar", "post"] as const;
+// 🔥 PERBAIKAN: Ubah "post" menjadi "pinned"
+const orderedKeys = ["platform", "status", "pillar", "pinned"] as const; 
 
 export default function EmbedFilter({
   theme = "light",
@@ -42,14 +44,14 @@ export default function EmbedFilter({
     platform: params.get("platform") ?? defaultValue.platform,
     status: params.get("status") ?? defaultValue.status,
     pillar: params.get("pillar") ?? defaultValue.pillar,
-    post:
+    // Logic ini sekarang akan berfungsi karena key-nya sudah "pinned"
+    pinned:
       params.get("pinned") === "true"
         ? "Pinned Only"
         : params.get("pinned") === "false"
           ? "Unpinned Only"
-          : defaultValue.post,
+          : defaultValue.pinned,
   };
-
 
   const updateFilter = (key: string, value: string) => {
     if (!isPro) return;
@@ -190,7 +192,6 @@ export default function EmbedFilter({
             );
           })}
         </div>
-        
 
         {!isPro && (
           <>

@@ -69,9 +69,10 @@ export default function ClientViewComponent({
 
   const filteredData = filtered
     .filter((item) => {
-      const platform = params.get("platform");`  `
+      const platform = params.get("platform");
       const status = params.get("status");
       const pinned = params.get("pinned");
+      const pillar = params.get("pillar"); // 🔥 1. Ambil param pillar
 
       const props = item.properties;
 
@@ -85,6 +86,11 @@ export default function ClientViewComponent({
 
       if (status && status !== "All Status") {
         if (props.Status?.select?.name !== status) return false;
+      }
+
+      // 🔥 2. Tambahkan logic filter untuk Pillar
+      if (pillar && pillar !== "All Pillars") {
+        if (props.Pillar?.select?.name !== pillar) return false;
       }
 
       if (pinned === "true" && props.Pinned?.checkbox !== true) return false;
