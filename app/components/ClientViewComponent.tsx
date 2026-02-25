@@ -5,10 +5,14 @@ import { useState, useEffect } from "react";
 // 🔥 Tambahkan Link2 di sini untuk icon link di bio
 import { Pin, X, ExternalLink, Settings, Menu, Link2, ChevronDown } from "lucide-react";
 import AutoThumbnail from "@/app/components/AutoThumbnail";
-import EmbedFilter from "@/app/components/EmbedFilter";
-import RefreshButton from "@/app/components/RefreshButton";
+// PENTING: Pindahkan EmbedFilter ke file terpisah (components/EmbedFilter.tsx)
+// atau letakkan DI ATAS ClientViewComponent jika dalam file yang sama.
+// Untuk contoh ini, saya asumsikan EmbedFilter tetap di bawah, tapi
+// idealnya dipisah untuk menghindari hoisting issues.
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import RefreshButton from "./RefreshButton";
+import { EmbedFilter } from '@/app/components/EmbedFilter';
 
 /* ================= TYPES ================= */
 
@@ -22,7 +26,7 @@ type Profile = {
   username?: string;
   avatarUrl?: string;
   bio?: string;
-  link?: string; // 🔥 PERBAIKAN: Tambahkan ini agar tidak error Type
+  link?: string;
   highlights?: Highlight[];
 };
 
@@ -69,34 +73,51 @@ export default function ClientViewComponent({
 
   const filteredData = filtered
     .filter((item) => {
-      // 🔥 Menggunakan camelCase untuk URL parameters
-      const platformParam = params.get("platform");
-      const statusParam = params.get("status");
-      const pillarParam = params.get("pillar");
-      const pinnedParam = params.get("pinned");
+      // 1. Ambil params dan pastikan semuanya string lowercase untuk perbandingan
+      const platformParam = params.get("platform")?.toLowerCase();
+      const statusParam = params.get("status")?.toLowerCase();
+      const pillarParam = params.get("pillar")?.toLowerCase();
+      const pinnedParam = params.get("pinned"); // 'true' | 'false'
 
       const props = item.properties;
 
+      // Sembunyikan item jika diset Hide
       if (props.Hide?.checkbox === true) return false;
 
+      // Sembunyikan jika tidak ada attachment
       if (!hasAttachment(item)) return false;
 
-      // Pencocokan dilakukan dengan mengabaikan besar/kecil huruf (toLowerCase)
+      // --- PERBAIKAN FILTER LOGIC ---
+      
+      // Filter Platform
       if (platformParam && platformParam !== "all") {
+        // Ambil nama platform dari Notion. Pastikan path object-nya benar.
+        // Berdasarkan screenshot Notion, huruf awalnya kapital (cth: "Instagram")
         const itemPlatform = props.Platform?.select?.name?.toLowerCase();
-        if (itemPlatform !== platformParam.toLowerCase()) return false;
+        
+        // Jika item tidak punya platform ATAU platformnya tidak cocok dengan filter
+        if (!itemPlatform || itemPlatform !== platformParam) {
+           return false; 
+        }
       }
 
+      // Filter Status
       if (statusParam && statusParam !== "all") {
         const itemStatus = props.Status?.select?.name?.toLowerCase();
-        if (itemStatus !== statusParam.toLowerCase()) return false;
+        if (!itemStatus || itemStatus !== statusParam) {
+            return false;
+        }
       }
 
+      // Filter Pillar
       if (pillarParam && pillarParam !== "all") {
         const itemPillar = props.Pillar?.select?.name?.toLowerCase();
-        if (itemPillar !== pillarParam.toLowerCase()) return false;
+        if (!itemPillar || itemPillar !== pillarParam) {
+            return false;
+        }
       }
 
+      // Filter Pinned
       if (pinnedParam === "true" && props.Pinned?.checkbox !== true) return false;
       if (pinnedParam === "false" && props.Pinned?.checkbox !== false) return false;
 
@@ -278,7 +299,6 @@ export default function ClientViewComponent({
 
         {/* ================= CONTENT ================= */}
         <div className="pb-5 space-y-4 sm:space-y-6 pt-6">
-          {/* 🔥 Hapus '&& profile' agar dummy selalu muncul ketika toggle dinyalakan */}
           {showBio && (
             <BioSection profile={profile} theme={currentTheme} />
           )}
@@ -289,7 +309,6 @@ export default function ClientViewComponent({
               theme={currentTheme}
             />
           )}
-
 
         </div>
 
@@ -623,4 +642,9 @@ function hasAttachment(item: any) {
   const first = files[0];
   return !!(first?.file?.url || first?.external?.url);
 } 
+
+
+// ===================== EMBED FILTER COMPONENT =====================
+// PENTING: Idealnya letakkan kode di bawah ini di file terpisah (misal: src/components/EmbedFilter.tsx)
+// Jika terpaksa digabung dalam file yang sama, pastikan posisinya di bawah ClientViewComponent
 

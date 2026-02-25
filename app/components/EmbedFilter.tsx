@@ -9,29 +9,29 @@ import { useEffect, useState } from "react";
 const filterLabels = {
   platform: {
     all: "All Platform",
-    instagram: "Instagram",
-    tiktok: "TikTok",      // Disesuaikan dengan screenshot ("TikTok" bukan "Tiktok")
-    youtube: "YouTube",
-    others: "Others",
+    instagram: "instagram", // Sesuaikan nama label dengan value dari notion API (lowercase)
+    tiktok: "tiktok",
+    youtube: "youtube",
+    others: "others",
   },
   status: {
     all: "All Status",
-    idea: "Idea",
-    scripting: "Scripting",
-    editing: "Editing",
-    review: "Review",
-    revision: "Revision",
-    upload: "Upload",
-    completed: "Completed"
+    idea: "idea",
+    scripting: "scripting",
+    editing: "editing",
+    review: "review",
+    revision: "revision",
+    upload: "upload",
+    completed: "completed"
   },
   pillar: {
     all: "All Pillars",
-    education: "Education",
-    entertainment: "Entertainment",
-    promotional: "Promotional",
-    "story telling": "Story Telling",
-    bts: "BTS",
-    testimonial: "Testimonial"
+    education: "education",
+    entertainment: "entertainment",
+    promotional: "promotional",
+    "story telling": "story telling",
+    bts: "bts",
+    testimonial: "testimonial"
   },
   pinned: {
     all: "All Posts",
@@ -49,7 +49,7 @@ const defaultValue = {
 
 const orderedKeys = ["platform", "status", "pillar", "pinned"] as const; 
 
-export default function EmbedFilter({
+   export function EmbedFilter({ // <-- Perhatikan nama function tidak diexport default jika diletakkan dalam satu file
   theme = "light",
   isPro = false,
 }: {
@@ -60,12 +60,12 @@ export default function EmbedFilter({
   const params = useSearchParams();
   const [open, setOpen] = useState<string | null>(null);
 
-  // 🔥 Mengambil value berdasarkan lowercase param URL
+  // Ambil state saat ini dari URL param, pastikan dalam format lowercase (sesuai defaultValue)
   const current = {
-    platform: params.get("platform") ?? defaultValue.platform,
-    status: params.get("status") ?? defaultValue.status,
-    pillar: params.get("pillar") ?? defaultValue.pillar,
-    pinned: params.get("pinned") ?? defaultValue.pinned,
+    platform: params.get("platform")?.toLowerCase() ?? defaultValue.platform,
+    status: params.get("status")?.toLowerCase() ?? defaultValue.status,
+    pillar: params.get("pillar")?.toLowerCase() ?? defaultValue.pillar,
+    pinned: params.get("pinned")?.toLowerCase() ?? defaultValue.pinned,
   };
 
   const updateFilter = (key: string, rawValue: string) => {
@@ -76,7 +76,7 @@ export default function EmbedFilter({
     if (rawValue === "all") {
       newParams.delete(key);
     } else {
-      newParams.set(key, rawValue);
+      newParams.set(key, rawValue); // Simpan nilai raw (lowercase) ke URL param
     }
 
     router.push(`?${newParams.toString()}`);
@@ -116,8 +116,19 @@ export default function EmbedFilter({
         <div className="grid grid-cols-1 gap-2">
           {orderedKeys.map((key) => {
             const currentRawValue = current[key];
-            // @ts-ignore
-            const displayValue = filterLabels[key]?.[currentRawValue] || currentRawValue;
+            
+            // Ambil text label untuk ditampilkan di button dropdown utama
+            let displayValue = currentRawValue;
+            if (key === 'pinned') {
+                // @ts-ignore
+                displayValue = filterLabels[key]?.[currentRawValue] || currentRawValue;
+            } else {
+                 // Untuk dropdown lain, huruf awalnya dibesarkan untuk tampilan (Capitalize)
+                 displayValue = currentRawValue === 'all' 
+                     // @ts-ignore
+                     ? filterLabels[key]?.all 
+                     : currentRawValue.replace(/\b\w/g, l => l.toUpperCase());
+            }
 
             return (
               <div key={key} className="relative w-full">
@@ -167,31 +178,40 @@ export default function EmbedFilter({
                             : "text-gray-400 border-[#2A3550]"
                         }`}
                       >
-                        {/* Menampilkan Title Dropdown menggunakan format default key yang dirapikan */}
                         {key === "pinned" ? "POSTS" : key.toUpperCase()}
                       </div>
 
-                      {/* Looping dari filterLabels object */}
-                      {Object.entries(filterLabels[key]).map(([optKey, optLabel]) => (
-                        <button
-                          key={optKey}
-                          onClick={() => updateFilter(key, optKey)}
-                          className={`w-full px-4 py-3 flex items-center justify-between text-sm
-                            ${
-                              currentRawValue === optKey
-                                ? theme === "light"
-                                  ? "bg-purple-50 text-purple-700"
-                                  : "bg-purple-600/20 text-purple-300"
-                                : theme === "light"
-                                  ? "hover:bg-[#F9FAFB]"
-                                  : "hover:bg-[#24304A]"
-                            }
-                          `}
-                        >
-                          <span>{optLabel}</span>
-                          {currentRawValue === optKey && <span className="text-xs">✓</span>}
-                        </button>
-                      ))}
+                      {Object.entries(filterLabels[key]).map(([optKey, optLabel]) => {
+                          // Pastikan membandingkan lowercase (kecuali pinned yang butuh "true"/"false")
+                          const isSelected = currentRawValue === optKey;
+
+                          // Format label options untuk list dropdown
+                          let finalOptLabel = optLabel;
+                          if (key !== 'pinned' && optKey !== 'all') {
+                             finalOptLabel = optKey.replace(/\b\w/g, l => l.toUpperCase());
+                          }
+
+                          return (
+                            <button
+                              key={optKey}
+                              onClick={() => updateFilter(key, optKey)}
+                              className={`w-full px-4 py-3 flex items-center justify-between text-sm
+                                ${
+                                  isSelected
+                                    ? theme === "light"
+                                      ? "bg-purple-50 text-purple-700"
+                                      : "bg-purple-600/20 text-purple-300"
+                                    : theme === "light"
+                                      ? "hover:bg-[#F9FAFB]"
+                                      : "hover:bg-[#24304A]"
+                                }
+                              `}
+                            >
+                              <span>{finalOptLabel}</span>
+                              {isSelected && <span className="text-xs">✓</span>}
+                            </button>
+                          )
+                      })}
                     </div>
                   </>
                 )}
@@ -253,7 +273,7 @@ export default function EmbedFilter({
                     <span className="capitalize">{key === "pinned" ? "post" : key}</span>
                     <span className="truncate max-w-[120px]">
                       {/* @ts-ignore */}
-                      {filterLabels[key]?.[current[key]] || current[key]}
+                      {key === 'pinned' ? filterLabels[key]?.[current[key]] : (current[key] === 'all' ? filterLabels[key]?.all : current[key].replace(/\b\w/g, l => l.toUpperCase()))}
                     </span>
                     <button
                       disabled={!isPro}
