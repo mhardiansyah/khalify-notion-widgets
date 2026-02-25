@@ -180,7 +180,7 @@ export default function ClientViewComponent({
 
   const visibleData = isPro ? filteredData : filteredData.slice(0, LIMIT_FREE);
 
-  const displayUsername = profile?.username || "username";
+  const displayUsername = profile?.username;
 
   const dummyHighlights = [
     { title: "Highlight" },
@@ -205,7 +205,7 @@ export default function ClientViewComponent({
         >
           <div className="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {isPro ? (
+              {isPro && displayUsername ? (
                 <span className="font-bold text-lg tracking-tight truncate max-w-[150px] sm:max-w-[200px]">
                   {displayUsername}
                 </span>
