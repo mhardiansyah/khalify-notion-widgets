@@ -3,7 +3,15 @@
 
 import { useState, useEffect } from "react";
 // 🔥 Tambahkan Link2 di sini untuk icon link di bio
-import { Pin, X, ExternalLink, Settings, Menu, Link2, ChevronDown } from "lucide-react";
+import {
+  Pin,
+  X,
+  ExternalLink,
+  Settings,
+  Menu,
+  Link2,
+  ChevronDown,
+} from "lucide-react";
 import AutoThumbnail from "@/app/components/AutoThumbnail";
 // PENTING: Pindahkan EmbedFilter ke file terpisah (components/EmbedFilter.tsx)
 // atau letakkan DI ATAS ClientViewComponent jika dalam file yang sama.
@@ -12,7 +20,7 @@ import AutoThumbnail from "@/app/components/AutoThumbnail";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import RefreshButton from "./RefreshButton";
-import { EmbedFilter } from '@/app/components/EmbedFilter';
+import { EmbedFilter } from "@/app/components/EmbedFilter";
 
 /* ================= TYPES ================= */
 
@@ -71,13 +79,15 @@ export default function ClientViewComponent({
 
   /* ================= FILTER LOGIC ================= */
 
+  /* ================= FILTER LOGIC ================= */
+
   const filteredData = filtered
     .filter((item) => {
-      // 1. Ambil params dan pastikan semuanya string lowercase untuk perbandingan
+      // 1. Ambil params dan ubah ke lowercase
       const platformParam = params.get("platform")?.toLowerCase();
       const statusParam = params.get("status")?.toLowerCase();
       const pillarParam = params.get("pillar")?.toLowerCase();
-      const pinnedParam = params.get("pinned"); // 'true' | 'false'
+      const pinnedParam = params.get("pinned"); // 'true' atau 'false'
 
       const props = item.properties;
 
@@ -87,39 +97,73 @@ export default function ClientViewComponent({
       // Sembunyikan jika tidak ada attachment
       if (!hasAttachment(item)) return false;
 
-      // --- PERBAIKAN FILTER LOGIC ---
-      
-      // Filter Platform
+      // --- PERBAIKAN FILTER LOGIC UNTUK NOTION MULTI-SELECT ---
+
+      // 2. Filter Platform (Notion Multi-Select)
       if (platformParam && platformParam !== "all") {
-        // Ambil nama platform dari Notion. Pastikan path object-nya benar.
-        // Berdasarkan screenshot Notion, huruf awalnya kapital (cth: "Instagram")
-        const itemPlatform = props.Platform?.select?.name?.toLowerCase();
-        
-        // Jika item tidak punya platform ATAU platformnya tidak cocok dengan filter
-        if (!itemPlatform || itemPlatform !== platformParam) {
-           return false; 
+        const platformOptions = props.Platform?.multi_select;
+        // Jika tidak ada opsi terpilih, atau tidak ada satupun opsi yang cocok (lowercase)
+        if (
+          !platformOptions ||
+          !platformOptions.some(
+            (opt: any) => opt.name.toLowerCase() === platformParam,
+          )
+        ) {
+          return false;
         }
       }
 
-      // Filter Status
+      // 3. Filter Status (Notion Multi-Select ATAU Select - saya buat dinamis buat jaga-jaga)
       if (statusParam && statusParam !== "all") {
-        const itemStatus = props.Status?.select?.name?.toLowerCase();
-        if (!itemStatus || itemStatus !== statusParam) {
+        // Cek apakah dia multi_select atau select biasa
+        const statusMultiOptions = props.Status?.multi_select;
+        const statusSingleOption = props.Status?.select;
+
+        if (statusMultiOptions) {
+          if (
+            !statusMultiOptions.some(
+              (opt: any) => opt.name.toLowerCase() === statusParam,
+            )
+          ) {
             return false;
+          }
+        } else if (statusSingleOption) {
+          if (statusSingleOption.name.toLowerCase() !== statusParam) {
+            return false;
+          }
+        } else {
+          // Jika kosong (tidak ada status)
+          return false;
         }
       }
 
-      // Filter Pillar
+      // 4. Filter Pillar (Notion Multi-Select ATAU Select)
       if (pillarParam && pillarParam !== "all") {
-        const itemPillar = props.Pillar?.select?.name?.toLowerCase();
-        if (!itemPillar || itemPillar !== pillarParam) {
+        const pillarMultiOptions = props.Pillar?.multi_select;
+        const pillarSingleOption = props.Pillar?.select;
+
+        if (pillarMultiOptions) {
+          if (
+            !pillarMultiOptions.some(
+              (opt: any) => opt.name.toLowerCase() === pillarParam,
+            )
+          ) {
             return false;
+          }
+        } else if (pillarSingleOption) {
+          if (pillarSingleOption.name.toLowerCase() !== pillarParam) {
+            return false;
+          }
+        } else {
+          return false;
         }
       }
 
-      // Filter Pinned
-      if (pinnedParam === "true" && props.Pinned?.checkbox !== true) return false;
-      if (pinnedParam === "false" && props.Pinned?.checkbox !== false) return false;
+      // 5. Filter Pinned (Checkbox)
+      if (pinnedParam === "true" && props.Pinned?.checkbox !== true)
+        return false;
+      if (pinnedParam === "false" && props.Pinned?.checkbox !== false)
+        return false;
 
       return true;
     })
@@ -299,9 +343,7 @@ export default function ClientViewComponent({
 
         {/* ================= CONTENT ================= */}
         <div className="pb-5 space-y-4 sm:space-y-6 pt-6">
-          {showBio && (
-            <BioSection profile={profile} theme={currentTheme} />
-          )}
+          {showBio && <BioSection profile={profile} theme={currentTheme} />}
 
           {showHighlight && (
             <HighlightSection
@@ -309,7 +351,6 @@ export default function ClientViewComponent({
               theme={currentTheme}
             />
           )}
-
         </div>
 
         {viewMode === "visual" && (
@@ -449,9 +490,7 @@ function BioSection({ profile, theme }: any) {
   // Fungsi buat bikin bio bisa pake enter (newline \n)
   const formatBio = (bioText: string) => {
     if (!bioText) return null;
-    return bioText.split('\n').map((line, i) => (
-      <p key={i}>{line}</p>
-    ));
+    return bioText.split("\n").map((line, i) => <p key={i}>{line}</p>);
   };
 
   return (
@@ -475,9 +514,7 @@ function BioSection({ profile, theme }: any) {
       </div>
 
       {/* Name */}
-      <h3 className="font-semibold text-[15px] mb-2">
-        {safeProfile.name}
-      </h3>
+      <h3 className="font-semibold text-[15px] mb-2">{safeProfile.name}</h3>
 
       {/* Bio yang sudah diformat */}
       <div className="text-sm space-y-1 mb-3 opacity-90">
@@ -487,13 +524,18 @@ function BioSection({ profile, theme }: any) {
       {/* Tautan Link (Hanya render jika ada link) */}
       {safeProfile.link && (
         <a
-          href={safeProfile.link.startsWith("http") ? safeProfile.link : `https://${safeProfile.link}`}
+          href={
+            safeProfile.link.startsWith("http")
+              ? safeProfile.link
+              : `https://${safeProfile.link}`
+          }
           target="_blank"
           rel="noreferrer"
           className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-800 transition-colors"
         >
           <Link2 size={14} />
-          {safeProfile.link.replace(/^https?:\/\//, '')} {/* Buang https:// buat display */}
+          {safeProfile.link.replace(/^https?:\/\//, "")}{" "}
+          {/* Buang https:// buat display */}
         </a>
       )}
     </section>
@@ -502,14 +544,15 @@ function BioSection({ profile, theme }: any) {
 
 function HighlightSection({ highlights, theme }: any) {
   // Jika highlights undefined atau array kosong, gunakan dummy data
-  const displayHighlights = (!highlights || highlights.length === 0) 
-    ? [
-        { title: "Highlight", image: "" },
-        { title: "Highlight", image: "" },
-        { title: "Highlight", image: "" },
-        { title: "Highlight", image: "" }
-      ]
-    : highlights;
+  const displayHighlights =
+    !highlights || highlights.length === 0
+      ? [
+          { title: "Highlight", image: "" },
+          { title: "Highlight", image: "" },
+          { title: "Highlight", image: "" },
+          { title: "Highlight", image: "" },
+        ]
+      : highlights;
 
   return (
     <section
@@ -521,20 +564,31 @@ function HighlightSection({ highlights, theme }: any) {
     >
       <div className="flex gap-4 overflow-x-auto pb-1 items-center">
         {displayHighlights.map((h: any, i: number) => (
-          <div key={i} className="min-w-[64px] flex flex-col items-center gap-2">
+          <div
+            key={i}
+            className="min-w-[64px] flex flex-col items-center gap-2"
+          >
             {/* Lingkaran Highlight */}
-            <div 
+            <div
               className={`w-16 h-16 rounded-full border-2 overflow-hidden flex items-center justify-center shrink-0 ${
-                 theme === "light" ? "bg-gray-100 border-gray-200" : "bg-[#2A3550] border-gray-600"
+                theme === "light"
+                  ? "bg-gray-100 border-gray-200"
+                  : "bg-[#2A3550] border-gray-600"
               }`}
             >
-               {/* Jika ada image, render image. Jika tidak (dummy), biarkan warna solid */}
-               {h.image && (
-                 <img src={h.image} alt={h.title} className="w-full h-full object-cover" />
-               )}
+              {/* Jika ada image, render image. Jika tidak (dummy), biarkan warna solid */}
+              {h.image && (
+                <img
+                  src={h.image}
+                  alt={h.title}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
             {/* Judul Highlight */}
-            <p className="text-[12px] font-medium text-center truncate w-full px-1">{h.title}</p>
+            <p className="text-[12px] font-medium text-center truncate w-full px-1">
+              {h.title}
+            </p>
           </div>
         ))}
       </div>
@@ -641,10 +695,8 @@ function hasAttachment(item: any) {
 
   const first = files[0];
   return !!(first?.file?.url || first?.external?.url);
-} 
-
+}
 
 // ===================== EMBED FILTER COMPONENT =====================
 // PENTING: Idealnya letakkan kode di bawah ini di file terpisah (misal: src/components/EmbedFilter.tsx)
 // Jika terpaksa digabung dalam file yang sama, pastikan posisinya di bawah ClientViewComponent
-
