@@ -177,7 +177,7 @@ export default function AccountsPage() {
       // 1. Upload Avatar ke Cloudinary (Jika user memilih file baru)
       if (avatarFile) {
         toast.loading("Uploading avatar...");
-        const uploadRes = await uploadWidgetAvatar(currentWidget.dbID, avatarFile);
+        const uploadRes = await uploadWidgetAvatar(currentWidget.id, avatarFile);
         
         if (uploadRes?.success && uploadRes?.data?.url) {
           finalAvatarUrl = uploadRes.data.url;
