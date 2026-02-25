@@ -23,7 +23,8 @@ import {
   AtSign,
   Loader2,
   Lock,
-  LogOut, // Tambahan icon untuk modal logout
+  LogOut,
+  AlertTriangle, // Icon untuk peringatan ukuran file
 } from "lucide-react";
 
 import {
@@ -82,8 +83,10 @@ export default function AccountsPage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // 🔥 STATE UNTUK MODAL LOGOUT
+  // State untuk Modal
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  // 🔥 State untuk peringatan ukuran file
+  const [isFileTooLargeModalOpen, setIsFileTooLargeModalOpen] = useState(false);
 
   const FREE_WIDGET_LIMIT = 1;
   const isWidgetPaused = (index: number) =>
@@ -257,7 +260,6 @@ export default function AccountsPage() {
     });
   };
 
-  // 🔥 FUNGSI LOGOUT YANG DIPANGGIL DARI MODAL
   const confirmLogout = () => {
     cookies.remove("access_token");
     cookies.remove("login_token");
@@ -282,7 +284,7 @@ export default function AccountsPage() {
       <Navbar />
       <Toaster position="top-center" richColors />
 
-      {/* 🔥 MODAL KONFIRMASI LOGOUT */}
+      {/* MODAL KONFIRMASI LOGOUT */}
       {isLogoutModalOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 text-center flex flex-col items-center">
@@ -310,6 +312,30 @@ export default function AccountsPage() {
                 Logout
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🔥 MODAL PERINGATAN UKURAN FILE */}
+      {isFileTooLargeModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 text-center flex flex-col items-center">
+            <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">
+              File Terlalu Besar
+            </h3>
+            <p className="text-sm text-slate-500 mb-6 px-4">
+              Ukuran gambar maksimal yang diizinkan adalah 2MB. Silakan pilih
+              gambar dengan ukuran yang lebih kecil.
+            </p>
+            <button
+              onClick={() => setIsFileTooLargeModalOpen(false)}
+              className="w-full py-2.5 rounded-xl font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 transition"
+            >
+              Mengerti
+            </button>
           </div>
         </div>
       )}
@@ -361,8 +387,10 @@ export default function AccountsPage() {
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
+                          // 🔥 Validasi ukuran file (Max 2MB)
                           if (file.size > 2 * 1024 * 1024) {
-                            toast.error("Ukuran gambar maksimal 2MB");
+                            setIsFileTooLargeModalOpen(true);
+                            e.target.value = ""; // Reset input file
                             return;
                           }
                           setAvatarFile(file);
@@ -536,7 +564,6 @@ export default function AccountsPage() {
                   </span>
                 )}
 
-                {/* 🔥 UBAH TOMBOL LOGOUT UNTUK MEMBUKA MODAL */}
                 <button
                   onClick={() => setIsLogoutModalOpen(true)}
                   className="text-sm text-red-500 hover:underline"
