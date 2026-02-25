@@ -42,3 +42,18 @@ export const updateWidgetBranding = async (id: string, payload: any) => {
   });
   return res.data;
 };
+
+
+export const uploadWidgetAvatar = async (dbID: string, file: File) => {
+  const token = Cookies.get("login_token"); // Atau ambil cara lain sesuai kodemu
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await api.patch(`/widgets/${dbID}/upload-avatar`, formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+};

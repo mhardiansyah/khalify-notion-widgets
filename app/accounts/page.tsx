@@ -22,10 +22,16 @@ import {
   Image as ImageIcon,
   AtSign,
   Loader2,
-  Lock // Tambah icon Lock untuk overlay
+  Lock, // Tambah icon Lock untuk overlay
 } from "lucide-react";
 
-import { deleteWidget, getWidgetsByUser, updateWidgetBranding } from "../lib/widget.api";
+// 🔥 PENTING: Pastikan kamu sudah menambahkan uploadWidgetAvatar di lib/widget.api
+import { 
+  deleteWidget, 
+  getWidgetsByUser, 
+  updateWidgetBranding, 
+  uploadWidgetAvatar 
+} from "../lib/widget.api";
 import { getPaymentLink, checkPaymentStatus } from "../lib/payment.api";
 import { toast, Toaster } from "sonner";
 
@@ -66,13 +72,19 @@ export default function AccountsPage() {
   // --- STATE UNTUK MODAL EDIT ---
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
+  
+  // State form text
   const [editFormData, setEditFormData] = useState({
     customName: "",
     customUsername: "",
     customBio: "",
-    customAvatar: "",
     customLink: ""
   });
+  
+  // State khusus file Avatar
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  
   const [isSaving, setIsSaving] = useState(false);
 
   const FREE_WIDGET_LIMIT = 1;
@@ -136,13 +148,19 @@ export default function AccountsPage() {
       return;
     }
     setEditingWidgetId(widget.id);
+    
+    // Set teks data
     setEditFormData({
       customName: widget.customName || "",
       customUsername: widget.customUsername || "",
       customBio: widget.customBio || "",
-      customAvatar: widget.customAvatar || "",
       customLink: widget.customLink || ""
     });
+    
+    // Set avatar preview dari database (jika ada) dan reset file upload
+    setAvatarFile(null);
+    setAvatarPreview(widget.customAvatar || null);
+    
     setIsEditModalOpen(true);
   };
 
@@ -151,15 +169,42 @@ export default function AccountsPage() {
     setIsSaving(true);
 
     try {
-      const res = await updateWidgetBranding(editingWidgetId, editFormData);
+      const currentWidget = widgets.find(w => w.id === editingWidgetId);
+      if (!currentWidget) return;
+
+      let finalAvatarUrl = currentWidget.customAvatar;
+
+      // 1. Upload Avatar ke Cloudinary (Jika user memilih file baru)
+      if (avatarFile) {
+        toast.loading("Uploading avatar...");
+        const uploadRes = await uploadWidgetAvatar(currentWidget.dbID, avatarFile);
+        
+        if (uploadRes?.success && uploadRes?.data?.url) {
+          finalAvatarUrl = uploadRes.data.url;
+        } else {
+          toast.dismiss();
+          toast.error("Gagal mengupload gambar.");
+          setIsSaving(false);
+          return;
+        }
+        toast.dismiss();
+      }
+
+      // 2. Update Teks Bio dll & simpan URL gambar (jika ada yg baru)
+      const payload = {
+        ...editFormData,
+        customAvatar: finalAvatarUrl
+      };
+
+      const res = await updateWidgetBranding(editingWidgetId, payload);
       
       if (res?.success) {
         toast.success("Widget branding berhasil diupdate!");
         
-        // Update state lokal biar gak perlu refresh
+        // Update state lokal biar UI langsung berubah
         setWidgets(prev => prev.map(w => 
           w.id === editingWidgetId 
-            ? { ...w, ...editFormData } 
+            ? { ...w, ...payload } 
             : w
         ));
         setIsEditModalOpen(false);
@@ -168,6 +213,7 @@ export default function AccountsPage() {
       }
     } catch (error) {
       console.error(error);
+      toast.dismiss();
       toast.error("Terjadi kesalahan saat menyimpan");
     } finally {
       setIsSaving(false);
@@ -229,7 +275,7 @@ export default function AccountsPage() {
     expiredAt: "Nov 2, 2025",
   };
 
-  if (loading) return <div className="p-10">Loading...</div>;
+  if (loading) return <div className="p-10 flex items-center gap-2"><Loader2 className="animate-spin text-purple-600"/> Loading...</div>;
 
   return (
     <>
@@ -255,8 +301,51 @@ export default function AccountsPage() {
             </div>
 
             {/* Body */}
-            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
               
+              {/* 🔥 FOTO PROFIL UPLOAD */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
+                  <ImageIcon className="w-3 h-3" /> Avatar Photo
+                </label>
+                <div className="flex items-center gap-4">
+                  {/* Lingkaran Preview Foto */}
+                  <div className="w-14 h-14 rounded-full border border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <UserIcon className="w-6 h-6 text-gray-300" />
+                    )}
+                  </div>
+                  
+                  {/* Tombol Input File */}
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/jpg, image/webp"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          // Validasi ukuran max 2MB (opsional)
+                          if (file.size > 2 * 1024 * 1024) {
+                            toast.error("Ukuran gambar maksimal 2MB");
+                            return;
+                          }
+                          setAvatarFile(file);
+                          setAvatarPreview(URL.createObjectURL(file)); // Buat URL preview sementara
+                        }
+                      }}
+                      className="block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-xs file:font-semibold
+                        file:bg-purple-50 file:text-purple-700
+                        hover:file:bg-purple-100 transition cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
@@ -282,20 +371,6 @@ export default function AccountsPage() {
                     onChange={(e) => setEditFormData({ ...editFormData, customUsername: e.target.value })}
                   />
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
-                  <ImageIcon className="w-3 h-3" /> Avatar URL
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition"
-                  placeholder="https://imgur.com/..."
-                  value={editFormData.customAvatar}
-                  onChange={(e) => setEditFormData({ ...editFormData, customAvatar: e.target.value })}
-                />
-                <p className="text-[10px] text-gray-400">Paste direct image link (jpg/png)</p>
               </div>
 
               <div className="space-y-1.5">
@@ -350,7 +425,6 @@ export default function AccountsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            {/* ... (KODE USER PROFILE & LICENSE BOX) ... */}
             <div className="md:col-span-2 rounded-3xl p-6 bg-white/70 backdrop-blur border shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
