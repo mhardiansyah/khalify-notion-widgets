@@ -13,14 +13,10 @@ import {
   ChevronDown,
 } from "lucide-react";
 import AutoThumbnail from "@/app/components/AutoThumbnail";
-// PENTING: Pindahkan EmbedFilter ke file terpisah (components/EmbedFilter.tsx)
-// atau letakkan DI ATAS ClientViewComponent jika dalam file yang sama.
-// Untuk contoh ini, saya asumsikan EmbedFilter tetap di bawah, tapi
-// idealnya dipisah untuk menghindari hoisting issues.
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import RefreshButton from "./RefreshButton";
-import { EmbedFilter } from "@/app/components/EmbedFilter";
+import { EmbedFilter } from "./EmbedFilter";
 
 /* ================= TYPES ================= */
 
@@ -70,39 +66,31 @@ export default function ClientViewComponent({
     setCurrentTheme(theme);
   }, [theme]);
 
+  // 🔥 PERBAIKAN WARNA DARK MODE (Background Utama)
   const bg =
     currentTheme === "light"
       ? "bg-white text-gray-900"
-      : "bg-[#1A2332] text-white";
+      : "bg-[#191919] text-white";
 
-  const cardBg = currentTheme === "light" ? "bg-white" : "bg-[#1F2A3C]";
-
-  /* ================= FILTER LOGIC ================= */
+  // 🔥 PERBAIKAN WARNA DARK MODE (Background Card)
+  const cardBg = currentTheme === "light" ? "bg-white" : "bg-[#222222]";
 
   /* ================= FILTER LOGIC ================= */
 
   const filteredData = filtered
     .filter((item) => {
-      // 1. Ambil params dan ubah ke lowercase
       const platformParam = params.get("platform")?.toLowerCase();
       const statusParam = params.get("status")?.toLowerCase();
       const pillarParam = params.get("pillar")?.toLowerCase();
-      const pinnedParam = params.get("pinned"); // 'true' atau 'false'
+      const pinnedParam = params.get("pinned"); 
 
       const props = item.properties;
 
-      // Sembunyikan item jika diset Hide
       if (props.Hide?.checkbox === true) return false;
-
-      // Sembunyikan jika tidak ada attachment
       if (!hasAttachment(item)) return false;
 
-      // --- PERBAIKAN FILTER LOGIC UNTUK NOTION MULTI-SELECT ---
-
-      // 2. Filter Platform (Notion Multi-Select)
       if (platformParam && platformParam !== "all") {
         const platformOptions = props.Platform?.multi_select;
-        // Jika tidak ada opsi terpilih, atau tidak ada satupun opsi yang cocok (lowercase)
         if (
           !platformOptions ||
           !platformOptions.some(
@@ -113,9 +101,7 @@ export default function ClientViewComponent({
         }
       }
 
-      // 3. Filter Status (Notion Multi-Select ATAU Select - saya buat dinamis buat jaga-jaga)
       if (statusParam && statusParam !== "all") {
-        // Cek apakah dia multi_select atau select biasa
         const statusMultiOptions = props.Status?.multi_select;
         const statusSingleOption = props.Status?.select;
 
@@ -132,12 +118,10 @@ export default function ClientViewComponent({
             return false;
           }
         } else {
-          // Jika kosong (tidak ada status)
           return false;
         }
       }
 
-      // 4. Filter Pillar (Notion Multi-Select ATAU Select)
       if (pillarParam && pillarParam !== "all") {
         const pillarMultiOptions = props.Pillar?.multi_select;
         const pillarSingleOption = props.Pillar?.select;
@@ -159,7 +143,6 @@ export default function ClientViewComponent({
         }
       }
 
-      // 5. Filter Pinned (Checkbox)
       if (pinnedParam === "true" && props.Pinned?.checkbox !== true)
         return false;
       if (pinnedParam === "false" && props.Pinned?.checkbox !== false)
@@ -180,14 +163,7 @@ export default function ClientViewComponent({
 
   const visibleData = isPro ? filteredData : filteredData.slice(0, LIMIT_FREE);
 
-  const displayUsername = profile?.username;
-
-  const dummyHighlights = [
-    { title: "Highlight" },
-    { title: "Highlight" },
-    { title: "Highlight" },
-    { title: "Highlight" },
-  ];
+  const displayUsername = profile?.username || "";
 
   /* ================= RENDER ================= */
 
@@ -200,12 +176,12 @@ export default function ClientViewComponent({
     ${
       currentTheme === "light"
         ? "bg-white/80 border-gray-200"
-        : "bg-[#1A2332]/90 border-[#2A3550]"
+        : "bg-[#191919]/90 border-[#333333]" // 🔥 Update warna border & bg Header
     }`}
         >
           <div className="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {isPro && displayUsername ? (
+              {isPro && displayUsername.trim() !== "" ? (
                 <span className="font-bold text-lg tracking-tight truncate max-w-[150px] sm:max-w-[200px]">
                   {displayUsername}
                 </span>
@@ -240,7 +216,7 @@ export default function ClientViewComponent({
                 )}
               </div>
 
-              {/* SETTINGS ✅ FIXED */}
+              {/* SETTINGS */}
               <div className="relative">
                 <IconButton
                   theme={currentTheme}
@@ -255,7 +231,7 @@ export default function ClientViewComponent({
                   ${
                     currentTheme === "light"
                       ? "bg-white border-gray-200"
-                      : "bg-[#1F2A3C] border-[#2A3550]"
+                      : "bg-[#222222] border-[#333333]" // 🔥 Update popup settings
                   }`}
                   >
                     <SettingToggle
@@ -291,11 +267,11 @@ export default function ClientViewComponent({
                       className={`h-px my-1 ${
                         currentTheme === "light"
                           ? "bg-gray-200"
-                          : "bg-[#2A3550]"
+                          : "bg-[#333333]" // 🔥 Update warna border pemisah
                       }`}
                     />
 
-                    {/* 🔥 PRO CTA */}
+                    {/* PRO CTA */}
                     {isPro ? (
                       <button
                         onClick={() => {
@@ -307,7 +283,7 @@ export default function ClientViewComponent({
       ${
         currentTheme === "light"
           ? "text-purple-600 hover:bg-[#F9FAFB]"
-          : "text-purple-400 hover:bg-[#24304A]"
+          : "text-purple-400 hover:bg-[#333333]" // 🔥 Update hover button dark
       }
           `}
                       >
@@ -327,7 +303,7 @@ export default function ClientViewComponent({
       ${
         currentTheme === "light"
           ? "text-purple-600 hover:bg-[#F9FAFB]"
-          : "text-purple-400 hover:bg-[#24304A]"
+          : "text-purple-400 hover:bg-[#333333]" // 🔥 Update hover button dark
       }
           `}
                       >
@@ -379,7 +355,7 @@ export default function ClientViewComponent({
           />
         )}
 
-        {/* 🔔 FREE LIMIT BAR */}
+        {/* FREE LIMIT BAR */}
         {(isExactlyLimit || isOverLimit) && (
           <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-xl">
             <div
@@ -390,17 +366,15 @@ export default function ClientViewComponent({
         ${
           currentTheme === "light"
             ? "bg-white/90 text-gray-900 border border-gray-200"
-            : "bg-[#1F2A3C]/90 text-white border border-[#2A3550]"
+            : "bg-[#222222]/90 text-white border border-[#333333]" // 🔥 Update card limit bg
         }
       `}
             >
-              {/* TEXT */}
               <p className="text-xs sm:text-sm font-medium">
                 You’ve reached your free limit of{" "}
                 <span className="font-semibold">9 posts</span>.
               </p>
 
-              {/* BUTTON → HANYA JIKA > 9 */}
               {isOverLimit && (
                 <button
                   onClick={() =>
@@ -439,7 +413,7 @@ function IconButton({ children, onClick, theme }: any) {
     <button
       onClick={onClick}
       className={`w-9 h-9 flex items-center justify-center rounded-full border transition
-          ${theme === "light" ? "hover:bg-[#F9FAFB]" : "hover:bg-[#24304A]"}
+          ${theme === "light" ? "hover:bg-[#F9FAFB] border-gray-200" : "hover:bg-[#333333] border-[#333333]"}
         `}
     >
       {children}
@@ -456,7 +430,7 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
       }}
       className={`
         w-full px-4 py-3 flex items-center justify-between text-sm rounded-xl transition
-        ${theme === "light" ? "hover:bg-[#F9FAFB]" : "hover:bg-[#24304A]"}
+        ${theme === "light" ? "hover:bg-[#F9FAFB]" : "hover:bg-[#333333]"} 
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
       `}
     >
@@ -476,9 +450,7 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
   );
 }
 
-// 🔥 BIO SECTION YANG SUDAH DI-UPDATE RATA KIRI + DUMMY DATA
 function BioSection({ profile, theme }: any) {
-  // Kalau profil kosong, kita kasih default dummy
   const safeProfile = profile || {
     username: "",
     name: "Your Name",
@@ -487,7 +459,6 @@ function BioSection({ profile, theme }: any) {
     link: "https://khlasify.notion.site",
   };
 
-  // Fungsi buat bikin bio bisa pake enter (newline \n)
   const formatBio = (bioText: string) => {
     if (!bioText) return null;
     return bioText.split("\n").map((line, i) => <p key={i}>{line}</p>);
@@ -499,13 +470,13 @@ function BioSection({ profile, theme }: any) {
         theme === "light" ? "text-gray-900" : "text-white"
       }`}
     >
-      {/* Username */}
-      <h2 className="text-[22px] font-extrabold mb-4 tracking-tight">
-        {safeProfile.username}
-      </h2>
+      {safeProfile.username && (
+         <h2 className="text-[22px] font-extrabold mb-4 tracking-tight">
+          {safeProfile.username}
+        </h2>
+      )}
 
-      {/* Avatar Bulat */}
-      <div className="w-[84px] h-[84px] rounded-full overflow-hidden border border-gray-200 mb-3 bg-white shrink-0">
+      <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 ${theme === "light" ? "border-gray-200 bg-white" : "border-[#333333] bg-[#222222]"}`}>
         <img
           src={safeProfile.avatarUrl}
           alt="Profile Avatar"
@@ -513,15 +484,12 @@ function BioSection({ profile, theme }: any) {
         />
       </div>
 
-      {/* Name */}
       <h3 className="font-semibold text-[15px] mb-2">{safeProfile.name}</h3>
 
-      {/* Bio yang sudah diformat */}
       <div className="text-sm space-y-1 mb-3 opacity-90">
         {formatBio(safeProfile.bio)}
       </div>
 
-      {/* Tautan Link (Hanya render jika ada link) */}
       {safeProfile.link && (
         <a
           href={
@@ -534,8 +502,7 @@ function BioSection({ profile, theme }: any) {
           className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-800 transition-colors"
         >
           <Link2 size={14} />
-          {safeProfile.link.replace(/^https?:\/\//, "")}{" "}
-          {/* Buang https:// buat display */}
+          {safeProfile.link.replace(/^https?:\/\//, "")}
         </a>
       )}
     </section>
@@ -543,7 +510,6 @@ function BioSection({ profile, theme }: any) {
 }
 
 function HighlightSection({ highlights, theme }: any) {
-  // Jika highlights undefined atau array kosong, gunakan dummy data
   const displayHighlights =
     !highlights || highlights.length === 0
       ? [
@@ -559,7 +525,7 @@ function HighlightSection({ highlights, theme }: any) {
       className={`border rounded-2xl p-4 ${
         theme === "light"
           ? "bg-gray-50 border-gray-200 text-gray-900"
-          : "bg-[#1F2A3C] border-[#2A3550] text-gray-300"
+          : "bg-[#222222] border-[#333333] text-gray-300" // 🔥 Update warna section highlight
       }`}
     >
       <div className="flex gap-4 overflow-x-auto pb-1 items-center">
@@ -568,15 +534,13 @@ function HighlightSection({ highlights, theme }: any) {
             key={i}
             className="min-w-[64px] flex flex-col items-center gap-2"
           >
-            {/* Lingkaran Highlight */}
             <div
               className={`w-16 h-16 rounded-full border-2 overflow-hidden flex items-center justify-center shrink-0 ${
                 theme === "light"
                   ? "bg-gray-100 border-gray-200"
-                  : "bg-[#2A3550] border-gray-600"
+                  : "bg-[#333333] border-[#444444]" // 🔥 Update bulat highlight
               }`}
             >
-              {/* Jika ada image, render image. Jika tidak (dummy), biarkan warna solid */}
               {h.image && (
                 <img
                   src={h.image}
@@ -585,7 +549,6 @@ function HighlightSection({ highlights, theme }: any) {
                 />
               )}
             </div>
-            {/* Judul Highlight */}
             <p className="text-[12px] font-medium text-center truncate w-full px-1">
               {h.title}
             </p>
@@ -599,14 +562,12 @@ function HighlightSection({ highlights, theme }: any) {
 function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
   return (
     <div
-      className="grid gap-px"
+      className={`grid gap-px ${theme === "dark" ? "bg-[#333333]" : "bg-gray-100"}`} // Menambahkan gap line yang bagus
       style={{
         gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
       }}
     >
       {filtered.map((item: any, i: number) => {
-        const name =
-          item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
         const image = extractImage(item);
         const pinned = item.properties?.Pinned?.checkbox;
 
@@ -656,7 +617,7 @@ function DetailModal({ item, theme, onClose }: any) {
         className={`w-full max-w-5xl rounded-2xl overflow-hidden ${
           theme === "light"
             ? "bg-gray-50 border-gray-200"
-            : "bg-[#1F2A3C] border-[#2A3550]"
+            : "bg-[#222222] border-[#333333]" // 🔥 Update modal warna dark
         }`}
       >
         <button
@@ -696,7 +657,3 @@ function hasAttachment(item: any) {
   const first = files[0];
   return !!(first?.file?.url || first?.external?.url);
 }
-
-// ===================== EMBED FILTER COMPONENT =====================
-// PENTING: Idealnya letakkan kode di bawah ini di file terpisah (misal: src/components/EmbedFilter.tsx)
-// Jika terpaksa digabung dalam file yang sama, pastikan posisinya di bawah ClientViewComponent

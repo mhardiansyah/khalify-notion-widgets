@@ -49,7 +49,7 @@ const defaultValue = {
 
 const orderedKeys = ["platform", "status", "pillar", "pinned"] as const; 
 
-   export function EmbedFilter({ // <-- Perhatikan nama function tidak diexport default jika diletakkan dalam satu file
+export function EmbedFilter({ 
   theme = "light",
   isPro = false,
 }: {
@@ -60,7 +60,49 @@ const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
   const params = useSearchParams();
   const [open, setOpen] = useState<string | null>(null);
 
-  // Ambil state saat ini dari URL param, pastikan dalam format lowercase (sesuai defaultValue)
+  const filterLabels = {
+    platform: {
+      all: "All Platform",
+      instagram: "Instagram", 
+      tiktok: "TikTok",      
+      youtube: "YouTube",
+      others: "Others",
+    },
+    status: {
+      all: "All Status",
+      idea: "Idea",
+      scripting: "Scripting",
+      editing: "Editing",
+      review: "Review",
+      revision: "Revision",
+      upload: "Upload",
+      completed: "Completed"
+    },
+    pillar: {
+      all: "All Pillars",
+      education: "Education",
+      entertainment: "Entertainment",
+      promotional: "Promotional",
+      "story telling": "Story Telling",
+      bts: "BTS",
+      testimonial: "Testimonial"
+    },
+    pinned: {
+      all: "All Posts",
+      true: "Pinned Only",
+      false: "Unpinned Only"
+    }
+  };
+
+  const defaultValue = {
+    platform: "all",
+    status: "all",
+    pillar: "all",  
+    pinned: "all",
+  };
+
+  const orderedKeys = ["platform", "status", "pillar", "pinned"] as const; 
+
   const current = {
     platform: params.get("platform")?.toLowerCase() ?? defaultValue.platform,
     status: params.get("status")?.toLowerCase() ?? defaultValue.status,
@@ -76,7 +118,7 @@ const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
     if (rawValue === "all") {
       newParams.delete(key);
     } else {
-      newParams.set(key, rawValue); // Simpan nilai raw (lowercase) ke URL param
+      newParams.set(key, rawValue); 
     }
 
     router.push(`?${newParams.toString()}`);
@@ -110,20 +152,18 @@ const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
         className={`rounded-xl p-3 sm:p-4 space-y-3 border ${
           theme === "light"
             ? "bg-white border-gray-200"
-            : "bg-[#1F2A3C] border-[#2A3550] text-white"
+            : "bg-[#222222] border-[#333333] text-white" // 🔥 Update warna border dan bg filter wrap
         }`}
       >
         <div className="grid grid-cols-1 gap-2">
           {orderedKeys.map((key) => {
             const currentRawValue = current[key];
             
-            // Ambil text label untuk ditampilkan di button dropdown utama
             let displayValue = currentRawValue;
             if (key === 'pinned') {
                 // @ts-ignore
                 displayValue = filterLabels[key]?.[currentRawValue] || currentRawValue;
             } else {
-                 // Untuk dropdown lain, huruf awalnya dibesarkan untuk tampilan (Capitalize)
                  displayValue = currentRawValue === 'all' 
                      // @ts-ignore
                      ? filterLabels[key]?.all 
@@ -146,7 +186,7 @@ const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
                           : "bg-purple-600/20 border-purple-500 text-purple-300"
                         : theme === "light"
                           ? "bg-gray-200 border-gray-300 text-gray-500"
-                          : "bg-[#2A3550] border-[#2A3550] text-gray-400"
+                          : "bg-[#333333] border-[#333333] text-gray-400" // 🔥 Update bg button pas belum dipilih
                     }
                     ${!isPro ? "cursor-not-allowed opacity-60" : ""}
                   `}
@@ -168,24 +208,22 @@ const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
                       className={`absolute z-50 mt-2 w-56 rounded-xl border shadow-lg overflow-hidden ${
                         theme === "light"
                           ? "bg-white border-gray-200"
-                          : "bg-[#1F2A3C] border-[#2A3550]"
+                          : "bg-[#222222] border-[#333333]" // 🔥 Update bg dropdown
                       }`}
                     >
                       <div
                         className={`px-4 py-2 text-xs font-semibold border-b ${
                           theme === "light"
                             ? "text-gray-400 border-gray-200"
-                            : "text-gray-400 border-[#2A3550]"
+                            : "text-gray-400 border-[#333333]" // 🔥 Update garis bawah title dropdown
                         }`}
                       >
                         {key === "pinned" ? "POSTS" : key.toUpperCase()}
                       </div>
 
                       {Object.entries(filterLabels[key]).map(([optKey, optLabel]) => {
-                          // Pastikan membandingkan lowercase (kecuali pinned yang butuh "true"/"false")
                           const isSelected = currentRawValue === optKey;
 
-                          // Format label options untuk list dropdown
                           let finalOptLabel = optLabel;
                           if (key !== 'pinned' && optKey !== 'all') {
                              finalOptLabel = optKey.replace(/\b\w/g, l => l.toUpperCase());
@@ -203,7 +241,7 @@ const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
                                       : "bg-purple-600/20 text-purple-300"
                                     : theme === "light"
                                       ? "hover:bg-[#F9FAFB]"
-                                      : "hover:bg-[#24304A]"
+                                      : "hover:bg-[#333333]" // 🔥 Update hover warna list item
                                 }
                               `}
                             >
@@ -224,7 +262,7 @@ const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
           <>
             <div
               className={`h-px my-3 ${
-                theme === "light" ? "bg-gray-200" : "bg-[#2A3550]"
+                theme === "light" ? "bg-gray-200" : "bg-[#333333]" // 🔥 Divider darkmode
               }`}
             />
 
