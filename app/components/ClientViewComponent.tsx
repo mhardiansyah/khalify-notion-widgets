@@ -480,7 +480,7 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
 function BioSection({ profile, theme }: any) {
   // Kalau profil kosong, kita kasih default dummy
   const safeProfile = profile || {
-    username: "username",
+    username: "",
     name: "Your Name",
     avatarUrl: "https://api.dicebear.com/7.x/notionists/svg?seed=khlasify",
     bio: "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
