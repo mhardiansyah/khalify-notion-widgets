@@ -184,6 +184,7 @@ export default function AccountsPage() {
         } else {
           toast.dismiss();
           toast.error("Gagal mengupload gambar.");
+          console.error("Upload avatar error:", uploadRes);
           setIsSaving(false);
           return;
         }
