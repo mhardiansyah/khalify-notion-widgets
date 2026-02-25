@@ -22,20 +22,19 @@ import {
   Image as ImageIcon,
   AtSign,
   Loader2,
-  Lock, // Tambah icon Lock untuk overlay
+  Lock,
+  LogOut, // Tambahan icon untuk modal logout
 } from "lucide-react";
 
-// 🔥 PENTING: Pastikan kamu sudah menambahkan uploadWidgetAvatar di lib/widget.api
-import { 
-  deleteWidget, 
-  getWidgetsByUser, 
-  updateWidgetBranding, 
-  uploadWidgetAvatar 
+import {
+  deleteWidget,
+  getWidgetsByUser,
+  updateWidgetBranding,
+  uploadWidgetAvatar,
 } from "../lib/widget.api";
 import { getPaymentLink, checkPaymentStatus } from "../lib/payment.api";
 import { toast, Toaster } from "sonner";
 
-// Update Interface biar support data branding dari Backend
 interface Widget {
   id: string;
   token: string;
@@ -44,7 +43,6 @@ interface Widget {
   profileId: string;
   name: string;
   link: string;
-  // Field Custom Branding
   customName?: string;
   customUsername?: string;
   customBio?: string;
@@ -62,36 +60,36 @@ type JwtPayload = {
 export default function AccountsPage() {
   const router = useRouter();
 
-  const [user, setUser] = useState<{ email?: string; name?: string } | null>(null);
+  const [user, setUser] = useState<{ email?: string; name?: string } | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [showTokens, setShowTokens] = useState<Record<string, boolean>>({});
   const [openDetails, setOpenDetails] = useState<Record<string, boolean>>({});
   const [isPro, setIsPro] = useState(false);
 
-  // --- STATE UNTUK MODAL EDIT ---
+  // State Edit Modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
-  
-  // State form text
   const [editFormData, setEditFormData] = useState({
     customName: "",
     customUsername: "",
     customBio: "",
-    customLink: ""
+    customLink: "",
   });
-  
-  // State khusus file Avatar
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  
   const [isSaving, setIsSaving] = useState(false);
 
+  // 🔥 STATE UNTUK MODAL LOGOUT
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
   const FREE_WIDGET_LIMIT = 1;
-  const isWidgetPaused = (index: number) => !isPro && index >= FREE_WIDGET_LIMIT;
+  const isWidgetPaused = (index: number) =>
+    !isPro && index >= FREE_WIDGET_LIMIT;
   const disabledClass = "opacity-50 pointer-events-none select-none";
 
-  // 1. Inisialisasi Auth & Status PRO
   useEffect(() => {
     const token = cookies.get("login_token");
 
@@ -124,7 +122,6 @@ export default function AccountsPage() {
     }
   }, [router]);
 
-  // 2. Load Widgets
   useEffect(() => {
     const loadWidgets = async () => {
       try {
@@ -141,26 +138,23 @@ export default function AccountsPage() {
     loadWidgets();
   }, []);
 
-  // --- LOGIC EDIT MODAL ---
   const openEditModal = (widget: Widget) => {
     if (!isPro) {
       toast.error("Fitur Custom Branding hanya untuk akun PRO!");
       return;
     }
     setEditingWidgetId(widget.id);
-    
-    // Set teks data
+
     setEditFormData({
       customName: widget.customName || "",
       customUsername: widget.customUsername || "",
       customBio: widget.customBio || "",
-      customLink: widget.customLink || ""
+      customLink: widget.customLink || "",
     });
-    
-    // Set avatar preview dari database (jika ada) dan reset file upload
+
     setAvatarFile(null);
     setAvatarPreview(widget.customAvatar || null);
-    
+
     setIsEditModalOpen(true);
   };
 
@@ -169,16 +163,18 @@ export default function AccountsPage() {
     setIsSaving(true);
 
     try {
-      const currentWidget = widgets.find(w => w.id === editingWidgetId);
+      const currentWidget = widgets.find((w) => w.id === editingWidgetId);
       if (!currentWidget) return;
 
       let finalAvatarUrl = currentWidget.customAvatar;
 
-      // 1. Upload Avatar ke Cloudinary (Jika user memilih file baru)
       if (avatarFile) {
         toast.loading("Uploading avatar...");
-        const uploadRes = await uploadWidgetAvatar(currentWidget.id, avatarFile);
-        
+        const uploadRes = await uploadWidgetAvatar(
+          currentWidget.id,
+          avatarFile
+        );
+
         if (uploadRes?.success && uploadRes?.data?.url) {
           finalAvatarUrl = uploadRes.data.url;
         } else {
@@ -191,23 +187,21 @@ export default function AccountsPage() {
         toast.dismiss();
       }
 
-      // 2. Update Teks Bio dll & simpan URL gambar (jika ada yg baru)
       const payload = {
         ...editFormData,
-        customAvatar: finalAvatarUrl
+        customAvatar: finalAvatarUrl,
       };
 
       const res = await updateWidgetBranding(editingWidgetId, payload);
-      
+
       if (res?.success) {
         toast.success("Widget branding berhasil diupdate!");
-        
-        // Update state lokal biar UI langsung berubah
-        setWidgets(prev => prev.map(w => 
-          w.id === editingWidgetId 
-            ? { ...w, ...payload } 
-            : w
-        ));
+
+        setWidgets((prev) =>
+          prev.map((w) =>
+            w.id === editingWidgetId ? { ...w, ...payload } : w
+          )
+        );
         setIsEditModalOpen(false);
       } else {
         toast.error("Gagal update widget");
@@ -221,7 +215,6 @@ export default function AccountsPage() {
     }
   };
 
-  // --- EXISTING LOGIC ---
   const handleUpgrade = async () => {
     try {
       toast.loading("Membuka halaman pembayaran...");
@@ -264,7 +257,8 @@ export default function AccountsPage() {
     });
   };
 
-  const handleLogout = () => {
+  // 🔥 FUNGSI LOGOUT YANG DIPANGGIL DARI MODAL
+  const confirmLogout = () => {
     cookies.remove("access_token");
     cookies.remove("login_token");
     cookies.remove("login_email");
@@ -276,12 +270,49 @@ export default function AccountsPage() {
     expiredAt: "Nov 2, 2025",
   };
 
-  if (loading) return <div className="p-10 flex items-center gap-2"><Loader2 className="animate-spin text-purple-600"/> Loading...</div>;
+  if (loading)
+    return (
+      <div className="p-10 flex items-center gap-2">
+        <Loader2 className="animate-spin text-purple-600" /> Loading...
+      </div>
+    );
 
   return (
     <>
       <Navbar />
       <Toaster position="top-center" richColors />
+
+      {/* 🔥 MODAL KONFIRMASI LOGOUT */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 text-center flex flex-col items-center">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
+              <LogOut className="w-8 h-8 ml-1" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">
+              Ready to leave?
+            </h3>
+            <p className="text-sm text-slate-500 mb-6 px-4">
+              Anda akan keluar dari sesi saat ini. Anda harus masuk kembali
+              untuk mengakses dashboard Anda.
+            </p>
+            <div className="flex w-full gap-3">
+              <button
+                onClick={() => setIsLogoutModalOpen(false)}
+                className="flex-1 py-2.5 rounded-xl font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="flex-1 py-2.5 rounded-xl font-medium text-white bg-red-500 hover:bg-red-600 shadow-md shadow-red-200 transition"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- MODAL EDIT POPUP --- */}
       {isEditModalOpen && (
@@ -293,7 +324,7 @@ export default function AccountsPage() {
                 <Edit2 className="w-5 h-5 text-purple-600" />
                 Customize Widget Bio
               </h3>
-              <button 
+              <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="p-2 hover:bg-gray-200 rounded-full transition"
               >
@@ -303,8 +334,7 @@ export default function AccountsPage() {
 
             {/* Body */}
             <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
-              
-              {/* 🔥 FOTO PROFIL UPLOAD */}
+              {/* FOTO PROFIL UPLOAD */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
                   <ImageIcon className="w-3 h-3" /> Avatar Photo
@@ -313,12 +343,16 @@ export default function AccountsPage() {
                   {/* Lingkaran Preview Foto */}
                   <div className="w-14 h-14 rounded-full border border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
                     {avatarPreview ? (
-                      <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                      <img
+                        src={avatarPreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <UserIcon className="w-6 h-6 text-gray-300" />
                     )}
                   </div>
-                  
+
                   {/* Tombol Input File */}
                   <div className="flex-1">
                     <input
@@ -327,13 +361,12 @@ export default function AccountsPage() {
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          // Validasi ukuran max 2MB (opsional)
                           if (file.size > 2 * 1024 * 1024) {
                             toast.error("Ukuran gambar maksimal 2MB");
                             return;
                           }
                           setAvatarFile(file);
-                          setAvatarPreview(URL.createObjectURL(file)); // Buat URL preview sementara
+                          setAvatarPreview(URL.createObjectURL(file));
                         }
                       }}
                       className="block w-full text-sm text-gray-500
@@ -357,7 +390,12 @@ export default function AccountsPage() {
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition"
                     placeholder="e.g. Naufal Dev"
                     value={editFormData.customName}
-                    onChange={(e) => setEditFormData({ ...editFormData, customName: e.target.value })}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        customName: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -369,7 +407,12 @@ export default function AccountsPage() {
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition"
                     placeholder="@naufal"
                     value={editFormData.customUsername}
-                    onChange={(e) => setEditFormData({ ...editFormData, customUsername: e.target.value })}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        customUsername: e.target.value,
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -382,7 +425,9 @@ export default function AccountsPage() {
                   className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition resize-none h-24"
                   placeholder="Tell something about your notion page..."
                   value={editFormData.customBio}
-                  onChange={(e) => setEditFormData({ ...editFormData, customBio: e.target.value })}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, customBio: e.target.value })
+                  }
                 />
               </div>
 
@@ -395,10 +440,14 @@ export default function AccountsPage() {
                   className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition"
                   placeholder="https://mysite.com"
                   value={editFormData.customLink}
-                  onChange={(e) => setEditFormData({ ...editFormData, customLink: e.target.value })}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      customLink: e.target.value,
+                    })
+                  }
                 />
               </div>
-
             </div>
 
             {/* Footer */}
@@ -414,7 +463,11 @@ export default function AccountsPage() {
                 disabled={isSaving}
                 className="px-5 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-xl transition shadow-md shadow-purple-200 flex items-center gap-2 disabled:opacity-70"
               >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
                 Save Changes
               </button>
             </div>
@@ -425,7 +478,6 @@ export default function AccountsPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 overflow-x-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
             <div className="md:col-span-2 rounded-3xl p-6 bg-white/70 backdrop-blur border shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
@@ -436,7 +488,11 @@ export default function AccountsPage() {
                   <p className="font-medium text-slate-900">{user?.email}</p>
                 </div>
                 <span
-                  className={`px-4 py-1 rounded-full text-xs font-bold ${isPro ? "bg-green-100 text-green-700" : "bg-purple-100 text-purple-700"}`}
+                  className={`px-4 py-1 rounded-full text-xs font-bold ${
+                    isPro
+                      ? "bg-green-100 text-green-700"
+                      : "bg-purple-100 text-purple-700"
+                  }`}
                 >
                   {isPro ? "Pro" : "Starter"}
                 </span>
@@ -480,8 +536,9 @@ export default function AccountsPage() {
                   </span>
                 )}
 
+                {/* 🔥 UBAH TOMBOL LOGOUT UNTUK MEMBUKA MODAL */}
                 <button
-                  onClick={handleLogout}
+                  onClick={() => setIsLogoutModalOpen(true)}
                   className="text-sm text-red-500 hover:underline"
                 >
                   Logout
@@ -520,11 +577,12 @@ export default function AccountsPage() {
                 return (
                   <div
                     key={widget.id}
-                    className={`rounded-2xl border bg-white shadow-sm transition ${paused ? "opacity-70 grayscale-[0.5]" : "hover:shadow-md"}`}
+                    className={`rounded-2xl border bg-white shadow-sm transition ${
+                      paused ? "opacity-70 grayscale-[0.5]" : "hover:shadow-md"
+                    }`}
                   >
                     <div className="flex items-start justify-between p-5 gap-3">
                       <div>
-                        {/* 🔥 LOGIC PERUBAHAN NAMA WIDGET */}
                         <p className="text-sm font-medium text-slate-900 break-all">
                           {isPro && widget.customUsername
                             ? widget.customUsername
@@ -541,23 +599,25 @@ export default function AccountsPage() {
                           </span>
                         )}
                       </div>
-                      
-                      {/* ACTION BUTTONS */}
+
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => {
                             if (!isPro) {
-                              toast.info("Upgrade to PRO to customize widget bio", {
-                                icon: '👑',
-                              });
+                              toast.info(
+                                "Upgrade to PRO to customize widget bio",
+                                {
+                                  icon: "👑",
+                                }
+                              );
                               return;
                             }
                             openEditModal(widget);
                           }}
                           disabled={paused}
                           className={`p-2 rounded-lg transition group ${
-                            isPro 
-                              ? "hover:bg-blue-50 text-slate-400 hover:text-blue-600 cursor-pointer" 
+                            isPro
+                              ? "hover:bg-blue-50 text-slate-400 hover:text-blue-600 cursor-pointer"
                               : "text-slate-300 cursor-not-allowed opacity-60"
                           }`}
                           title={isPro ? "Edit Bio" : "Pro Feature Only"}
@@ -578,7 +638,9 @@ export default function AccountsPage() {
                     <div className="px-5 pb-4">
                       <p className="text-xs text-slate-500 mb-1">Embed Link</p>
                       <div
-                        className={`flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-xl px-3 py-2 ${paused ? disabledClass : ""}`}
+                        className={`flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-xl px-3 py-2 ${
+                          paused ? disabledClass : ""
+                        }`}
                       >
                         <p className="text-xs font-mono truncate flex-1 text-slate-700">
                           {widget.link}
@@ -608,15 +670,20 @@ export default function AccountsPage() {
                     <button
                       disabled={paused}
                       onClick={() => toggleDetails(widget.id)}
-                      className={`w-full flex items-center justify-between px-5 py-3 text-xs text-slate-500 border-t hover:bg-slate-50 transition ${!openDetails[widget.id] ? "rounded-b-2xl" : ""} ${paused ? disabledClass : ""}`}
+                      className={`w-full flex items-center justify-between px-5 py-3 text-xs text-slate-500 border-t hover:bg-slate-50 transition ${
+                        !openDetails[widget.id] ? "rounded-b-2xl" : ""
+                      } ${paused ? disabledClass : ""}`}
                     >
                       Show Advanced Details {openDetails[widget.id] ? "▲" : "▼"}
                     </button>
 
-                    {/* WRAPPER RELATIVE UNTUK ADVANCED DETAILS & OVERLAY */}
                     <div className="relative">
                       {openDetails[widget.id] && !paused && (
-                        <div className={`px-5 pb-5 space-y-3 text-xs rounded-b-2xl ${!isPro ? "blur-[3px] select-none pointer-events-none" : ""}`}>
+                        <div
+                          className={`px-5 pb-5 space-y-3 text-xs rounded-b-2xl ${
+                            !isPro ? "blur-[3px] select-none pointer-events-none" : ""
+                          }`}
+                        >
                           <div>
                             <p className="text-slate-500 mb-1">Widget ID</p>
                             <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
@@ -655,14 +722,16 @@ export default function AccountsPage() {
                         </div>
                       )}
 
-                      {/* OVERLAY JIKA BUKAN PRO */}
                       {openDetails[widget.id] && !paused && !isPro && (
                         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/40 rounded-b-2xl pb-4">
                           <div className="bg-white px-4 py-3 rounded-xl shadow-lg border border-purple-100 flex flex-col items-center text-center">
                             <Lock className="w-6 h-6 text-purple-500 mb-2" />
-                            <p className="text-sm font-bold text-slate-800 mb-1">PRO Feature</p>
+                            <p className="text-sm font-bold text-slate-800 mb-1">
+                              PRO Feature
+                            </p>
                             <p className="text-[11px] text-slate-500 mb-3 px-2">
-                              Upgrade to access advanced API tokens and database IDs.
+                              Upgrade to access advanced API tokens and database
+                              IDs.
                             </p>
                             <button
                               onClick={handleUpgrade}
