@@ -630,12 +630,21 @@ function DetailModal({ item, theme, onClose }: any) {
   );
 }
 
+// function extractImage(item: any) {
+//   const p = item.properties;
+//   return (
+//     p.Attachment?.files?.[0]?.file?.url ||
+//     p.Attachment?.files?.[0]?.external?.url ||
+//     "/placeholder.png"
+//   );
+// }
+
 function extractImage(item: any) {
   const p = item.properties;
   return (
     p.Attachment?.files?.[0]?.file?.url ||
     p.Attachment?.files?.[0]?.external?.url ||
-    "/placeholder.png"
+    "https://via.placeholder.com/640x800.png?text=No+Image" // 🔥 Ganti ke link ini
   );
 }
 

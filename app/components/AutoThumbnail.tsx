@@ -32,10 +32,9 @@ export default function AutoThumbnail({
         setLoading(false);
       };
       img.onerror = () => {
-        // 🔥 Ubah fallback menjadi placeholder.png yang sudah ada
-        setThumb("/placeholder.png"); 
-        setLoading(false);
-      };
+  setThumb("https://via.placeholder.com/640x800.png?text=No+Image"); 
+  setLoading(false);
+};
       return;
     }
 
@@ -61,10 +60,9 @@ export default function AutoThumbnail({
     });
 
     video.onerror = () => {
-      // 🔥 Ubah fallback menjadi placeholder.png
-      setThumb("/placeholder.png");
-      setLoading(false);
-    };
+  setThumb("https://via.placeholder.com/640x800.png?text=No+Image");
+  setLoading(false);
+};
   }, [src]);
 
   return (
@@ -80,7 +78,7 @@ export default function AutoThumbnail({
       {/* Thumbnail */}
       <img
         // 🔥 Ubah default source menjadi placeholder.png
-        src={thumb || "/placeholder.png"}
+        src={thumb || "https://via.placeholder.com/640x800.png?text=No+Image"}
         className={className}
         style={{
           objectFit: "cover",
