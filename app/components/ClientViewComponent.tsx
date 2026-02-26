@@ -644,7 +644,7 @@ function extractImage(item: any) {
   return (
     p.Attachment?.files?.[0]?.file?.url ||
     p.Attachment?.files?.[0]?.external?.url ||
-    "https://via.placeholder.com/640x800.png?text=No+Image" // 🔥 Ganti ke link ini
+    "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder" // 🔥 Ganti pake ini
   );
 }
 

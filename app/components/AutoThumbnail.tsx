@@ -3,6 +3,9 @@
 
 import { useEffect, useState } from "react";
 
+// 🔥 PAKE INI BIAR GAK ERROR LAGI
+const FALLBACK_IMAGE = "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
+
 export default function AutoThumbnail({
   src,
   className = "",
@@ -32,9 +35,9 @@ export default function AutoThumbnail({
         setLoading(false);
       };
       img.onerror = () => {
-  setThumb("https://via.placeholder.com/640x800.png?text=No+Image"); 
-  setLoading(false);
-};
+        setThumb(FALLBACK_IMAGE); 
+        setLoading(false);
+      };
       return;
     }
 
@@ -60,9 +63,9 @@ export default function AutoThumbnail({
     });
 
     video.onerror = () => {
-  setThumb("https://via.placeholder.com/640x800.png?text=No+Image");
-  setLoading(false);
-};
+      setThumb(FALLBACK_IMAGE);
+      setLoading(false);
+    };
   }, [src]);
 
   return (
@@ -77,8 +80,7 @@ export default function AutoThumbnail({
     >
       {/* Thumbnail */}
       <img
-        // 🔥 Ubah default source menjadi placeholder.png
-        src={thumb || "https://via.placeholder.com/640x800.png?text=No+Image"}
+        src={thumb || FALLBACK_IMAGE}
         className={className}
         style={{
           objectFit: "cover",
