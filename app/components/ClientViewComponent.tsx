@@ -77,6 +77,8 @@ export default function ClientViewComponent({
 
   /* ================= FILTER LOGIC ================= */
 
+  /* ================= FILTER LOGIC ================= */
+
   const filteredData = filtered
     .filter((item) => {
       const platformParam = params.get("platform")?.toLowerCase();
@@ -89,64 +91,51 @@ export default function ClientViewComponent({
       if (props.Hide?.checkbox === true) return false;
       if (!hasAttachment(item)) return false;
 
+      // 1. Filter Platform (Bisa jadi multi_select atau select biasa)
       if (platformParam && platformParam !== "all") {
-        const platformOptions = props.Platform?.multi_select;
-        if (
-          !platformOptions ||
-          !platformOptions.some(
-            (opt: any) => opt.name.toLowerCase() === platformParam,
-          )
-        ) {
-          return false;
+        const platformMulti = props.Platform?.multi_select;
+        const platformSingle = props.Platform?.select;
+
+        if (platformMulti) {
+           if (!platformMulti.some((opt: any) => opt.name.toLowerCase() === platformParam)) return false;
+        } else if (platformSingle) {
+           if (platformSingle.name.toLowerCase() !== platformParam) return false;
+        } else {
+           return false;
         }
       }
 
+      // 2. Filter Status (Notion punya tipe kolom khusus 'status', atau bisa jadi 'select')
       if (statusParam && statusParam !== "all") {
-        const statusMultiOptions = props.Status?.multi_select;
-        const statusSingleOption = props.Status?.select;
-
-        if (statusMultiOptions) {
-          if (
-            !statusMultiOptions.some(
-              (opt: any) => opt.name.toLowerCase() === statusParam,
-            )
-          ) {
-            return false;
-          }
-        } else if (statusSingleOption) {
-          if (statusSingleOption.name.toLowerCase() !== statusParam) {
-            return false;
-          }
+        const statusTypeStatus = props.Status?.status; // Kolom tipe Status
+        const statusTypeSelect = props.Status?.select; // Kolom tipe Select
+        
+        if (statusTypeStatus) {
+           if (statusTypeStatus.name.toLowerCase() !== statusParam) return false;
+        } else if (statusTypeSelect) {
+           if (statusTypeSelect.name.toLowerCase() !== statusParam) return false;
         } else {
-          return false;
+           return false;
         }
       }
 
+      // 3. Filter Pillar (Bisa jadi multi_select atau select biasa)
       if (pillarParam && pillarParam !== "all") {
-        const pillarMultiOptions = props.Pillar?.multi_select;
-        const pillarSingleOption = props.Pillar?.select;
+        const pillarMulti = props.Pillar?.multi_select;
+        const pillarSingle = props.Pillar?.select;
 
-        if (pillarMultiOptions) {
-          if (
-            !pillarMultiOptions.some(
-              (opt: any) => opt.name.toLowerCase() === pillarParam,
-            )
-          ) {
-            return false;
-          }
-        } else if (pillarSingleOption) {
-          if (pillarSingleOption.name.toLowerCase() !== pillarParam) {
-            return false;
-          }
+        if (pillarMulti) {
+          if (!pillarMulti.some((opt: any) => opt.name.toLowerCase() === pillarParam)) return false;
+        } else if (pillarSingle) {
+          if (pillarSingle.name.toLowerCase() !== pillarParam) return false;
         } else {
           return false;
         }
       }
 
-      if (pinnedParam === "true" && props.Pinned?.checkbox !== true)
-        return false;
-      if (pinnedParam === "false" && props.Pinned?.checkbox !== false)
-        return false;
+      // 4. Filter Pinned
+      if (pinnedParam === "true" && props.Pinned?.checkbox !== true) return false;
+      if (pinnedParam === "false" && props.Pinned?.checkbox !== false) return false;
 
       return true;
     })
