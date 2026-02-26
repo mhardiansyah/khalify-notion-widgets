@@ -32,7 +32,8 @@ export default function AutoThumbnail({
         setLoading(false);
       };
       img.onerror = () => {
-        setThumb("/placeholder.png");
+        // 🔥 Ubah fallback menjadi placeholder.png yang sudah ada
+        setThumb("/placeholder.png"); 
         setLoading(false);
       };
       return;
@@ -60,7 +61,8 @@ export default function AutoThumbnail({
     });
 
     video.onerror = () => {
-      setThumb("/video-placeholder.png");
+      // 🔥 Ubah fallback menjadi placeholder.png
+      setThumb("/placeholder.png");
       setLoading(false);
     };
   }, [src]);
@@ -77,7 +79,8 @@ export default function AutoThumbnail({
     >
       {/* Thumbnail */}
       <img
-        src={thumb || "/video-placeholder.png"}
+        // 🔥 Ubah default source menjadi placeholder.png
+        src={thumb || "/placeholder.png"}
         className={className}
         style={{
           objectFit: "cover",
