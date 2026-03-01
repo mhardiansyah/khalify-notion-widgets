@@ -77,8 +77,6 @@ export default function ClientViewComponent({
 
   /* ================= FILTER LOGIC ================= */
 
-  /* ================= FILTER LOGIC ================= */
-
   const filteredData = filtered
     .filter((item) => {
       const platformParam = params.get("platform")?.toLowerCase();
@@ -91,7 +89,7 @@ export default function ClientViewComponent({
       if (props.Hide?.checkbox === true) return false;
       if (!hasAttachment(item)) return false;
 
-      // 1. Filter Platform (Bisa jadi multi_select atau select biasa)
+      // 1. Filter Platform
       if (platformParam && platformParam !== "all") {
         const platformMulti = props.Platform?.multi_select;
         const platformSingle = props.Platform?.select;
@@ -105,10 +103,10 @@ export default function ClientViewComponent({
         }
       }
 
-      // 2. Filter Status (Notion punya tipe kolom khusus 'status', atau bisa jadi 'select')
+      // 2. Filter Status
       if (statusParam && statusParam !== "all") {
-        const statusTypeStatus = props.Status?.status; // Kolom tipe Status
-        const statusTypeSelect = props.Status?.select; // Kolom tipe Select
+        const statusTypeStatus = props.Status?.status;
+        const statusTypeSelect = props.Status?.select;
         
         if (statusTypeStatus) {
            if (statusTypeStatus.name.toLowerCase() !== statusParam) return false;
@@ -119,7 +117,7 @@ export default function ClientViewComponent({
         }
       }
 
-      // 3. Filter Pillar (Bisa jadi multi_select atau select biasa)
+      // 3. Filter Pillar
       if (pillarParam && pillarParam !== "all") {
         const pillarMulti = props.Pillar?.multi_select;
         const pillarSingle = props.Pillar?.select;
@@ -165,7 +163,7 @@ export default function ClientViewComponent({
     ${
       currentTheme === "light"
         ? "bg-white/80 border-gray-200"
-        : "bg-[#191919]/90 border-[#333333]" // 🔥 Update warna border & bg Header
+        : "bg-[#191919]/90 border-[#333333]" 
     }`}
         >
           <div className="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between">
@@ -193,7 +191,11 @@ export default function ClientViewComponent({
               <div className="relative">
                 <IconButton
                   theme={currentTheme}
-                  onClick={() => setShowFilterBar((s) => !s)}
+                  onClick={() => {
+                    // 🔥 Toggle Filter, dan pastikan Settings tertutup
+                    setShowFilterBar((s) => !s);
+                    setOpenSetting(false);
+                  }}
                 >
                   <Menu size={16} />
                 </IconButton>
@@ -209,7 +211,11 @@ export default function ClientViewComponent({
               <div className="relative">
                 <IconButton
                   theme={currentTheme}
-                  onClick={() => setOpenSetting((s) => !s)}
+                  onClick={() => {
+                    // 🔥 Toggle Settings, dan pastikan Filter tertutup
+                    setOpenSetting((s) => !s);
+                    setShowFilterBar(false);
+                  }}
                 >
                   <Settings size={16} />
                 </IconButton>
@@ -220,7 +226,7 @@ export default function ClientViewComponent({
                   ${
                     currentTheme === "light"
                       ? "bg-white border-gray-200"
-                      : "bg-[#222222] border-[#333333]" // 🔥 Update popup settings
+                      : "bg-[#222222] border-[#333333]" 
                   }`}
                   >
                     <SettingToggle
@@ -256,54 +262,54 @@ export default function ClientViewComponent({
                       className={`h-px my-1 ${
                         currentTheme === "light"
                           ? "bg-gray-200"
-                          : "bg-[#333333]" // 🔥 Update warna border pemisah
+                          : "bg-[#333333]" 
                       }`}
                     />
 
                     {/* PRO CTA */}
-                    {/* PRO CTA */}
-                    {isPro ? (
-                      <button
-                        onClick={() => {
-                          // 🔥 Buka tab baru ke halaman account
-                          window.open(
-                            "https://khlasify.myr.id/accounts",
-                            "_blank"
-                          );
-                        }}
-                        className={`
-                      w-full py-3 text-sm font-semibold
-                      transition
-      ${
-        currentTheme === "light"
-          ? "text-purple-600 hover:bg-[#F9FAFB]"
-          : "text-purple-400 hover:bg-[#333333]" // 🔥 Update hover button dark
-      }
-          `}
-                      >
-                        Edit profile
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          window.open(
-                            "https://khlasify.myr.id/pl/content-pro",
-                            "_blank",
-                          );
-                        }}
-                        className={`
-      w-full py-3 text-sm font-semibold
-      transition
-      ${
-        currentTheme === "light"
-          ? "text-purple-600 hover:bg-[#F9FAFB]"
-          : "text-purple-400 hover:bg-[#333333]" // 🔥 Update hover button dark
-      }
-          `}
-                      >
-                        Upgrade to PRO
-                      </button>
-                    )}
+                    <div className="px-2 pb-2 pt-1">
+                        {isPro ? (
+                          <button
+                            onClick={() => {
+                              window.open(
+                                "https://khlasify.myr.id/accounts",
+                                "_blank"
+                              );
+                            }}
+                            className={`
+                          w-full py-2.5 text-sm font-semibold rounded-lg
+                          transition
+          ${
+            currentTheme === "light"
+              ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
+              : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30" // 🔥 Disamakan dengan hover filter item aktif
+          }
+              `}
+                          >
+                            Edit profile
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              window.open(
+                                "https://khlasify.myr.id/pl/content-pro",
+                                "_blank",
+                              );
+                            }}
+                            className={`
+          w-full py-2.5 text-sm font-semibold rounded-lg
+          transition
+          ${
+            currentTheme === "light"
+              ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
+              : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30" // 🔥 Disamakan dengan hover filter item aktif
+          }
+              `}
+                          >
+                            Upgrade to PRO
+                          </button>
+                        )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -360,7 +366,7 @@ export default function ClientViewComponent({
         ${
           currentTheme === "light"
             ? "bg-white/90 text-gray-900 border border-gray-200"
-            : "bg-[#222222]/90 text-white border border-[#333333]" // 🔥 Update card limit bg
+            : "bg-[#222222]/90 text-white border border-[#333333]" 
         }
       `}
             >
@@ -423,7 +429,7 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
         if (!disabled) onChange();
       }}
       className={`
-        w-full px-4 py-3 flex items-center justify-between text-sm rounded-xl transition
+        w-full px-4 py-3 flex items-center justify-between text-sm transition
         ${theme === "light" ? "hover:bg-[#F9FAFB]" : "hover:bg-[#333333]"} 
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
       `}
@@ -464,11 +470,11 @@ function BioSection({ profile, theme }: any) {
         theme === "light" ? "text-gray-900" : "text-white"
       }`}
     >
-      {/* {safeProfile.username && (
+      {safeProfile.username && (
          <h2 className="text-[22px] font-extrabold mb-4 tracking-tight">
           {safeProfile.username}
         </h2>
-      )} */}
+      )}
 
       <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 ${theme === "light" ? "border-gray-200 bg-white" : "border-[#333333] bg-[#222222]"}`}>
         <img
@@ -519,7 +525,7 @@ function HighlightSection({ highlights, theme }: any) {
       className={`border rounded-2xl p-4 ${
         theme === "light"
           ? "bg-gray-50 border-gray-200 text-gray-900"
-          : "bg-[#222222] border-[#333333] text-gray-300" // 🔥 Update warna section highlight
+          : "bg-[#222222] border-[#333333] text-gray-300" 
       }`}
     >
       <div className="flex gap-4 overflow-x-auto pb-1 items-center">
@@ -532,7 +538,7 @@ function HighlightSection({ highlights, theme }: any) {
               className={`w-16 h-16 rounded-full border-2 overflow-hidden flex items-center justify-center shrink-0 ${
                 theme === "light"
                   ? "bg-gray-100 border-gray-200"
-                  : "bg-[#333333] border-[#444444]" // 🔥 Update bulat highlight
+                  : "bg-[#333333] border-[#444444]" 
               }`}
             >
               {h.image && (
@@ -556,7 +562,7 @@ function HighlightSection({ highlights, theme }: any) {
 function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
   return (
     <div
-      className={`grid gap-px ${theme === "dark" ? "bg-[#333333]" : "bg-gray-100"}`} // Menambahkan gap line yang bagus
+      className={`grid gap-px ${theme === "dark" ? "bg-[#333333]" : "bg-gray-100"}`} 
       style={{
         gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
       }}
@@ -611,7 +617,7 @@ function DetailModal({ item, theme, onClose }: any) {
         className={`w-full max-w-5xl rounded-2xl overflow-hidden ${
           theme === "light"
             ? "bg-gray-50 border-gray-200"
-            : "bg-[#222222] border-[#333333]" // 🔥 Update modal warna dark
+            : "bg-[#222222] border-[#333333]" 
         }`}
       >
         <button
@@ -635,21 +641,12 @@ function DetailModal({ item, theme, onClose }: any) {
   );
 }
 
-// function extractImage(item: any) {
-//   const p = item.properties;
-//   return (
-//     p.Attachment?.files?.[0]?.file?.url ||
-//     p.Attachment?.files?.[0]?.external?.url ||
-//     "/placeholder.png"
-//   );
-// }
-
 function extractImage(item: any) {
   const p = item.properties;
   return (
     p.Attachment?.files?.[0]?.file?.url ||
     p.Attachment?.files?.[0]?.external?.url ||
-    "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder" // 🔥 Ganti pake ini
+    "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder" 
   );
 }
 
