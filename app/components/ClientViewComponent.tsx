@@ -281,7 +281,7 @@ export default function ClientViewComponent({
       }
           `}
                       >
-                        Click here to customize your bio
+                        Edit profile
                       </button>
                     ) : (
                       <button
