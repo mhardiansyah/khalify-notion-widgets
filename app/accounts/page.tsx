@@ -522,7 +522,7 @@ export default function AccountsPage() {
                       : "bg-purple-100 text-purple-700"
                   }`}
                 >
-                  {isPro ? "Pro" : "Starter"}
+                  {isPro ? "PRO" : "Starter"}
                 </span>
               </div>
 
@@ -560,7 +560,7 @@ export default function AccountsPage() {
                   </button>
                 ) : (
                   <span className="text-sm text-green-600 font-medium flex items-center gap-1">
-                    <Crown className="w-4 h-4" /> Anda sudah berlangganan PRO
+                    {/* <Crown className="w-4 h-4" /> Anda sudah berlangganan PRO */}
                   </span>
                 )}
 
