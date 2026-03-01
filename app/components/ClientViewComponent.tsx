@@ -443,7 +443,7 @@ function BioSection({ profile, theme }: any) {
   const safeProfile = profile || {
     username: "",
     name: "Your Name",
-    avatarUrl: "https://api.dicebear.com/7.x/notionists/svg?seed=khlasify",
+    avatarUrl: "/logo-bulat.png",
     bio: "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
     link: "https://khlasify.notion.site",
   };
