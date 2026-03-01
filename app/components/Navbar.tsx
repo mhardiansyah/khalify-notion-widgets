@@ -18,7 +18,7 @@ export default function Navbar() {
 
   const menuItems = [
     { id: "/", label: "Home", icon: Home },
-    { id: "/widgets/create", label: "Setup", icon: Settings },
+    { id: "/widgets/create", label: "Create", icon: Settings },
     { id: "/helps", label: "Help", icon: HelpCircle },
     { id: "/accounts", label: "Account", icon: User },
   ];
