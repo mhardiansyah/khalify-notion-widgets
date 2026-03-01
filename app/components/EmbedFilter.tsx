@@ -47,7 +47,7 @@ const defaultValue = {
   pinned: "all",
 };
 
-const orderedKeys = ["platform", "status", "pillar", "pinned"] as const; 
+const orderedKeys = ["platform", "status", "pillar:", "pinned"] as const; 
 
 export function EmbedFilter({ 
   theme = "light",
