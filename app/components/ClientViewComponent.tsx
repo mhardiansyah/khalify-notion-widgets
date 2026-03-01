@@ -272,7 +272,7 @@ export default function ClientViewComponent({
                           <button
                             onClick={() => {
                               window.open(
-                                "https://khlasify.myr.id/accounts",
+                                "https://widget.khlasify.com/accounts",
                                 "_blank"
                               );
                             }}
