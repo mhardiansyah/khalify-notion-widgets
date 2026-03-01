@@ -363,7 +363,7 @@ export default function AccountsPage() {
               {/* FOTO PROFIL UPLOAD */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
-                  <ImageIcon className="w-3 h-3" /> Avatar Photo
+                  <ImageIcon className="w-3 h-3" /> Picture
                 </label>
                 <div className="flex items-center gap-4">
                   {/* Lingkaran Preview Foto */}
