@@ -261,10 +261,15 @@ export default function ClientViewComponent({
                     />
 
                     {/* PRO CTA */}
+                    {/* PRO CTA */}
                     {isPro ? (
                       <button
                         onClick={() => {
-                          alert("Open customize bio");
+                          // 🔥 Buka tab baru ke halaman account
+                          window.open(
+                            "https://khlasify.myr.id/accounts",
+                            "_blank"
+                          );
                         }}
                         className={`
                       w-full py-3 text-sm font-semibold
