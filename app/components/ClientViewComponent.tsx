@@ -560,6 +560,17 @@ function HighlightSection({ highlights, theme }: any) {
 }
 
 function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
+  // Fungsi untuk memformat tanggal dari format yyyy-mm-dd ke dd MMMM yyyy
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "";
+    const options: Intl.DateTimeFormatOptions = { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    };
+    return new Date(dateString).toLocaleDateString('id-ID', options);
+  };
+
   return (
     <div
       className={`grid gap-px ${theme === "dark" ? "bg-[#333333]" : "bg-gray-100"}`} 
@@ -568,8 +579,13 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
       }}
     >
       {filtered.map((item: any, i: number) => {
+        const name = item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
         const image = extractImage(item);
         const pinned = item.properties?.Pinned?.checkbox;
+        
+        // 🔥 Mengambil tanggal dari property 'Publish Date'
+        const publishDateRaw = item.properties?.['Publish Date']?.date?.start;
+        const publishDateStr = formatDate(publishDateRaw);
 
         return (
           <div
@@ -579,7 +595,7 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
           >
             {pinned && (
               <div
-                className="absolute top-2.5 right-2.5 z-10
+                className="absolute top-2.5 right-2.5 z-20
                   w-6 h-6 rounded-2xl
                   bg-black/40
                   flex items-center justify-center"
@@ -589,6 +605,19 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
             )}
 
             <AutoThumbnail src={image} />
+
+            {/* 🔥 EFEK HOVER UNTUK MENAMPILKAN TANGGAL DAN NAMA */}
+            <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+               {publishDateStr && (
+                 <p className="text-white/80 text-[10px] sm:text-xs font-medium mb-0.5">
+                   {publishDateStr}
+                 </p>
+               )}
+               <p className="text-white text-xs sm:text-sm font-bold line-clamp-2 leading-tight">
+                 {name}
+               </p>
+            </div>
+
           </div>
         );
       })}
