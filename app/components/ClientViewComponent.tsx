@@ -579,6 +579,9 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
+  // 🔥 LOGIKA BARU: Menghitung berapa sisa slot kosong yang perlu ditutupi
+  const emptySlots = (3 - (filtered.length % 3)) % 3;
+
   return (
     <div
       className={`grid gap-px ${theme === "dark" ? "bg-[#333333]" : "bg-gray-100"}`} 
@@ -613,7 +616,7 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
 
             <AutoThumbnail src={image} />
 
-            {/* 🔥 EFEK HOVER UNTUK MENAMPILKAN TANGGAL DAN NAMA */}
+            {/* EFEK HOVER UNTUK MENAMPILKAN TANGGAL DAN NAMA */}
             <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
                {publishDateStr && (
                  <p className="text-white/80 text-[10px] sm:text-xs font-medium mb-0.5">
@@ -628,6 +631,14 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
           </div>
         );
       })}
+
+      {/* 🔥 DUMMY SLOTS: Menutupi sisa ruang kosong dengan warna background utama */}
+      {Array.from({ length: emptySlots }).map((_, i) => (
+        <div 
+          key={`empty-${i}`} 
+          className={theme === "light" ? "bg-white" : "bg-[#191919]"} 
+        />
+      ))}
     </div>
   );
 }
