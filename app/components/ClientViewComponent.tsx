@@ -579,12 +579,11 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
-  // 🔥 LOGIKA BARU: Menghitung berapa sisa slot kosong yang perlu ditutupi
-  const emptySlots = (3 - (filtered.length % 3)) % 3;
-
+  // Kita tidak perlu dummy slot lagi jika menggunakan border individual
   return (
     <div
-      className={`grid gap-px ${theme === "dark" ? "bg-[#333333]" : "bg-gray-100"}`} 
+      // 🔥 Hapus gap-px dan bg pembungkus. Biarkan transparan.
+      className="grid" 
       style={{
         gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
       }}
@@ -601,7 +600,15 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
           <div
             key={i}
             onClick={() => onSelect(item)}
-            className={`relative group overflow-hidden aspect-[4/5] cursor-pointer hover:-translate-y-1 transition ${cardBg}`}
+            // 🔥 Tambahkan border individu pada setiap card. 
+            // Atur agar garis tidak dobel (misal: hanya kanan dan bawah, atau sesuaikan)
+            // Di sini kita kasih border penuh, tapi dibikin menyatu (collapse) agar rapi
+            className={`relative group overflow-hidden aspect-[4/5] cursor-pointer hover:-translate-y-1 transition ${cardBg} border ${theme === "dark" ? "border-[#333333]" : "border-gray-100"}`}
+            // style margin negatif untuk mencegah border ganda (CSS trik)
+            style={{ 
+               marginRight: i % 3 !== 2 ? '-1px' : '0',
+               marginBottom: '-1px'
+            }}
           >
             {pinned && (
               <div
@@ -631,14 +638,6 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
           </div>
         );
       })}
-
-      {/* 🔥 DUMMY SLOTS: Menutupi sisa ruang kosong dengan warna background utama */}
-      {Array.from({ length: emptySlots }).map((_, i) => (
-        <div 
-          key={`empty-${i}`} 
-          className={theme === "light" ? "bg-white" : "bg-[#191919]"} 
-        />
-      ))}
     </div>
   );
 }
