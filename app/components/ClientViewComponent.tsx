@@ -152,6 +152,16 @@ export default function ClientViewComponent({
 
   const displayUsername = profile?.username || "";
 
+  // 🔥 LOGIKA BARU: Cek apakah ada filter yang sedang aktif
+  const isFilterActive = 
+    (params.get("platform") && params.get("platform")?.toLowerCase() !== "all") ||
+    (params.get("status") && params.get("status")?.toLowerCase() !== "all") ||
+    (params.get("pillar") && params.get("pillar")?.toLowerCase() !== "all") ||
+    (params.get("pinned") && params.get("pinned")?.toLowerCase() !== "all");
+
+  // 🔥 LOGIKA BARU: Sembunyikan highlight JIKA filter aktif DAN jumlah item kurang dari 3
+  const shouldHideHighlight = isFilterActive && visibleData.length < 3;
+
   /* ================= RENDER ================= */
 
   return (
@@ -192,7 +202,6 @@ export default function ClientViewComponent({
                 <IconButton
                   theme={currentTheme}
                   onClick={() => {
-                    // 🔥 Toggle Filter, dan pastikan Settings tertutup
                     setShowFilterBar((s) => !s);
                     setOpenSetting(false);
                   }}
@@ -212,7 +221,6 @@ export default function ClientViewComponent({
                 <IconButton
                   theme={currentTheme}
                   onClick={() => {
-                    // 🔥 Toggle Settings, dan pastikan Filter tertutup
                     setOpenSetting((s) => !s);
                     setShowFilterBar(false);
                   }}
@@ -282,7 +290,7 @@ export default function ClientViewComponent({
           ${
             currentTheme === "light"
               ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
-              : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30" // 🔥 Disamakan dengan hover filter item aktif
+              : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30" 
           }
               `}
                           >
@@ -302,7 +310,7 @@ export default function ClientViewComponent({
           ${
             currentTheme === "light"
               ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
-              : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30" // 🔥 Disamakan dengan hover filter item aktif
+              : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30" 
           }
               `}
                           >
@@ -321,7 +329,8 @@ export default function ClientViewComponent({
         <div className="pb-5 space-y-4 sm:space-y-6 pt-6">
           {showBio && <BioSection profile={profile} theme={currentTheme} />}
 
-          {showHighlight && (
+          {/* 🔥 Terapkan kondisi shouldHideHighlight di sini */}
+          {showHighlight && !shouldHideHighlight && (
             <HighlightSection
               highlights={profile?.highlights}
               theme={currentTheme}
@@ -560,7 +569,6 @@ function HighlightSection({ highlights, theme }: any) {
 }
 
 function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
-  // Fungsi untuk memformat tanggal dari format yyyy-mm-dd ke dd MMMM yyyy
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
     const options: Intl.DateTimeFormatOptions = { 
@@ -583,7 +591,6 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
         const image = extractImage(item);
         const pinned = item.properties?.Pinned?.checkbox;
         
-        // 🔥 Mengambil tanggal dari property 'Publish Date'
         const publishDateRaw = item.properties?.['Publish Date']?.date?.start;
         const publishDateStr = formatDate(publishDateRaw);
 
