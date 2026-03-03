@@ -2,97 +2,70 @@
 
 import { ChevronDown, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-// 🔥 PERBAIKAN: Gunakan format dictionary dengan keys lowercase (camelCase)
-// Nilai string disesuaikan dengan ejaan di screenshot
-const filterLabels = {
-  platform: {
-    all: "All Platform",
-    instagram: "instagram", // Sesuaikan nama label dengan value dari notion API (lowercase)
-    tiktok: "tiktok",
-    youtube: "youtube",
-    others: "others",
-  },
-  status: {
-    all: "All Status",
-    idea: "idea",
-    scripting: "scripting",
-    editing: "editing",
-    review: "review",
-    revision: "revision",
-    upload: "upload",
-    completed: "completed"
-  },
-  pillar: {
-    all: "All Pillars",
-    education: "education",
-    entertainment: "entertainment",
-    promotional: "promotional",
-    "story telling": "story telling",
-    bts: "bts",
-    testimonial: "testimonial"
-  },
-  pinned: {
-    all: "All Posts",
-    true: "Pinned Only",
-    false: "Unpinned Only"
-  }
-};
-
-const defaultValue = {
-  platform: "all",
-  status: "all",
-  pillar: "all",  
-  pinned: "all",
-};
-
-const orderedKeys = ["platform", "status", "pillar:", "pinned"] as const; 
 
 export function EmbedFilter({ 
   theme = "light",
   isPro = false,
+  rawData = [] // 🔥 Terima rawData dari props
 }: {
   theme?: "light" | "dark";
   isPro?: boolean;
+  rawData?: any[];
 }) {
   const router = useRouter();
   const params = useSearchParams();
   const [open, setOpen] = useState<string | null>(null);
 
-  const filterLabels = {
-    platform: {
-      all: "All Platform",
-      instagram: "Instagram", 
-      tiktok: "TikTok",      
-      youtube: "YouTube",
-      others: "Others",
-    },
-    status: {
-      all: "All Status",
-      idea: "Idea",
-      scripting: "Scripting",
-      editing: "Editing",
-      review: "Review",
-      revision: "Revision",
-      upload: "Upload",
-      completed: "Completed"
-    },
-    pillar: {
-      all: "All Pillars",
-      education: "Education",
-      entertainment: "Entertainment",
-      promotional: "Promotional",
-      "story telling": "Story Telling",
-      bts: "BTS",
-      testimonial: "Testimonial"
-    },
-    pinned: {
-      all: "All Posts",
-      true: "Pinned Only",
-      false: "Unpinned Only"
-    }
-  };
+  // 🔥 LOGIKA DINAMIS: Mengekstrak opsi unik dari database Notion
+  const dynamicFilters = useMemo(() => {
+    const platforms = new Set<string>();
+    const statuses = new Set<string>();
+    const pillars = new Set<string>();
+
+    rawData.forEach(item => {
+      const props = item.properties;
+      
+      // Ekstrak Platform
+      const platMulti = props.Platform?.multi_select;
+      const platSingle = props.Platform?.select;
+      if (platMulti) platMulti.forEach((p:any) => platforms.add(p.name));
+      if (platSingle) platforms.add(platSingle.name);
+
+      // Ekstrak Status
+      const statStatus = props.Status?.status;
+      const statSelect = props.Status?.select;
+      if (statStatus) statuses.add(statStatus.name);
+      if (statSelect) statuses.add(statSelect.name);
+
+      // Ekstrak Pillar
+      const pilMulti = props.Pillar?.multi_select;
+      const pilSingle = props.Pillar?.select;
+      if (pilMulti) pilMulti.forEach((p:any) => pillars.add(p.name));
+      if (pilSingle) pillars.add(pilSingle.name);
+    });
+
+    // Helper untuk mengubah Set menjadi object dictionary untuk filterLabels
+    const setToDict = (setObj: Set<string>, allLabel: string) => {
+      const dict: Record<string, string> = { all: allLabel };
+      setObj.forEach(val => {
+        dict[val.toLowerCase()] = val; // key lowercase, label asli
+      });
+      return dict;
+    };
+
+    return {
+      platform: setToDict(platforms, "All Platform"),
+      status: setToDict(statuses, "All Status"),
+      pillar: setToDict(pillars, "All Pillars"),
+      pinned: {
+        all: "All Posts",
+        true: "Pinned Only",
+        false: "Unpinned Only"
+      }
+    };
+  }, [rawData]);
 
   const defaultValue = {
     platform: "all",
@@ -152,22 +125,22 @@ export function EmbedFilter({
         className={`rounded-xl p-3 sm:p-4 space-y-3 border ${
           theme === "light"
             ? "bg-white border-gray-200"
-            : "bg-[#222222] border-[#333333] text-white" // 🔥 Update warna border dan bg filter wrap
+            : "bg-[#222222] border-[#333333] text-white" 
         }`}
       >
         <div className="grid grid-cols-1 gap-2">
           {orderedKeys.map((key) => {
             const currentRawValue = current[key];
+            // 🔥 PERBAIKAN TYPE SCRIPT (Gunakan 'any' untuk mem-bypass strict type)
+            const filterOptions: any = dynamicFilters[key];
             
             let displayValue = currentRawValue;
             if (key === 'pinned') {
-                // @ts-ignore
-                displayValue = filterLabels[key]?.[currentRawValue] || currentRawValue;
+                displayValue = filterOptions[currentRawValue] || currentRawValue;
             } else {
                  displayValue = currentRawValue === 'all' 
-                     // @ts-ignore
-                     ? filterLabels[key]?.all 
-                     : currentRawValue.replace(/\b\w/g, l => l.toUpperCase());
+                     ? filterOptions.all 
+                     : (filterOptions[currentRawValue] || currentRawValue.replace(/\b\w/g, (l: string) => l.toUpperCase()));
             }
 
             return (
@@ -186,12 +159,12 @@ export function EmbedFilter({
                           : "bg-purple-600/20 border-purple-500 text-purple-300"
                         : theme === "light"
                           ? "bg-gray-200 border-gray-300 text-gray-500"
-                          : "bg-[#333333] border-[#333333] text-gray-400" // 🔥 Update bg button pas belum dipilih
+                          : "bg-[#333333] border-[#333333] text-gray-400" 
                     }
                     ${!isPro ? "cursor-not-allowed opacity-60" : ""}
                   `}
                 >
-                  <span className="truncate flex-1">{displayValue}</span>
+                  <span className="truncate flex-1 text-left">{displayValue}</span>
                   <ChevronDown
                     className={`w-4 h-4 shrink-0 ${!isPro ? "opacity-50" : ""}`}
                   />
@@ -205,35 +178,31 @@ export function EmbedFilter({
                     />
 
                     <div
-                      className={`absolute z-50 mt-2 w-56 rounded-xl border shadow-lg overflow-hidden ${
+                      className={`absolute z-50 mt-2 w-56 rounded-xl border shadow-lg overflow-hidden max-h-64 overflow-y-auto ${
                         theme === "light"
                           ? "bg-white border-gray-200"
-                          : "bg-[#222222] border-[#333333]" // 🔥 Update bg dropdown
+                          : "bg-[#222222] border-[#333333]" 
                       }`}
                     >
                       <div
-                        className={`px-4 py-2 text-xs font-semibold border-b ${
+                        className={`sticky top-0 z-10 px-4 py-2 text-xs font-semibold border-b ${
                           theme === "light"
-                            ? "text-gray-400 border-gray-200"
-                            : "text-gray-400 border-[#333333]" // 🔥 Update garis bawah title dropdown
+                            ? "bg-gray-50 text-gray-400 border-gray-200"
+                            : "bg-[#2A2A2A] text-gray-400 border-[#333333]" 
                         }`}
                       >
                         {key === "pinned" ? "POSTS" : key.toUpperCase()}
                       </div>
 
-                      {Object.entries(filterLabels[key]).map(([optKey, optLabel]) => {
+                      {Object.entries(filterOptions).map(([optKey, optLabel]) => {
                           const isSelected = currentRawValue === optKey;
-
-                          let finalOptLabel = optLabel;
-                          if (key !== 'pinned' && optKey !== 'all') {
-                             finalOptLabel = optKey.replace(/\b\w/g, l => l.toUpperCase());
-                          }
+                          const finalOptLabel = optLabel as string;
 
                           return (
                             <button
                               key={optKey}
                               onClick={() => updateFilter(key, optKey)}
-                              className={`w-full px-4 py-3 flex items-center justify-between text-sm
+                              className={`w-full px-4 py-3 flex items-center justify-between text-sm text-left
                                 ${
                                   isSelected
                                     ? theme === "light"
@@ -241,12 +210,12 @@ export function EmbedFilter({
                                       : "bg-purple-600/20 text-purple-300"
                                     : theme === "light"
                                       ? "hover:bg-[#F9FAFB]"
-                                      : "hover:bg-[#333333]" // 🔥 Update hover warna list item
+                                      : "hover:bg-[#333333]" 
                                 }
                               `}
                             >
-                              <span>{finalOptLabel}</span>
-                              {isSelected && <span className="text-xs">✓</span>}
+                              <span className="truncate pr-2">{finalOptLabel}</span>
+                              {isSelected && <span className="text-xs shrink-0">✓</span>}
                             </button>
                           )
                       })}
@@ -262,7 +231,7 @@ export function EmbedFilter({
           <>
             <div
               className={`h-px my-3 ${
-                theme === "light" ? "bg-gray-200" : "bg-[#333333]" // 🔥 Divider darkmode
+                theme === "light" ? "bg-gray-200" : "bg-[#333333]" 
               }`}
             />
 
@@ -298,8 +267,20 @@ export function EmbedFilter({
         {activeCount > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
             {orderedKeys.map(
-              (key) =>
-                isActive(key) && (
+              (key) => {
+                if (!isActive(key)) return null;
+                // 🔥 PERBAIKAN TYPE SCRIPT (Gunakan 'any')
+                const filterOptions: any = dynamicFilters[key];
+                const currentVal = current[key];
+                
+                let badgeLabel = currentVal;
+                if (key === 'pinned') {
+                     badgeLabel = filterOptions[currentVal] as string;
+                } else {
+                     badgeLabel = filterOptions[currentVal] as string || currentVal.replace(/\b\w/g, (l:string) => l.toUpperCase());
+                }
+
+                return (
                   <div
                     key={key}
                     className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
@@ -310,8 +291,7 @@ export function EmbedFilter({
                   >
                     <span className="capitalize">{key === "pinned" ? "post" : key}</span>
                     <span className="truncate max-w-[120px]">
-                      {/* @ts-ignore */}
-                      {key === 'pinned' ? filterLabels[key]?.[current[key]] : (current[key] === 'all' ? filterLabels[key]?.all : current[key].replace(/\b\w/g, l => l.toUpperCase()))}
+                      {badgeLabel}
                     </span>
                     <button
                       disabled={!isPro}
@@ -323,7 +303,8 @@ export function EmbedFilter({
                       <X className="w-3 h-3" />
                     </button>
                   </div>
-                ),
+                )
+              }
             )}
           </div>
         )}

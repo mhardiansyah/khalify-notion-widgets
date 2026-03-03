@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
-// 🔥 Tambahkan Link2 di sini untuk icon link di bio
+import { useState, useEffect, useMemo } from "react";
 import {
   Pin,
   X,
@@ -66,13 +65,11 @@ export default function ClientViewComponent({
     setCurrentTheme(theme);
   }, [theme]);
 
-  // 🔥 PERBAIKAN WARNA DARK MODE (Background Utama)
   const bg =
     currentTheme === "light"
       ? "bg-white text-gray-900"
       : "bg-[#191919] text-white";
 
-  // 🔥 PERBAIKAN WARNA DARK MODE (Background Card)
   const cardBg = currentTheme === "light" ? "bg-white" : "bg-[#222222]";
 
   /* ================= FILTER LOGIC ================= */
@@ -152,14 +149,12 @@ export default function ClientViewComponent({
 
   const displayUsername = profile?.username || "";
 
-  // 🔥 LOGIKA BARU: Cek apakah ada filter yang sedang aktif
   const isFilterActive = 
     (params.get("platform") && params.get("platform")?.toLowerCase() !== "all") ||
     (params.get("status") && params.get("status")?.toLowerCase() !== "all") ||
     (params.get("pillar") && params.get("pillar")?.toLowerCase() !== "all") ||
     (params.get("pinned") && params.get("pinned")?.toLowerCase() !== "all");
 
-  // 🔥 LOGIKA BARU: Sembunyikan highlight JIKA filter aktif DAN jumlah item kurang dari 3
   const shouldHideHighlight = isFilterActive && visibleData.length < 3;
 
   /* ================= RENDER ================= */
@@ -211,7 +206,8 @@ export default function ClientViewComponent({
 
                 {showFilterBar && (
                   <div className="absolute right-0 top-full mt-2 z-50 w-56">
-                    <EmbedFilter theme={currentTheme} isPro={isPro} />
+                    {/* 🔥 Mengirim raw 'filtered' ke EmbedFilter agar bisa mengekstrak filter dinamis */}
+                    <EmbedFilter theme={currentTheme} isPro={isPro} rawData={filtered} />
                   </div>
                 )}
               </div>
@@ -280,7 +276,7 @@ export default function ClientViewComponent({
                           <button
                             onClick={() => {
                               window.open(
-                                "https://widget.khlasify.com/accounts",
+                                "https://khlasify.myr.id/accounts",
                                 "_blank"
                               );
                             }}
@@ -329,7 +325,6 @@ export default function ClientViewComponent({
         <div className="pb-5 space-y-4 sm:space-y-6 pt-6">
           {showBio && <BioSection profile={profile} theme={currentTheme} />}
 
-          {/* 🔥 Terapkan kondisi shouldHideHighlight di sini */}
           {showHighlight && !shouldHideHighlight && (
             <HighlightSection
               highlights={profile?.highlights}
@@ -579,10 +574,9 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
-  // Kita tidak perlu dummy slot lagi jika menggunakan border individual
   return (
     <div
-      // 🔥 Hapus gap-px dan bg pembungkus. Biarkan transparan.
+      // 🔥 KITA HAPUS bg pembungkus dan gap. Grid murni transparan.
       className="grid" 
       style={{
         gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
@@ -600,11 +594,9 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
           <div
             key={i}
             onClick={() => onSelect(item)}
-            // 🔥 Tambahkan border individu pada setiap card. 
-            // Atur agar garis tidak dobel (misal: hanya kanan dan bawah, atau sesuaikan)
-            // Di sini kita kasih border penuh, tapi dibikin menyatu (collapse) agar rapi
+            // 🔥 Beri border pada Masing-Masing CARD, BUKAN pada grid. 
             className={`relative group overflow-hidden aspect-[4/5] cursor-pointer hover:-translate-y-1 transition ${cardBg} border ${theme === "dark" ? "border-[#333333]" : "border-gray-100"}`}
-            // style margin negatif untuk mencegah border ganda (CSS trik)
+            // 🔥 Trik Margin negatif agar garis bordernya tidak jadi tebal 2px saat bersebelahan
             style={{ 
                marginRight: i % 3 !== 2 ? '-1px' : '0',
                marginBottom: '-1px'
@@ -623,7 +615,6 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
 
             <AutoThumbnail src={image} />
 
-            {/* EFEK HOVER UNTUK MENAMPILKAN TANGGAL DAN NAMA */}
             <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
                {publishDateStr && (
                  <p className="text-white/80 text-[10px] sm:text-xs font-medium mb-0.5">
@@ -703,3 +694,6 @@ function hasAttachment(item: any) {
   const first = files[0];
   return !!(first?.file?.url || first?.external?.url);
 }
+
+// ===================== EMBED FILTER COMPONENT =====================
+
