@@ -61,8 +61,8 @@ export function EmbedFilter({
       pillar: setToDict(pillars, "All Pillars"),
       pinned: {
         all: "All Posts",
-        true: "Pinned Only",
-        false: "Unpinned Only"
+        true: "Pin Only",
+        false: "Unpin Only"
       }
     };
   }, [rawData]);
