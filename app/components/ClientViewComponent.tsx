@@ -42,20 +42,26 @@ interface Props {
   isPro?: boolean;
 }
 
-/* ================= FUNGSI SAPU JAGAT (BACA SEMUA TIPE DATA NOTION) ================= */
-// Fungsi ini menembus tipe data Notion apapun (termasuk Rollup yang bertingkat)
+/* ================= FUNGSI SAPU JAGAT ================= */
 function getNotionValues(prop: any): string[] {
   if (!prop) return [];
   
-  if (prop.select) return [prop.select.name];
+  if (prop.select && prop.select.name) return [prop.select.name];
   if (prop.multi_select) return prop.multi_select.map((s: any) => s.name);
-  if (prop.status) return [prop.status.name];
+  if (prop.status && prop.status.name) return [prop.status.name];
   if (prop.rich_text) return prop.rich_text.map((t: any) => t.plain_text);
   if (prop.title) return prop.title.map((t: any) => t.plain_text);
   
-  // 🔥 Jika dia Rollup (kaca pembesar)
-  if (prop.rollup && prop.rollup.array) {
-    return prop.rollup.array.flatMap((item: any) => getNotionValues(item));
+  if (prop.type === "rollup" && prop.rollup && prop.rollup.array) {
+    let results: string[] = [];
+    prop.rollup.array.forEach((item: any) => {
+       if (item.type) {
+           results = results.concat(getNotionValues({ [item.type]: item[item.type] }));
+       } else {
+           results = results.concat(getNotionValues(item));
+       }
+    });
+    return results;
   }
   
   return [];
@@ -92,7 +98,7 @@ export default function ClientViewComponent({
 
   const cardBg = currentTheme === "light" ? "bg-white" : "bg-[#222222]";
 
-  /* ================= FILTER LOGIC (SUPER DINAMIS) ================= */
+  /* ================= FILTER LOGIC ================= */
 
   const filteredData = filtered
     .filter((item) => {
@@ -106,9 +112,7 @@ export default function ClientViewComponent({
       if (props.Hide?.checkbox === true) return false;
       if (!hasAttachment(item)) return false;
 
-      // 🔥 MENGGUNAKAN FUNGSI SAPU JAGAT UNTUK FILTERING
-
-      // 1. Filter Platform (Otomatis handle Rollup)
+      // 1. Filter Platform
       if (platformParam && platformParam !== "all") {
         const platformVals = getNotionValues(props.Platform).map(v => v.toLowerCase());
         if (!platformVals.includes(platformParam)) return false;
@@ -687,6 +691,7 @@ function hasAttachment(item: any) {
   const first = files[0];
   return !!(first?.file?.url || first?.external?.url);
 }
+
 
 /* ================= EMBED FILTER COMPONENT ================= */
 

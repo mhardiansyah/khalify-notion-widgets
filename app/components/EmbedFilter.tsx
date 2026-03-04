@@ -15,12 +15,9 @@ function getNotionValues(prop: any): string[] {
   if (prop.rich_text) return prop.rich_text.map((t: any) => t.plain_text);
   if (prop.title) return prop.title.map((t: any) => t.plain_text);
   
-  // 🔥 PERBAIKAN ROLLUP: Harus mengecek tipe data di DALAM rollup-nya
   if (prop.type === "rollup" && prop.rollup && prop.rollup.array) {
     let results: string[] = [];
     prop.rollup.array.forEach((item: any) => {
-       // Rollup bisa berisi tipe 'select', 'multi_select', dll.
-       // Kita panggil fungsi ini lagi secara rekursif untuk membongkar isinya
        if (item.type) {
            results = results.concat(getNotionValues({ [item.type]: item[item.type] }));
        } else {
@@ -32,6 +29,7 @@ function getNotionValues(prop: any): string[] {
   
   return [];
 }
+
 export function EmbedFilter({ 
   theme = "light",
   isPro = false,
@@ -45,15 +43,16 @@ export function EmbedFilter({
   const params = useSearchParams();
   const [open, setOpen] = useState<string | null>(null);
 
-  // 🔥 FILTER MENGGUNAKAN GET NOTION VALUES
   const dynamicFilters = useMemo(() => {
-    const platforms = new Set<string>();
-    const statuses = new Set<string>();
-    const pillars = new Set<string>();
+    // 🔥 INISIALISASI SET DENGAN NILAI DEFAULT HARDCODE
+    // Tujuannya agar opsi ini selalu muncul walaupun belum ada di konten Notion
+    const platforms = new Set<string>(["Instagram", "TikTok", "YouTube", "LinkedIn", "Threads"]);
+    const statuses = new Set<string>(["Idea", "Scripting", "Editing", "Review", "Revision", "Upload", "Completed"]);
+    const pillars = new Set<string>(["Education", "Entertainment", "Promotional", "Story Telling", "Behind The Scene", "Pasti Viral"]);
 
+    // Tetap ambil juga dari rawData (Notion) jaga-jaga kalau user bikin tag baru
     rawData.forEach(item => {
       const props = item.properties;
-      
       getNotionValues(props.Platform).forEach(v => { if(v) platforms.add(v) });
       getNotionValues(props.Status).forEach(v => { if(v) statuses.add(v) });
       getNotionValues(props.Pillar).forEach(v => { if(v) pillars.add(v) });
