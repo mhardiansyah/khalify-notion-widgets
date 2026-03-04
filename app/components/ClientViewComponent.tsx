@@ -43,6 +43,7 @@ interface Props {
 }
 
 /* ================= FUNGSI SAPU JAGAT (BACA SEMUA TIPE DATA NOTION) ================= */
+// Fungsi ini menembus tipe data Notion apapun (termasuk Rollup yang bertingkat)
 function getNotionValues(prop: any): string[] {
   if (!prop) return [];
   
@@ -52,7 +53,7 @@ function getNotionValues(prop: any): string[] {
   if (prop.rich_text) return prop.rich_text.map((t: any) => t.plain_text);
   if (prop.title) return prop.title.map((t: any) => t.plain_text);
   
-  // Jika dia Rollup (kaca pembesar)
+  // 🔥 Jika dia Rollup (kaca pembesar)
   if (prop.rollup && prop.rollup.array) {
     return prop.rollup.array.flatMap((item: any) => getNotionValues(item));
   }
@@ -105,12 +106,11 @@ export default function ClientViewComponent({
       if (props.Hide?.checkbox === true) return false;
       if (!hasAttachment(item)) return false;
 
-      // 🔥 KITA PAKE FUNGSI SAPU JAGAT DI SINI BIAR BISA BACA MULTI-SELECT
+      // 🔥 MENGGUNAKAN FUNGSI SAPU JAGAT UNTUK FILTERING
 
-      // 1. Filter Platform
+      // 1. Filter Platform (Otomatis handle Rollup)
       if (platformParam && platformParam !== "all") {
         const platformVals = getNotionValues(props.Platform).map(v => v.toLowerCase());
-        // includes() akan memastikan platform yg dipilih (meski ada banyak) tetap lolos filter
         if (!platformVals.includes(platformParam)) return false;
       }
 
@@ -204,7 +204,6 @@ export default function ClientViewComponent({
 
                 {showFilterBar && (
                   <div className="absolute right-0 top-full mt-2 z-50 w-56">
-                    {/* 🔥 RAW DATA DILEMPAR KE EMBED FILTER */}
                     <EmbedFilter theme={currentTheme} isPro={isPro} rawData={filtered} />
                   </div>
                 )}
