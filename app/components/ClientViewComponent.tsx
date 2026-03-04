@@ -72,7 +72,7 @@ export default function ClientViewComponent({
 
   const cardBg = currentTheme === "light" ? "bg-white" : "bg-[#222222]";
 
-  /* ================= FILTER LOGIC ================= */
+  /* ================= FILTER LOGIC (SUPER DINAMIS) ================= */
 
   const filteredData = filtered
     .filter((item) => {
@@ -86,46 +86,25 @@ export default function ClientViewComponent({
       if (props.Hide?.checkbox === true) return false;
       if (!hasAttachment(item)) return false;
 
+      // 🔥 Menggunakan fungsi sapu jagat (getNotionValues) untuk mengekstrak data 
+      // apapun bentuk property-nya (select, multi-select, rollup, status)
+
       // 1. Filter Platform
       if (platformParam && platformParam !== "all") {
-        const platformMulti = props.Platform?.multi_select;
-        const platformSingle = props.Platform?.select;
-
-        if (platformMulti) {
-           if (!platformMulti.some((opt: any) => opt.name.toLowerCase() === platformParam)) return false;
-        } else if (platformSingle) {
-           if (platformSingle.name.toLowerCase() !== platformParam) return false;
-        } else {
-           return false;
-        }
+        const platformVals = getNotionValues(props.Platform).map(v => v.toLowerCase());
+        if (!platformVals.includes(platformParam)) return false;
       }
 
       // 2. Filter Status
       if (statusParam && statusParam !== "all") {
-        const statusTypeStatus = props.Status?.status;
-        const statusTypeSelect = props.Status?.select;
-        
-        if (statusTypeStatus) {
-           if (statusTypeStatus.name.toLowerCase() !== statusParam) return false;
-        } else if (statusTypeSelect) {
-           if (statusTypeSelect.name.toLowerCase() !== statusParam) return false;
-        } else {
-           return false;
-        }
+        const statusVals = getNotionValues(props.Status).map(v => v.toLowerCase());
+        if (!statusVals.includes(statusParam)) return false;
       }
 
       // 3. Filter Pillar
       if (pillarParam && pillarParam !== "all") {
-        const pillarMulti = props.Pillar?.multi_select;
-        const pillarSingle = props.Pillar?.select;
-
-        if (pillarMulti) {
-          if (!pillarMulti.some((opt: any) => opt.name.toLowerCase() === pillarParam)) return false;
-        } else if (pillarSingle) {
-          if (pillarSingle.name.toLowerCase() !== pillarParam) return false;
-        } else {
-          return false;
-        }
+        const pillarVals = getNotionValues(props.Pillar).map(v => v.toLowerCase());
+        if (!pillarVals.includes(pillarParam)) return false;
       }
 
       // 4. Filter Pinned
@@ -206,7 +185,6 @@ export default function ClientViewComponent({
 
                 {showFilterBar && (
                   <div className="absolute right-0 top-full mt-2 z-50 w-56">
-                    {/* 🔥 Mengirim raw 'filtered' ke EmbedFilter agar bisa mengekstrak filter dinamis */}
                     <EmbedFilter theme={currentTheme} isPro={isPro} rawData={filtered} />
                   </div>
                 )}
@@ -261,7 +239,6 @@ export default function ClientViewComponent({
                       }
                     />
 
-                    {/* DIVIDER */}
                     <div
                       className={`h-px my-1 ${
                         currentTheme === "light"
@@ -276,7 +253,7 @@ export default function ClientViewComponent({
                           <button
                             onClick={() => {
                               window.open(
-                                "https://khlasify.myr.id/accounts",
+                                "https://widget.khlasify.com/accounts",
                                 "_blank"
                               );
                             }}
@@ -576,7 +553,6 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
 
   return (
     <div
-      // 🔥 KITA HAPUS bg pembungkus dan gap. Grid murni transparan.
       className="grid" 
       style={{
         gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
@@ -594,9 +570,7 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
           <div
             key={i}
             onClick={() => onSelect(item)}
-            // 🔥 Beri border pada Masing-Masing CARD, BUKAN pada grid. 
             className={`relative group overflow-hidden aspect-[4/5] cursor-pointer hover:-translate-y-1 transition ${cardBg} border ${theme === "dark" ? "border-[#333333]" : "border-gray-100"}`}
-            // 🔥 Trik Margin negatif agar garis bordernya tidak jadi tebal 2px saat bersebelahan
             style={{ 
                marginRight: i % 3 !== 2 ? '-1px' : '0',
                marginBottom: '-1px'
@@ -678,6 +652,23 @@ function DetailModal({ item, theme, onClose }: any) {
   );
 }
 
+// 🔥 FUNGSI SAPU JAGAT UNTUK MENGAMBIL VALUE APAPUN DARI NOTION (Termasuk Rollup)
+function getNotionValues(prop: any): string[] {
+  if (!prop) return [];
+  
+  if (prop.select) return [prop.select.name];
+  if (prop.multi_select) return prop.multi_select.map((s: any) => s.name);
+  if (prop.status) return [prop.status.name];
+  
+  // Jika dia Rollup (kaca pembesar)
+  if (prop.rollup && prop.rollup.array) {
+    // Ekstrak semua nilai dari dalam array rollup rekursif
+    return prop.rollup.array.flatMap((item: any) => getNotionValues(item));
+  }
+  
+  return [];
+}
+
 function extractImage(item: any) {
   const p = item.properties;
   return (
@@ -695,5 +686,5 @@ function hasAttachment(item: any) {
   return !!(first?.file?.url || first?.external?.url);
 }
 
-// ===================== EMBED FILTER COMPONENT =====================
+
 

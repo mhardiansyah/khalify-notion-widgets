@@ -1,14 +1,29 @@
-"use client";
-
 import { ChevronDown, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 
+
+function getNotionValues(prop: any): string[] {
+  if (!prop) return [];
+  
+  if (prop.select) return [prop.select.name];
+  if (prop.multi_select) return prop.multi_select.map((s: any) => s.name);
+  if (prop.status) return [prop.status.name];
+  
+  // Jika dia Rollup (kaca pembesar)
+  if (prop.rollup && prop.rollup.array) {
+    // Ekstrak semua nilai dari dalam array rollup rekursif
+    return prop.rollup.array.flatMap((item: any) => getNotionValues(item));
+  }
+  
+  return [];
+}
+
 export function EmbedFilter({ 
   theme = "light",
   isPro = false,
-  rawData = [] // 🔥 Terima rawData dari props
+  rawData = [] 
 }: {
   theme?: "light" | "dark";
   isPro?: boolean;
@@ -18,7 +33,7 @@ export function EmbedFilter({
   const params = useSearchParams();
   const [open, setOpen] = useState<string | null>(null);
 
-  // 🔥 LOGIKA DINAMIS: Mengekstrak opsi unik dari database Notion
+  // 🔥 Mengekstrak opsi filter otomatis dari rawData menggunakan getNotionValues
   const dynamicFilters = useMemo(() => {
     const platforms = new Set<string>();
     const statuses = new Set<string>();
@@ -27,30 +42,15 @@ export function EmbedFilter({
     rawData.forEach(item => {
       const props = item.properties;
       
-      // Ekstrak Platform
-      const platMulti = props.Platform?.multi_select;
-      const platSingle = props.Platform?.select;
-      if (platMulti) platMulti.forEach((p:any) => platforms.add(p.name));
-      if (platSingle) platforms.add(platSingle.name);
-
-      // Ekstrak Status
-      const statStatus = props.Status?.status;
-      const statSelect = props.Status?.select;
-      if (statStatus) statuses.add(statStatus.name);
-      if (statSelect) statuses.add(statSelect.name);
-
-      // Ekstrak Pillar
-      const pilMulti = props.Pillar?.multi_select;
-      const pilSingle = props.Pillar?.select;
-      if (pilMulti) pilMulti.forEach((p:any) => pillars.add(p.name));
-      if (pilSingle) pillars.add(pilSingle.name);
+      getNotionValues(props.Platform).forEach(v => { if(v) platforms.add(v) });
+      getNotionValues(props.Status).forEach(v => { if(v) statuses.add(v) });
+      getNotionValues(props.Pillar).forEach(v => { if(v) pillars.add(v) });
     });
 
-    // Helper untuk mengubah Set menjadi object dictionary untuk filterLabels
     const setToDict = (setObj: Set<string>, allLabel: string) => {
       const dict: Record<string, string> = { all: allLabel };
       setObj.forEach(val => {
-        dict[val.toLowerCase()] = val; // key lowercase, label asli
+        dict[val.toLowerCase()] = val; 
       });
       return dict;
     };
@@ -61,8 +61,8 @@ export function EmbedFilter({
       pillar: setToDict(pillars, "All Pillars"),
       pinned: {
         all: "All Posts",
-        true: "Pin Only",
-        false: "Unpin Only"
+        true: "Pinned Only",
+        false: "Unpinned Only"
       }
     };
   }, [rawData]);
@@ -131,8 +131,7 @@ export function EmbedFilter({
         <div className="grid grid-cols-1 gap-2">
           {orderedKeys.map((key) => {
             const currentRawValue = current[key];
-            // 🔥 PERBAIKAN TYPE SCRIPT (Gunakan 'any' untuk mem-bypass strict type)
-            const filterOptions: any = dynamicFilters[key];
+            const filterOptions: any = dynamicFilters[key]; 
             
             let displayValue = currentRawValue;
             if (key === 'pinned') {
@@ -140,7 +139,7 @@ export function EmbedFilter({
             } else {
                  displayValue = currentRawValue === 'all' 
                      ? filterOptions.all 
-                     : (filterOptions[currentRawValue] || currentRawValue.replace(/\b\w/g, (l: string) => l.toUpperCase()));
+                     : (filterOptions[currentRawValue] || currentRawValue.replace(/\b\w/g, (l:string) => l.toUpperCase()));
             }
 
             return (
@@ -269,7 +268,6 @@ export function EmbedFilter({
             {orderedKeys.map(
               (key) => {
                 if (!isActive(key)) return null;
-                // 🔥 PERBAIKAN TYPE SCRIPT (Gunakan 'any')
                 const filterOptions: any = dynamicFilters[key];
                 const currentVal = current[key];
                 
