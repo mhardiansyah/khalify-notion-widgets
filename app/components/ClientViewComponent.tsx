@@ -110,7 +110,7 @@ export default function ClientViewComponent({
       const props = item.properties;
 
       if (props.Hide?.checkbox === true) return false;
-      if (!hasAttachment(item)) return false;
+      // if (!hasAttachment(item)) return false;
 
       // 1. Filter Platform
       if (platformParam && platformParam !== "all") {
