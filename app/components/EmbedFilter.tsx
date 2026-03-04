@@ -4,22 +4,34 @@ import { useEffect, useMemo, useState } from "react";
 
 
 
+/* ================= FUNGSI SAPU JAGAT (BACA SEMUA TIPE DATA NOTION) ================= */
+// Fungsi ini menembus tipe data Notion apapun (termasuk Rollup yang bertingkat)
 function getNotionValues(prop: any): string[] {
   if (!prop) return [];
   
-  if (prop.select) return [prop.select.name];
+  if (prop.select && prop.select.name) return [prop.select.name];
   if (prop.multi_select) return prop.multi_select.map((s: any) => s.name);
-  if (prop.status) return [prop.status.name];
+  if (prop.status && prop.status.name) return [prop.status.name];
+  if (prop.rich_text) return prop.rich_text.map((t: any) => t.plain_text);
+  if (prop.title) return prop.title.map((t: any) => t.plain_text);
   
-  // Jika dia Rollup (kaca pembesar)
-  if (prop.rollup && prop.rollup.array) {
-    // Ekstrak semua nilai dari dalam array rollup rekursif
-    return prop.rollup.array.flatMap((item: any) => getNotionValues(item));
+  // 🔥 PERBAIKAN ROLLUP: Harus mengecek tipe data di DALAM rollup-nya
+  if (prop.type === "rollup" && prop.rollup && prop.rollup.array) {
+    let results: string[] = [];
+    prop.rollup.array.forEach((item: any) => {
+       // Rollup bisa berisi tipe 'select', 'multi_select', dll.
+       // Kita panggil fungsi ini lagi secara rekursif untuk membongkar isinya
+       if (item.type) {
+           results = results.concat(getNotionValues({ [item.type]: item[item.type] }));
+       } else {
+           results = results.concat(getNotionValues(item));
+       }
+    });
+    return results;
   }
   
   return [];
 }
-
 export function EmbedFilter({ 
   theme = "light",
   isPro = false,
