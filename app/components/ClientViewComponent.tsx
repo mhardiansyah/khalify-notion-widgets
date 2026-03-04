@@ -2,7 +2,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-// 🔥 Tambahkan Link2 di sini untuk icon link di bio
 import {
   Pin,
   X,
@@ -42,7 +41,8 @@ interface Props {
   isPro?: boolean;
 }
 
-/* ================= FUNGSI SAPU JAGAT ================= */
+/* ================= FUNGSI SAPU JAGAT & ANTI TYPO ================= */
+// 1. Ekstrak value dari struktur Notion
 function getNotionValues(prop: any): string[] {
   if (!prop) return [];
   
@@ -66,6 +66,15 @@ function getNotionValues(prop: any): string[] {
   
   return [];
 }
+
+// 2. Cegah error gara-gara typo/spasi di nama Kolom Notion
+function getProp(propsObj: any, key: string) {
+  if (!propsObj) return null;
+  if (propsObj[key]) return propsObj[key];
+  const foundKey = Object.keys(propsObj).find(k => k.trim().toLowerCase() === key.toLowerCase());
+  return foundKey ? propsObj[foundKey] : null;
+}
+
 
 /* ================= MAIN ================= */
 
@@ -102,43 +111,53 @@ export default function ClientViewComponent({
 
   const filteredData = filtered
     .filter((item) => {
-      const platformParam = params.get("platform")?.toLowerCase();
-      const statusParam = params.get("status")?.toLowerCase();
-      const pillarParam = params.get("pillar")?.toLowerCase();
+      // 🔥 BERSAIHKAN PARAM URL: Hapus '+' dan spasi ekstra
+      const platformParam = params.get("platform")?.replace(/\+/g, " ").trim().toLowerCase();
+      const statusParam = params.get("status")?.replace(/\+/g, " ").trim().toLowerCase();
+      const pillarParam = params.get("pillar")?.replace(/\+/g, " ").trim().toLowerCase();
       const pinnedParam = params.get("pinned"); 
 
       const props = item.properties;
 
-      if (props.Hide?.checkbox === true) return false;
-      // if (!hasAttachment(item)) return false;
+      // Ambil kolom pake fungsi anti-typo
+      const hideProp = getProp(props, "Hide");
+      const platformProp = getProp(props, "Platform");
+      const statusProp = getProp(props, "Status");
+      const pillarProp = getProp(props, "Pillar");
+      const pinnedProp = getProp(props, "Pinned");
+
+      if (hideProp?.checkbox === true) return false;
+      // PASTIKAN INI TETAP DIMATIKAN! Kalau dinyalain, data yg ga ada gambarnya (kayak "What is Business Ops") langsung ke-hide!
+      // if (!hasAttachment(item)) return false; 
 
       // 1. Filter Platform
       if (platformParam && platformParam !== "all") {
-        const platformVals = getNotionValues(props.Platform).map(v => v.toLowerCase());
+        const platformVals = getNotionValues(platformProp).map(v => v.trim().toLowerCase());
         if (!platformVals.includes(platformParam)) return false;
       }
 
       // 2. Filter Status
       if (statusParam && statusParam !== "all") {
-        const statusVals = getNotionValues(props.Status).map(v => v.toLowerCase());
+        const statusVals = getNotionValues(statusProp).map(v => v.trim().toLowerCase());
         if (!statusVals.includes(statusParam)) return false;
       }
 
-      // 3. Filter Pillar
+      // 3. Filter Pillar (Pasti Viral ada di sini)
       if (pillarParam && pillarParam !== "all") {
-        const pillarVals = getNotionValues(props.Pillar).map(v => v.toLowerCase());
+        // Ekstrak text pilar, hapus spasi nyangkut, jadiin huruf kecil
+        const pillarVals = getNotionValues(pillarProp).map(v => v.trim().toLowerCase());
         if (!pillarVals.includes(pillarParam)) return false;
       }
 
       // 4. Filter Pinned
-      if (pinnedParam === "true" && props.Pinned?.checkbox !== true) return false;
-      if (pinnedParam === "false" && props.Pinned?.checkbox !== false) return false;
+      if (pinnedParam === "true" && pinnedProp?.checkbox !== true) return false;
+      if (pinnedParam === "false" && pinnedProp?.checkbox !== false) return false;
 
       return true;
     })
     .sort((a, b) => {
-      const aPinned = a.properties?.Pinned?.checkbox ? 1 : 0;
-      const bPinned = b.properties?.Pinned?.checkbox ? 1 : 0;
+      const aPinned = getProp(a.properties, "Pinned")?.checkbox ? 1 : 0;
+      const bPinned = getProp(b.properties, "Pinned")?.checkbox ? 1 : 0;
       return bPinned - aPinned;
     });
 
@@ -582,11 +601,11 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
       }}
     >
       {filtered.map((item: any, i: number) => {
-        const name = item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
+        const name = getProp(item.properties, "Name")?.title?.[0]?.plain_text || "Untitled";
         const image = extractImage(item);
-        const pinned = item.properties?.Pinned?.checkbox;
+        const pinned = getProp(item.properties, "Pinned")?.checkbox;
         
-        const publishDateRaw = item.properties?.['Publish Date']?.date?.start;
+        const publishDateRaw = getProp(item.properties, "Publish Date")?.date?.start;
         const publishDateStr = formatDate(publishDateRaw);
 
         return (
@@ -638,7 +657,7 @@ function DetailModal({ item, theme, onClose }: any) {
     };
   }, []);
 
-  const name = item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
+  const name = getProp(item.properties, "Name")?.title?.[0]?.plain_text || "Untitled";
   const image = extractImage(item);
 
   return (
@@ -677,21 +696,22 @@ function DetailModal({ item, theme, onClose }: any) {
 
 function extractImage(item: any) {
   const p = item.properties;
+  const attachment = getProp(p, "Attachment");
   return (
-    p.Attachment?.files?.[0]?.file?.url ||
-    p.Attachment?.files?.[0]?.external?.url ||
+    attachment?.files?.[0]?.file?.url ||
+    attachment?.files?.[0]?.external?.url ||
     "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder" 
   );
 }
 
 function hasAttachment(item: any) {
-  const files = item.properties?.Attachment?.files;
+  const attachment = getProp(item.properties, "Attachment");
+  const files = attachment?.files;
   if (!files || files.length === 0) return false;
 
   const first = files[0];
   return !!(first?.file?.url || first?.external?.url);
 }
-
 
 /* ================= EMBED FILTER COMPONENT ================= */
 

@@ -30,6 +30,13 @@ function getNotionValues(prop: any): string[] {
   return [];
 }
 
+function getProp(propsObj: any, key: string) {
+  if (!propsObj) return null;
+  if (propsObj[key]) return propsObj[key];
+  const foundKey = Object.keys(propsObj).find(k => k.trim().toLowerCase() === key.toLowerCase());
+  return foundKey ? propsObj[foundKey] : null;
+}
+
 /* ================= EMBED FILTER COMPONENT ================= */
 
 export function EmbedFilter({ 
@@ -46,28 +53,21 @@ export function EmbedFilter({
   const [open, setOpen] = useState<string | null>(null);
 
   const dynamicFilters = useMemo(() => {
-    // 1. Inisialisasi dengan opsi dasar yang umum ada
+    // Inisialisasi Manual
     const platforms = new Set<string>(["Instagram", "TikTok", "YouTube", "LinkedIn", "Threads"]);
     const statuses = new Set<string>(["Idea", "Scripting", "Editing", "Review", "Revision", "Upload", "Completed", "Canceled"]);
-    
-    // 🔥 Pastikan "Pasti Viral" sudah masuk dalam inisialisasi awal
     const pillars = new Set<string>(["Education", "Entertainment", "Promotional", "Story Telling", "Behind The Scene", "Pasti Viral"]);
 
-    // 2. Tambahkan (merge) dengan apa pun yang benar-benar ada di database (rawData)
     rawData.forEach(item => {
       const props = item.properties;
-      getNotionValues(props.Platform).forEach(v => { if(v) platforms.add(v) });
-      getNotionValues(props.Status).forEach(v => { if(v) statuses.add(v) });
-      getNotionValues(props.Pillar).forEach(v => { if(v) pillars.add(v) });
+      getNotionValues(getProp(props, "Platform")).forEach(v => { if(v) platforms.add(v.trim()) });
+      getNotionValues(getProp(props, "Status")).forEach(v => { if(v) statuses.add(v.trim()) });
+      getNotionValues(getProp(props, "Pillar")).forEach(v => { if(v) pillars.add(v.trim()) });
     });
 
-    // 3. Konversi Set ke dalam Dictionary (Object)
-    // Object ini menggunakan key dalam format huruf kecil (untuk mencocokkan URL param)
-    // dan value adalah nama aslinya (untuk ditampilkan di layar)
     const setToDict = (setObj: Set<string>, allLabel: string) => {
       const dict: Record<string, string> = { all: allLabel };
       setObj.forEach(val => {
-        // Hapus spasi berlebih sebelum dijadikan key
         const cleanVal = val.trim();
         dict[cleanVal.toLowerCase()] = cleanVal; 
       });
@@ -96,10 +96,10 @@ export function EmbedFilter({
   const orderedKeys = ["platform", "status", "pillar", "pinned"] as const; 
 
   const current = {
-    platform: params.get("platform")?.toLowerCase() ?? defaultValue.platform,
-    status: params.get("status")?.toLowerCase() ?? defaultValue.status,
-    pillar: params.get("pillar")?.toLowerCase() ?? defaultValue.pillar,
-    pinned: params.get("pinned")?.toLowerCase() ?? defaultValue.pinned,
+    platform: params.get("platform")?.replace(/\+/g, " ").trim().toLowerCase() ?? defaultValue.platform,
+    status: params.get("status")?.replace(/\+/g, " ").trim().toLowerCase() ?? defaultValue.status,
+    pillar: params.get("pillar")?.replace(/\+/g, " ").trim().toLowerCase() ?? defaultValue.pillar,
+    pinned: params.get("pinned")?.trim().toLowerCase() ?? defaultValue.pinned,
   };
 
   const updateFilter = (key: string, rawValue: string) => {
