@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+// 🔥 Tambahkan Link2 di sini untuk icon link di bio
 import {
   Pin,
   X,
@@ -39,6 +40,24 @@ interface Props {
   theme?: "light" | "dark";
   gridColumns?: number;
   isPro?: boolean;
+}
+
+/* ================= FUNGSI SAPU JAGAT (BACA SEMUA TIPE DATA NOTION) ================= */
+function getNotionValues(prop: any): string[] {
+  if (!prop) return [];
+  
+  if (prop.select) return [prop.select.name];
+  if (prop.multi_select) return prop.multi_select.map((s: any) => s.name);
+  if (prop.status) return [prop.status.name];
+  if (prop.rich_text) return prop.rich_text.map((t: any) => t.plain_text);
+  if (prop.title) return prop.title.map((t: any) => t.plain_text);
+  
+  // Jika dia Rollup (kaca pembesar)
+  if (prop.rollup && prop.rollup.array) {
+    return prop.rollup.array.flatMap((item: any) => getNotionValues(item));
+  }
+  
+  return [];
 }
 
 /* ================= MAIN ================= */
@@ -86,12 +105,12 @@ export default function ClientViewComponent({
       if (props.Hide?.checkbox === true) return false;
       if (!hasAttachment(item)) return false;
 
-      // 🔥 Menggunakan fungsi sapu jagat (getNotionValues) untuk mengekstrak data 
-      // apapun bentuk property-nya (select, multi-select, rollup, status)
+      // 🔥 KITA PAKE FUNGSI SAPU JAGAT DI SINI BIAR BISA BACA MULTI-SELECT
 
       // 1. Filter Platform
       if (platformParam && platformParam !== "all") {
         const platformVals = getNotionValues(props.Platform).map(v => v.toLowerCase());
+        // includes() akan memastikan platform yg dipilih (meski ada banyak) tetap lolos filter
         if (!platformVals.includes(platformParam)) return false;
       }
 
@@ -185,6 +204,7 @@ export default function ClientViewComponent({
 
                 {showFilterBar && (
                   <div className="absolute right-0 top-full mt-2 z-50 w-56">
+                    {/* 🔥 RAW DATA DILEMPAR KE EMBED FILTER */}
                     <EmbedFilter theme={currentTheme} isPro={isPro} rawData={filtered} />
                   </div>
                 )}
@@ -394,7 +414,7 @@ function IconButton({ children, onClick, theme }: any) {
     <button
       onClick={onClick}
       className={`w-9 h-9 flex items-center justify-center rounded-full border transition
-          ${theme === "light" ? "hover:bg-[#F9FAFB] border-gray-200" : "hover:bg-[#333333] border-[#333333]"}
+          ${theme === "light" ? "hover:bg-[#F9FAFB] border-gray-200" : "hover:bg-[#333333] border-[#333333] text-gray-400 hover:text-white"}
         `}
     >
       {children}
@@ -411,7 +431,7 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
       }}
       className={`
         w-full px-4 py-3 flex items-center justify-between text-sm transition
-        ${theme === "light" ? "hover:bg-[#F9FAFB]" : "hover:bg-[#333333]"} 
+        ${theme === "light" ? "hover:bg-[#F9FAFB]" : "hover:bg-[#333333] text-gray-300"} 
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
       `}
     >
@@ -652,23 +672,6 @@ function DetailModal({ item, theme, onClose }: any) {
   );
 }
 
-// 🔥 FUNGSI SAPU JAGAT UNTUK MENGAMBIL VALUE APAPUN DARI NOTION (Termasuk Rollup)
-function getNotionValues(prop: any): string[] {
-  if (!prop) return [];
-  
-  if (prop.select) return [prop.select.name];
-  if (prop.multi_select) return prop.multi_select.map((s: any) => s.name);
-  if (prop.status) return [prop.status.name];
-  
-  // Jika dia Rollup (kaca pembesar)
-  if (prop.rollup && prop.rollup.array) {
-    // Ekstrak semua nilai dari dalam array rollup rekursif
-    return prop.rollup.array.flatMap((item: any) => getNotionValues(item));
-  }
-  
-  return [];
-}
-
 function extractImage(item: any) {
   const p = item.properties;
   return (
@@ -686,5 +689,5 @@ function hasAttachment(item: any) {
   return !!(first?.file?.url || first?.external?.url);
 }
 
-
+/* ================= EMBED FILTER COMPONENT ================= */
 

@@ -33,7 +33,7 @@ export function EmbedFilter({
   const params = useSearchParams();
   const [open, setOpen] = useState<string | null>(null);
 
-  // 🔥 Mengekstrak opsi filter otomatis dari rawData menggunakan getNotionValues
+  // 🔥 FILTER MENGGUNAKAN GET NOTION VALUES
   const dynamicFilters = useMemo(() => {
     const platforms = new Set<string>();
     const statuses = new Set<string>();
