@@ -30,6 +30,8 @@ function getNotionValues(prop: any): string[] {
   return [];
 }
 
+/* ================= EMBED FILTER COMPONENT ================= */
+
 export function EmbedFilter({ 
   theme = "light",
   isPro = false,
@@ -44,13 +46,14 @@ export function EmbedFilter({
   const [open, setOpen] = useState<string | null>(null);
 
   const dynamicFilters = useMemo(() => {
-    // 🔥 INISIALISASI SET DENGAN NILAI DEFAULT HARDCODE
-    // Tujuannya agar opsi ini selalu muncul walaupun belum ada di konten Notion
+    // 1. Inisialisasi dengan opsi dasar yang umum ada
     const platforms = new Set<string>(["Instagram", "TikTok", "YouTube", "LinkedIn", "Threads"]);
-    const statuses = new Set<string>(["Idea", "Scripting", "Editing", "Review", "Revision", "Upload", "Completed"]);
+    const statuses = new Set<string>(["Idea", "Scripting", "Editing", "Review", "Revision", "Upload", "Completed", "Canceled"]);
+    
+    // 🔥 Pastikan "Pasti Viral" sudah masuk dalam inisialisasi awal
     const pillars = new Set<string>(["Education", "Entertainment", "Promotional", "Story Telling", "Behind The Scene", "Pasti Viral"]);
 
-    // Tetap ambil juga dari rawData (Notion) jaga-jaga kalau user bikin tag baru
+    // 2. Tambahkan (merge) dengan apa pun yang benar-benar ada di database (rawData)
     rawData.forEach(item => {
       const props = item.properties;
       getNotionValues(props.Platform).forEach(v => { if(v) platforms.add(v) });
@@ -58,10 +61,15 @@ export function EmbedFilter({
       getNotionValues(props.Pillar).forEach(v => { if(v) pillars.add(v) });
     });
 
+    // 3. Konversi Set ke dalam Dictionary (Object)
+    // Object ini menggunakan key dalam format huruf kecil (untuk mencocokkan URL param)
+    // dan value adalah nama aslinya (untuk ditampilkan di layar)
     const setToDict = (setObj: Set<string>, allLabel: string) => {
       const dict: Record<string, string> = { all: allLabel };
       setObj.forEach(val => {
-        dict[val.toLowerCase()] = val; 
+        // Hapus spasi berlebih sebelum dijadikan key
+        const cleanVal = val.trim();
+        dict[cleanVal.toLowerCase()] = cleanVal; 
       });
       return dict;
     };
