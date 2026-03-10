@@ -476,10 +476,11 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
 }
 
 function BioSection({ profile, theme }: any) {
+  // 🔥 PERBAIKAN: Ganti avatarUrl default dari "/logo-bulat.png" menjadi "/person.png"
   const safeProfile = profile || {
     username: "",
     name: "Your Name",
-    avatarUrl: "/person.png",
+    avatarUrl: "/person.png", // <--- UBAH DI SINI
     bio: "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
     link: "https://khlasify.notion.site",
   };
@@ -503,7 +504,8 @@ function BioSection({ profile, theme }: any) {
 
       <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 ${theme === "light" ? "border-gray-200 bg-white" : "border-[#333333] bg-[#222222]"}`}>
         <img
-          src={safeProfile.avatarUrl || "/person.png"}
+          // 🔥 Pastikan di sini juga pakai fallback "/person.png" jika URL kosong
+          src={safeProfile.avatarUrl || "/person.png"} 
           alt="Profile Avatar"
           className="w-full h-full object-cover"
         />
