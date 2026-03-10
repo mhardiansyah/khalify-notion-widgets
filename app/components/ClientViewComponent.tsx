@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+// 🔥 Tambahkan Link2 di sini untuk icon link di bio
 import {
   Pin,
   X,
@@ -41,8 +42,7 @@ interface Props {
   isPro?: boolean;
 }
 
-/* ================= FUNGSI SAPU JAGAT & ANTI TYPO ================= */
-// 1. Ekstrak value dari struktur Notion
+/* ================= FUNGSI SAPU JAGAT ================= */
 function getNotionValues(prop: any): string[] {
   if (!prop) return [];
   
@@ -67,14 +67,14 @@ function getNotionValues(prop: any): string[] {
   return [];
 }
 
-// 2. Cegah error gara-gara typo/spasi di nama Kolom Notion
 function getProp(propsObj: any, key: string) {
   if (!propsObj) return null;
   if (propsObj[key]) return propsObj[key];
-  const foundKey = Object.keys(propsObj).find(k => k.trim().toLowerCase() === key.toLowerCase());
+  const foundKey = Object.keys(propsObj).find(
+    (k) => k.trim().toLowerCase() === key.toLowerCase(),
+  );
   return foundKey ? propsObj[foundKey] : null;
 }
-
 
 /* ================= MAIN ================= */
 
@@ -127,8 +127,6 @@ export default function ClientViewComponent({
       const pinnedProp = getProp(props, "Pinned");
 
       if (hideProp?.checkbox === true) return false;
-      // PASTIKAN INI TETAP DIMATIKAN! Kalau dinyalain, data yg ga ada gambarnya (kayak "What is Business Ops") langsung ke-hide!
-      // if (!hasAttachment(item)) return false; 
 
       // 1. Filter Platform
       if (platformParam && platformParam !== "all") {
@@ -144,7 +142,6 @@ export default function ClientViewComponent({
 
       // 3. Filter Pillar (Pasti Viral ada di sini)
       if (pillarParam && pillarParam !== "all") {
-        // Ekstrak text pilar, hapus spasi nyangkut, jadiin huruf kecil
         const pillarVals = getNotionValues(pillarProp).map(v => v.trim().toLowerCase());
         if (!pillarVals.includes(pillarParam)) return false;
       }
@@ -493,11 +490,11 @@ function BioSection({ profile, theme }: any) {
         theme === "light" ? "text-gray-900" : "text-white"
       }`}
     >
-      {/* {safeProfile.username && (
+      {safeProfile.username && (
          <h2 className="text-[22px] font-extrabold mb-4 tracking-tight">
           {safeProfile.username}
         </h2>
-      )} */}
+      )}
 
       <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 ${theme === "light" ? "border-gray-200 bg-white" : "border-[#333333] bg-[#222222]"}`}>
         <img
@@ -702,15 +699,6 @@ function extractImage(item: any) {
     attachment?.files?.[0]?.external?.url ||
     "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder" 
   );
-}
-
-function hasAttachment(item: any) {
-  const attachment = getProp(item.properties, "Attachment");
-  const files = attachment?.files;
-  if (!files || files.length === 0) return false;
-
-  const first = files[0];
-  return !!(first?.file?.url || first?.external?.url);
 }
 
 /* ================= EMBED FILTER COMPONENT ================= */

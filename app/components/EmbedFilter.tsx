@@ -2,34 +2,31 @@ import { ChevronDown, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-/* ================= FUNGSI SAPU JAGAT (BACA SEMUA TIPE DATA NOTION) ================= */
-// Fungsi ini menembus tipe data Notion apapun (termasuk Rollup yang bertingkat)
+
+
 function getNotionValues(prop: any): string[] {
   if (!prop) return [];
-
+  
   if (prop.select && prop.select.name) return [prop.select.name];
   if (prop.multi_select) return prop.multi_select.map((s: any) => s.name);
   if (prop.status && prop.status.name) return [prop.status.name];
   if (prop.rich_text) return prop.rich_text.map((t: any) => t.plain_text);
   if (prop.title) return prop.title.map((t: any) => t.plain_text);
-
+  
   if (prop.type === "rollup" && prop.rollup && prop.rollup.array) {
     let results: string[] = [];
     prop.rollup.array.forEach((item: any) => {
-      if (item.type) {
-        results = results.concat(
-          getNotionValues({ [item.type]: item[item.type] }),
-        );
-      } else {
-        results = results.concat(getNotionValues(item));
-      }
+       if (item.type) {
+           results = results.concat(getNotionValues({ [item.type]: item[item.type] }));
+       } else {
+           results = results.concat(getNotionValues(item));
+       }
     });
     return results;
   }
-
+  
   return [];
 }
-
 
 function getProp(propsObj: any, key: string) {
   if (!propsObj) return null;
@@ -39,8 +36,6 @@ function getProp(propsObj: any, key: string) {
   );
   return foundKey ? propsObj[foundKey] : null;
 }
-
-/* ================= EMBED FILTER COMPONENT ================= */
 
 export function EmbedFilter({
   theme = "light",
@@ -66,7 +61,7 @@ export function EmbedFilter({
       const props = item.properties;
 
       // getNotionValues sudah menangani ekstraksi dari Select/Multi-select/Status/Rollup
-      getNotionValues(getProp(props, "Platforms")).forEach((v) => {
+      getNotionValues(getProp(props, "Platform")).forEach((v) => {
         if (v) platforms.add(v.trim());
       });
       getNotionValues(getProp(props, "Status")).forEach((v) => {
@@ -281,19 +276,25 @@ export function EmbedFilter({
         {!isPro && (
           <>
             <div
-              className={`h-px my-3 ${
+              className={`h-px my-2 ${
                 theme === "light" ? "bg-gray-200" : "bg-[#333333]"
               }`}
             />
-
-            <button
-              onClick={() => {
-                window.open("https://khlasify.myr.id/pl/content-pro", "_blank");
-              }}
-              className="w-full py-3 text-sm font-semibold text-purple-600 hover:bg-purple-50 transition rounded-2xl"
-            >
-              Upgrade to PRO
-            </button>
+            {/* 🔥 EFEK HOVER UPGRADE TO PRO DISAMAKAN DENGAN SETTINGS */}
+            <div className="px-1 pb-1">
+              <button
+                onClick={() => {
+                  window.open("https://khlasify.myr.id/pl/content-pro", "_blank");
+                }}
+                className={`w-full py-2.5 text-sm font-semibold rounded-lg transition ${
+                  theme === "light"
+                    ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
+                    : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30"
+                }`}
+              >
+                Upgrade to PRO
+              </button>
+            </div>
           </>
         )}
 
