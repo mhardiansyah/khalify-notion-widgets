@@ -24,7 +24,7 @@ import {
   Loader2,
   Lock,
   LogOut,
-  AlertTriangle, // Icon untuk peringatan ukuran file
+  AlertTriangle, 
 } from "lucide-react";
 
 import {
@@ -85,7 +85,6 @@ export default function AccountsPage() {
 
   // State untuk Modal
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-  // 🔥 State untuk peringatan ukuran file
   const [isFileTooLargeModalOpen, setIsFileTooLargeModalOpen] = useState(false);
 
   const FREE_WIDGET_LIMIT = 1;
@@ -232,12 +231,13 @@ export default function AccountsPage() {
     }
   };
 
-  const toggleTokenVisibility = (id: string) => {
-    setShowTokens((prev) => ({ ...prev, [id]: !prev[id] }));
+  // 🔥 Fungsi ini sekarang menerima 'uiKey' gabungan, bukan ID mentah
+  const toggleTokenVisibility = (uiKey: string) => {
+    setShowTokens((prev) => ({ ...prev, [uiKey]: !prev[uiKey] }));
   };
 
-  const toggleDetails = (id: string) => {
-    setOpenDetails((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleDetails = (uiKey: string) => {
+    setOpenDetails((prev) => ({ ...prev, [uiKey]: !prev[uiKey] }));
   };
 
   const handleDeleteWidget = (widgetId: string) => {
@@ -316,7 +316,7 @@ export default function AccountsPage() {
         </div>
       )}
 
-      {/* 🔥 MODAL PERINGATAN UKURAN FILE */}
+      {/* MODAL PERINGATAN UKURAN FILE */}
       {isFileTooLargeModalOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 text-center flex flex-col items-center">
@@ -387,10 +387,9 @@ export default function AccountsPage() {
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          // 🔥 Validasi ukuran file (Max 2MB)
                           if (file.size > 2 * 1024 * 1024) {
                             setIsFileTooLargeModalOpen(true);
-                            e.target.value = ""; // Reset input file
+                            e.target.value = "";
                             return;
                           }
                           setAvatarFile(file);
@@ -564,7 +563,6 @@ export default function AccountsPage() {
                   </span>
                 )}
 
-                {/* 🔥 PERBAIKAN: Menambahkan Icon LogOut di tombol Logout */}
                 <button
                   onClick={() => setIsLogoutModalOpen(true)}
                   className="flex items-center justify-center gap-2 text-sm font-medium text-red-500 hover:text-red-600 transition hover:bg-red-50 px-4 py-2 rounded-xl"
@@ -603,9 +601,14 @@ export default function AccountsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {widgets.map((widget, index) => {
                 const paused = isWidgetPaused(index);
+                
+                // 🔥 KUNCI UNIK: Gabungan ID dari database & index array-nya
+                // Ini memastikan React tidak kebingungan membedakan kartu jika backend nge-return ID ganda
+                const uiKey = `${widget.id}-${index}`; 
+
                 return (
                   <div
-                    key={widget.id}
+                    key={uiKey} // 🔥 Pakai uiKey sebagai Key React
                     className={`rounded-2xl border bg-white shadow-sm transition ${
                       paused ? "opacity-70 grayscale-[0.5]" : "hover:shadow-md"
                     }`}
@@ -641,7 +644,7 @@ export default function AccountsPage() {
                               );
                               return;
                             }
-                            openEditModal(widget);
+                            openEditModal(widget); // Edit Modal tetap butuh full widget object, ini aman.
                           }}
                           disabled={paused}
                           className={`p-2 rounded-lg transition group ${
@@ -655,7 +658,7 @@ export default function AccountsPage() {
                         </button>
 
                         <button
-                          onClick={() => handleDeleteWidget(widget.id)}
+                          onClick={() => handleDeleteWidget(widget.id)} // Delete tetap butuh ID database asli, ini aman.
                           className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition group"
                           title="Delete"
                         >
@@ -698,16 +701,16 @@ export default function AccountsPage() {
 
                     <button
                       disabled={paused}
-                      onClick={() => toggleDetails(widget.id)}
+                      onClick={() => toggleDetails(uiKey)} // 🔥 Pakai uiKey saat di-klik
                       className={`w-full flex items-center justify-between px-5 py-3 text-xs text-slate-500 border-t hover:bg-slate-50 transition ${
-                        !openDetails[widget.id] ? "rounded-b-2xl" : ""
+                        !openDetails[uiKey] ? "rounded-b-2xl" : "" // 🔥 Pakai uiKey di pengecekan state
                       } ${paused ? disabledClass : ""}`}
                     >
-                      Show Advanced Details {openDetails[widget.id] ? "▲" : "▼"}
+                      Show Advanced Details {openDetails[uiKey] ? "▲" : "▼"}
                     </button>
 
                     <div className="relative">
-                      {openDetails[widget.id] && !paused && (
+                      {openDetails[uiKey] && !paused && ( // 🔥 Pakai uiKey
                         <div
                           className={`px-5 pb-5 space-y-3 text-xs rounded-b-2xl ${
                             !isPro ? "blur-[3px] select-none pointer-events-none" : ""
@@ -733,14 +736,14 @@ export default function AccountsPage() {
                             </p>
                             <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
                               <span className="font-mono flex-1 truncate">
-                                {showTokens[widget.id]
+                                {showTokens[uiKey] // 🔥 Pakai uiKey
                                   ? widget.token
                                   : "••••••••••••••••••"}
                               </span>
                               <button
-                                onClick={() => toggleTokenVisibility(widget.id)}
+                                onClick={() => toggleTokenVisibility(uiKey)} // 🔥 Pakai uiKey
                               >
-                                {showTokens[widget.id] ? (
+                                {showTokens[uiKey] ? ( // 🔥 Pakai uiKey
                                   <EyeOff className="w-4 h-4 text-slate-400" />
                                 ) : (
                                   <Eye className="w-4 h-4 text-slate-400" />
@@ -752,7 +755,7 @@ export default function AccountsPage() {
                         </div>
                       )}
 
-                      {openDetails[widget.id] && !paused && !isPro && (
+                      {openDetails[uiKey] && !paused && !isPro && ( // 🔥 Pakai uiKey
                         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/40 rounded-b-2xl pb-4">
                           <div className="bg-white px-4 py-3 rounded-xl shadow-lg border border-purple-100 flex flex-col items-center text-center">
                             <Lock className="w-6 h-6 text-purple-500 mb-2" />
