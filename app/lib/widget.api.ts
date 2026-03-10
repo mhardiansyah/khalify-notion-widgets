@@ -57,3 +57,14 @@ export const uploadWidgetAvatar = async (dbID: string, file: File) => {
   });
   return res.data;
 };
+
+export const removeWidgetAvatar = async (dbID: string) => {
+  const token = Cookies.get("login_token");
+  // Parameter body kosong {} karena kita hanya memanggil endpoint untuk menghapus
+  const res = await api.patch(`/widgets/${dbID}/remove-avatar`, {}, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  return res.data;
+};

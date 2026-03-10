@@ -24,17 +24,19 @@ import {
   Loader2,
   Lock,
   LogOut,
-  AlertTriangle, 
+  AlertTriangle,
 } from "lucide-react";
 
 import {
   deleteWidget,
   getWidgetsByUser,
+  removeWidgetAvatar,
   updateWidgetBranding,
   uploadWidgetAvatar,
 } from "../lib/widget.api";
 import { getPaymentLink, checkPaymentStatus } from "../lib/payment.api";
 import { toast, Toaster } from "sonner";
+import { api } from "../lib/axios";
 
 interface Widget {
   id: string;
@@ -82,6 +84,9 @@ export default function AccountsPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // 🔥 State baru untuk proses hapus avatar
+  const [isDeletingAvatar, setIsDeletingAvatar] = useState(false);
 
   // State untuk Modal
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
@@ -217,6 +222,48 @@ export default function AccountsPage() {
     }
   };
 
+  // 🔥 Fungsi Handler Baru untuk Hapus Avatar
+  // 🔥 Fungsi Handler Baru untuk Hapus Avatar
+  const handleRemoveAvatar = async () => {
+    if (!editingWidgetId) return;
+    
+    const confirmDelete = window.confirm("Apakah Anda yakin ingin menghapus foto profil ini?");
+    if (!confirmDelete) return;
+
+    setIsDeletingAvatar(true);
+    toast.loading("Menghapus avatar...");
+
+    try {
+      // 🔥 Panggil dari widget.api.ts
+      const res = await removeWidgetAvatar(editingWidgetId);
+
+      if (res?.success) {
+        toast.dismiss();
+        toast.success("Avatar berhasil dihapus");
+        
+        // Update state lokal agar preview langsung hilang
+        setAvatarPreview(null);
+        setAvatarFile(null);
+        
+        // Update data widget utama agar perubahan tersimpan di tabel
+        setWidgets((prev) =>
+          prev.map((w) =>
+            w.id === editingWidgetId ? { ...w, customAvatar: undefined } : w
+          )
+        );
+      } else {
+        toast.dismiss();
+        toast.error("Gagal menghapus avatar");
+      }
+    } catch (error) {
+      console.error("Gagal hapus avatar:", error);
+      toast.dismiss();
+      toast.error("Terjadi kesalahan koneksi");
+    } finally {
+      setIsDeletingAvatar(false);
+    }
+  };
+
   const handleUpgrade = async () => {
     try {
       toast.loading("Membuka halaman pembayaran...");
@@ -231,7 +278,6 @@ export default function AccountsPage() {
     }
   };
 
-  // 🔥 Fungsi ini sekarang menerima 'uiKey' gabungan, bukan ID mentah
   const toggleTokenVisibility = (uiKey: string) => {
     setShowTokens((prev) => ({ ...prev, [uiKey]: !prev[uiKey] }));
   };
@@ -271,6 +317,10 @@ export default function AccountsPage() {
     key: "e90d011-2302-dc51-8805-f18409C33F",
     expiredAt: "Nov 2, 2025",
   };
+
+  // 🔥 Cari tahu apakah widget yang sedang diedit saat ini memiliki avatar yang SUDAH tersimpan di DB
+  const currentEditingWidget = widgets.find(w => w.id === editingWidgetId);
+  const hasSavedAvatar = !!currentEditingWidget?.customAvatar;
 
   if (loading)
     return (
@@ -362,8 +412,22 @@ export default function AccountsPage() {
             <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
               {/* FOTO PROFIL UPLOAD */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
-                  <ImageIcon className="w-3 h-3" /> Picture
+                <label className="text-xs font-semibold text-gray-500 uppercase flex items-center justify-between w-full">
+                  <span className="flex items-center gap-1">
+                     <ImageIcon className="w-3 h-3" /> Picture
+                  </span>
+                  {/* 🔥 TOMBOL HAPUS FOTO (Hanya muncul jika di DB sudah ada fotonya) */}
+                  {hasSavedAvatar && (
+                     <button
+                       type="button"
+                       onClick={handleRemoveAvatar}
+                       disabled={isDeletingAvatar}
+                       className="text-[10px] text-red-500 hover:underline flex items-center gap-1 disabled:opacity-50"
+                     >
+                       {isDeletingAvatar ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2Icon className="w-3 h-3" />}
+                       Remove Picture
+                     </button>
+                  )}
                 </label>
                 <div className="flex items-center gap-4">
                   {/* Lingkaran Preview Foto */}
@@ -598,17 +662,15 @@ export default function AccountsPage() {
               </span>
             </div>
 
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
               {widgets.map((widget, index) => {
                 const paused = isWidgetPaused(index);
                 
-                // 🔥 KUNCI UNIK: Gabungan ID dari database & index array-nya
-                // Ini memastikan React tidak kebingungan membedakan kartu jika backend nge-return ID ganda
                 const uiKey = `${widget.id}-${index}`; 
 
                 return (
                   <div
-                    key={uiKey} // 🔥 Pakai uiKey sebagai Key React
+                    key={uiKey} 
                     className={`rounded-2xl border bg-white shadow-sm transition ${
                       paused ? "opacity-70 grayscale-[0.5]" : "hover:shadow-md"
                     }`}
@@ -644,7 +706,7 @@ export default function AccountsPage() {
                               );
                               return;
                             }
-                            openEditModal(widget); // Edit Modal tetap butuh full widget object, ini aman.
+                            openEditModal(widget);
                           }}
                           disabled={paused}
                           className={`p-2 rounded-lg transition group ${
@@ -658,7 +720,7 @@ export default function AccountsPage() {
                         </button>
 
                         <button
-                          onClick={() => handleDeleteWidget(widget.id)} // Delete tetap butuh ID database asli, ini aman.
+                          onClick={() => handleDeleteWidget(widget.id)}
                           className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition group"
                           title="Delete"
                         >
@@ -701,16 +763,16 @@ export default function AccountsPage() {
 
                     <button
                       disabled={paused}
-                      onClick={() => toggleDetails(uiKey)} // 🔥 Pakai uiKey saat di-klik
+                      onClick={() => toggleDetails(uiKey)} 
                       className={`w-full flex items-center justify-between px-5 py-3 text-xs text-slate-500 border-t hover:bg-slate-50 transition ${
-                        !openDetails[uiKey] ? "rounded-b-2xl" : "" // 🔥 Pakai uiKey di pengecekan state
+                        !openDetails[uiKey] ? "rounded-b-2xl" : "" 
                       } ${paused ? disabledClass : ""}`}
                     >
                       Show Advanced Details {openDetails[uiKey] ? "▲" : "▼"}
                     </button>
 
                     <div className="relative">
-                      {openDetails[uiKey] && !paused && ( // 🔥 Pakai uiKey
+                      {openDetails[uiKey] && !paused && (
                         <div
                           className={`px-5 pb-5 space-y-3 text-xs rounded-b-2xl ${
                             !isPro ? "blur-[3px] select-none pointer-events-none" : ""
@@ -736,14 +798,14 @@ export default function AccountsPage() {
                             </p>
                             <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
                               <span className="font-mono flex-1 truncate">
-                                {showTokens[uiKey] // 🔥 Pakai uiKey
+                                {showTokens[uiKey]
                                   ? widget.token
                                   : "••••••••••••••••••"}
                               </span>
                               <button
-                                onClick={() => toggleTokenVisibility(uiKey)} // 🔥 Pakai uiKey
+                                onClick={() => toggleTokenVisibility(uiKey)}
                               >
-                                {showTokens[uiKey] ? ( // 🔥 Pakai uiKey
+                                {showTokens[uiKey] ? (
                                   <EyeOff className="w-4 h-4 text-slate-400" />
                                 ) : (
                                   <Eye className="w-4 h-4 text-slate-400" />
@@ -755,7 +817,7 @@ export default function AccountsPage() {
                         </div>
                       )}
 
-                      {openDetails[uiKey] && !paused && !isPro && ( // 🔥 Pakai uiKey
+                      {openDetails[uiKey] && !paused && !isPro && (
                         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/40 rounded-b-2xl pb-4">
                           <div className="bg-white px-4 py-3 rounded-xl shadow-lg border border-purple-100 flex flex-col items-center text-center">
                             <Lock className="w-6 h-6 text-purple-500 mb-2" />
