@@ -341,10 +341,12 @@ export function EmbedFilter({
                       : "bg-purple-600/20 text-purple-300"
                   }`}
                 >
-                  <span className="capitalize">
-                    {key === "pinned" ? "post" : key}
+                  <span className="truncate max-w-[200px]">
+                    <span className="capitalize font-medium">
+                      {key === "pinned" ? "post" : key}:
+                    </span>{" "}
+                    {badgeLabel}
                   </span>
-                  <span className="truncate max-w-[120px]">{badgeLabel}</span>
                   <button
                     disabled={!isPro}
                     onClick={() => isPro && updateFilter(key, "all")}
