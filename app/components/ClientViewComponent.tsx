@@ -111,7 +111,6 @@ export default function ClientViewComponent({
 
   const filteredData = filtered
     .filter((item) => {
-      // 🔥 BERSAIHKAN PARAM URL: Hapus '+' dan spasi ekstra
       const platformParam = params.get("platform")?.replace(/\+/g, " ").trim().toLowerCase();
       const statusParam = params.get("status")?.replace(/\+/g, " ").trim().toLowerCase();
       const pillarParam = params.get("pillar")?.replace(/\+/g, " ").trim().toLowerCase();
@@ -119,7 +118,6 @@ export default function ClientViewComponent({
 
       const props = item.properties;
 
-      // Ambil kolom pake fungsi anti-typo
       const hideProp = getProp(props, "Hide");
       const platformProp = getProp(props, "Platform");
       const statusProp = getProp(props, "Status");
@@ -128,25 +126,21 @@ export default function ClientViewComponent({
 
       if (hideProp?.checkbox === true) return false;
 
-      // 1. Filter Platform
       if (platformParam && platformParam !== "all") {
         const platformVals = getNotionValues(platformProp).map(v => v.trim().toLowerCase());
         if (!platformVals.includes(platformParam)) return false;
       }
 
-      // 2. Filter Status
       if (statusParam && statusParam !== "all") {
         const statusVals = getNotionValues(statusProp).map(v => v.trim().toLowerCase());
         if (!statusVals.includes(statusParam)) return false;
       }
 
-      // 3. Filter Pillar (Pasti Viral ada di sini)
       if (pillarParam && pillarParam !== "all") {
         const pillarVals = getNotionValues(pillarProp).map(v => v.trim().toLowerCase());
         if (!pillarVals.includes(pillarParam)) return false;
       }
 
-      // 4. Filter Pinned
       if (pinnedParam === "true" && pinnedProp?.checkbox !== true) return false;
       if (pinnedParam === "false" && pinnedProp?.checkbox !== false) return false;
 
@@ -174,6 +168,9 @@ export default function ClientViewComponent({
     (params.get("pinned") && params.get("pinned")?.toLowerCase() !== "all");
 
   const shouldHideHighlight = isFilterActive && visibleData.length < 3;
+
+  // 🔥 Logika penentu apakah seksi konten atas (Bio/Highlight) perlu dirender atau tidak
+  const hasContentToRender = showBio || (showHighlight && !shouldHideHighlight);
 
   /* ================= RENDER ================= */
 
@@ -338,17 +335,21 @@ export default function ClientViewComponent({
         </header>
 
         {/* ================= CONTENT ================= */}
-        <div className="pb-5 space-y-4 sm:space-y-6 pt-6">
-          {showBio && <BioSection profile={profile} theme={currentTheme} />}
+        {/* 🔥 PERBAIKAN SPASI: Div ini hanya muncul kalau ada isinya */}
+        {hasContentToRender && (
+          <div className="pb-5 space-y-4 sm:space-y-6 pt-6">
+            {showBio && <BioSection profile={profile} theme={currentTheme} />}
 
-          {showHighlight && !shouldHideHighlight && (
-            <HighlightSection
-              highlights={profile?.highlights}
-              theme={currentTheme}
-            />
-          )}
-        </div>
+            {showHighlight && !shouldHideHighlight && (
+              <HighlightSection
+                highlights={profile?.highlights}
+                theme={currentTheme}
+              />
+            )}
+          </div>
+        )}
 
+        {/* 🔥 Visual Grid akan otomatis naik menempel header karena div atas dihilangkan */}
         {viewMode === "visual" && (
           <div className="relative">
             <VisualGrid
@@ -490,11 +491,11 @@ function BioSection({ profile, theme }: any) {
         theme === "light" ? "text-gray-900" : "text-white"
       }`}
     >
-      {safeProfile.username && (
+      {/* {safeProfile.username && (
          <h2 className="text-[22px] font-extrabold mb-4 tracking-tight">
           {safeProfile.username}
         </h2>
-      )}
+      )} */}
 
       <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 ${theme === "light" ? "border-gray-200 bg-white" : "border-[#333333] bg-[#222222]"}`}>
         <img
@@ -700,6 +701,3 @@ function extractImage(item: any) {
     "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder" 
   );
 }
-
-/* ================= EMBED FILTER COMPONENT ================= */
-
