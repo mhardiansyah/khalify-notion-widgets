@@ -476,22 +476,30 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
 }
 
 function BioSection({ profile, theme }: any) {
-  // Gunakan data profile, tapi berikan default yang aman.
-  const safeProfile = profile || {
-    username: "",
-    name: "Your Name",
-    avatarUrl: "", // Biarkan kosong kalau tidak ada
-    bio: "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
-    link: "https://khlasify.notion.site",
-  };
+  // 🔥 FALLBACK TOTAL: Kita set default value secara langsung
+  const {
+    username = "",
+    name = "Your Name",
+    avatarUrl = "", // Pastikan kalau kosong, ya beneran string kosong
+    bio = "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
+    link = "https://khlasify.notion.site",
+  } = profile || {};
 
   const formatBio = (bioText: string) => {
     if (!bioText) return null;
     return bioText.split("\n").map((line, i) => <p key={i}>{line}</p>);
   };
 
-  // 🔥 DETEKSI AVATAR: Apakah ada link dari backend yang valid?
-  const hasCustomAvatar = Boolean(safeProfile.avatarUrl) && safeProfile.avatarUrl.trim() !== "";
+  // 🔥 DETEKSI SUPER KETAT: BLOKIR SI MBAK KACAMATA
+  // Hanya anggap avatar VALID jika:
+  // 1. Tidak null/kosong
+  // 2. BUKAN URL bawaan Notion (notion.so/image)
+  // 3. BUKAN API dicebear notionists (ini dalangnya mbak kacamata!)
+  const isValidAvatar = 
+    Boolean(avatarUrl) && 
+    avatarUrl.trim() !== "" && 
+    !avatarUrl.includes("notion.so/image") &&
+    !avatarUrl.includes("dicebear.com/7.x/notionists"); // <-- INI YANG BLOKIR DIA
 
   return (
     <section
@@ -501,34 +509,34 @@ function BioSection({ profile, theme }: any) {
     >
       <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 flex items-center justify-center ${theme === "light" ? "border-gray-200 bg-gray-50" : "border-[#333333] bg-[#222222]"}`}>
         
-        {/* 🔥 PAKSA RE-FETCH DENGAN CACHE BUSTING (?v=1) */}
+        {/* 🔥 EKSEKUSI RENDER: Gambar Kustom vs person.png lokal */}
         <img
-          src={hasCustomAvatar ? safeProfile.avatarUrl : "/person.png?v=1"} 
+          src={isValidAvatar ? avatarUrl : "/person.png"} 
           alt="Profile Avatar"
           className="w-full h-full object-cover"
         />
 
       </div>
 
-      <h3 className="font-semibold text-[15px] mb-2">{safeProfile.name}</h3>
+      <h3 className="font-semibold text-[15px] mb-2">{name}</h3>
 
       <div className="text-sm space-y-1 mb-3 opacity-90">
-        {formatBio(safeProfile.bio)}
+        {formatBio(bio)}
       </div>
 
-      {safeProfile.link && (
+      {link && (
         <a
           href={
-            safeProfile.link.startsWith("http")
-              ? safeProfile.link
-              : `https://${safeProfile.link}`
+            link.startsWith("http")
+              ? link
+              : `https://${link}`
           }
           target="_blank"
           rel="noreferrer"
           className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-800 transition-colors"
         >
           <Link2 size={14} />
-          {safeProfile.link.replace(/^https?:\/\//, "")}
+          {link.replace(/^https?:\/\//, "")}
         </a>
       )}
     </section>
