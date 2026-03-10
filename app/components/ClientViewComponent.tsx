@@ -493,11 +493,11 @@ function BioSection({ profile, theme }: any) {
         theme === "light" ? "text-gray-900" : "text-white"
       }`}
     >
-      {safeProfile.username && (
+      {/* {safeProfile.username && (
          <h2 className="text-[22px] font-extrabold mb-4 tracking-tight">
           {safeProfile.username}
         </h2>
-      )}
+      )} */}
 
       <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 ${theme === "light" ? "border-gray-200 bg-white" : "border-[#333333] bg-[#222222]"}`}>
         <img
