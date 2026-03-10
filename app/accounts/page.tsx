@@ -553,7 +553,7 @@ export default function AccountsPage() {
                 {!isPro ? (
                   <button
                     onClick={handleUpgrade}
-                    className="flex items-center gap-2 text-sm font-semibold text-purple-600 bg-purple-50 px-4 py-2 rounded-xl hover:bg-purple-100 transition"
+                    className="flex items-center justify-center gap-2 text-sm font-semibold text-purple-600 bg-purple-50 px-4 py-2 rounded-xl hover:bg-purple-100 transition"
                   >
                     <Crown className="w-4 h-4" />
                     Upgrade to PRO
@@ -564,10 +564,12 @@ export default function AccountsPage() {
                   </span>
                 )}
 
+                {/* 🔥 PERBAIKAN: Menambahkan Icon LogOut di tombol Logout */}
                 <button
                   onClick={() => setIsLogoutModalOpen(true)}
-                  className="text-sm text-red-500 hover:underline"
+                  className="flex items-center justify-center gap-2 text-sm font-medium text-red-500 hover:text-red-600 transition hover:bg-red-50 px-4 py-2 rounded-xl"
                 >
+                  <LogOut className="w-4 h-4" />
                   Logout
                 </button>
               </div>
