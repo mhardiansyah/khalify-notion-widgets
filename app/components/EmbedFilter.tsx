@@ -30,6 +30,7 @@ function getNotionValues(prop: any): string[] {
   return [];
 }
 
+
 function getProp(propsObj: any, key: string) {
   if (!propsObj) return null;
   if (propsObj[key]) return propsObj[key];
