@@ -476,16 +476,11 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
 }
 
 function BioSection({ profile, theme }: any) {
-  // 🔥 PERBAIKAN: Gunakan nilai fallback dengan lebih agresif
-  const defaultAvatar = "/person.png";
-  
-  // Deteksi manual apakah avatar benar-benar kosong
-  const hasCustomAvatar = profile?.avatarUrl && profile.avatarUrl.trim() !== "";
-  const finalAvatarUrl = hasCustomAvatar ? profile.avatarUrl : defaultAvatar;
-
+  // 🔥 PERBAIKAN: Hapus semua fallback bawaan ke person.png
   const safeProfile = profile || {
     username: "",
     name: "Your Name",
+    avatarUrl: "", // Kosongkan secara default
     bio: "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
     link: "https://khlasify.notion.site",
   };
@@ -495,18 +490,30 @@ function BioSection({ profile, theme }: any) {
     return bioText.split("\n").map((line, i) => <p key={i}>{line}</p>);
   };
 
+  // Cek apakah ada link avatar yang valid dan bukan link ke person.png (menghindari cache lama)
+  const hasAvatar = safeProfile.avatarUrl && 
+                    safeProfile.avatarUrl.trim() !== "" && 
+                    !safeProfile.avatarUrl.includes("person.png");
+
   return (
     <section
       className={`flex flex-col items-start text-left w-full px-1 ${
         theme === "light" ? "text-gray-900" : "text-white"
       }`}
     >
-      <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 ${theme === "light" ? "border-gray-200 bg-white" : "border-[#333333] bg-[#222222]"}`}>
-        <img
-          src={finalAvatarUrl} // 🔥 Pakai variabel yang sudah dipastikan
-          alt="Profile Avatar"
-          className="w-full h-full object-cover"
-        />
+      <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 flex items-center justify-center ${theme === "light" ? "border-gray-200 bg-gray-50" : "border-[#333333] bg-[#222222]"}`}>
+        
+        {/* 🔥 LOGIKA BARU: Render gambar JIKA ada URL, kalau tidak render ICON POLOS */}
+        {hasAvatar ? (
+          <img
+            src={safeProfile.avatarUrl} 
+            alt="Profile Avatar"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <UserIcon className={`w-10 h-10 ${theme === "light" ? "text-gray-300" : "text-gray-600"}`} />
+        )}
+
       </div>
 
       <h3 className="font-semibold text-[15px] mb-2">{safeProfile.name}</h3>
