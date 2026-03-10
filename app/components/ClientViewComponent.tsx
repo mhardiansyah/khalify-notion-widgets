@@ -141,7 +141,7 @@ export default function ClientViewComponent({
         if (!statusVals.includes(statusParam)) return false;
       }
 
-      // 3. Filter Pillar (Pasti Viral ada di sini)
+      // 3. Filter Pillar
       if (pillarParam && pillarParam !== "all") {
         const pillarVals = getNotionValues(pillarProp).map(v => v.trim().toLowerCase());
         if (!pillarVals.includes(pillarParam)) return false;
@@ -176,7 +176,6 @@ export default function ClientViewComponent({
 
   const shouldHideHighlight = isFilterActive && visibleData.length < 3;
 
-  // 🔥 Logika penentu apakah seksi konten atas (Bio/Highlight) perlu dirender atau tidak
   const hasContentToRender = showBio || (showHighlight && !shouldHideHighlight);
 
   /* ================= RENDER ================= */
@@ -477,7 +476,6 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
 }
 
 function BioSection({ profile, theme }: any) {
-  // Gunakan data profile, tapi berikan default yang aman.
   const safeProfile = profile || {
     username: "",
     name: "Your Name",
@@ -491,16 +489,19 @@ function BioSection({ profile, theme }: any) {
     return bioText.split("\n").map((line, i) => <p key={i}>{line}</p>);
   };
 
-  // 🔥 DETEKSI OTOMATIS: 
-  // Kita cek apakah avatar ini valid. 
-  // Kalau avatar-nya ternyata URL dari "notion.so/image" atau berisi file tertentu (kayak foto mbak kacamata yg sering di-cache Notion), kita blokir.
-  const isDefaultNotionAvatar = safeProfile.avatarUrl?.includes("notion.so/image") || 
-                                safeProfile.avatarUrl?.includes("profile_"); 
-  
-  // Avatar dianggap VALID jika ada string-nya DAN bukan default Notion.
-  const isValidAvatar = Boolean(safeProfile.avatarUrl) && 
-                        safeProfile.avatarUrl.trim() !== "" && 
-                        !isDefaultNotionAvatar;
+  // 🔥 SENSOR KETAT: Memblokir otomatis foto bawaan akun Notion 
+  let finalAvatarUrl = safeProfile.avatarUrl;
+  if (
+    finalAvatarUrl && 
+    (finalAvatarUrl.includes("notion-static.com") || 
+     finalAvatarUrl.includes("notion.so") || 
+     finalAvatarUrl.includes("amazonaws.com")) // <-- Asal muasal foto mbak-mbak kacamata
+  ) {
+    finalAvatarUrl = null; // Kita anggap kosong
+  }
+
+  // Jika kosong (termasuk habis disensor), paksa ke person.png
+  const displayAvatar = finalAvatarUrl && finalAvatarUrl.trim() !== "" ? finalAvatarUrl : "/person.png";
 
   return (
     <section
@@ -508,18 +509,17 @@ function BioSection({ profile, theme }: any) {
         theme === "light" ? "text-gray-900" : "text-white"
       }`}
     >
-      <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 flex items-center justify-center ${theme === "light" ? "border-gray-200 bg-gray-50" : "border-[#333333] bg-[#222222]"}`}>
+      <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 flex items-center justify-center ${theme === "light" ? "border-gray-200 bg-white" : "border-[#333333] bg-[#222222]"}`}>
         
-        {/* 🔥 RENDER KONDISIONAL: Tampilkan Gambar hanya jika Valid, selain itu beri ICON */}
-        {isValidAvatar ? (
-          <img
-            src={safeProfile.avatarUrl} 
-            alt="Profile Avatar"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <UserIcon className={`w-10 h-10 ${theme === "light" ? "text-gray-300" : "text-gray-600"}`} />
-        )}
+        <img
+          src={displayAvatar} 
+          onError={(e) => {
+            // 🔥 Pertahanan terakhir: kalau gambar error/rusak, timpa lagi pake person.png
+            e.currentTarget.src = "/person.png";
+          }}
+          alt="Profile Avatar"
+          className="w-full h-full object-cover"
+        />
 
       </div>
 
