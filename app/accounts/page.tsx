@@ -722,6 +722,12 @@ export default function AccountsPage() {
                             </div>
                           </div>
                           <div>
+                            <p className="text-slate-500 mb-1">Database ID</p>
+                            <div className="bg-slate-50 rounded-lg px-3 py-2 font-mono truncate">
+                              {widget.dbID}
+                            </div>
+                          </div>
+                          <div>
                             <p className="text-slate-500 mb-1">
                               Integration Token
                             </p>
@@ -742,12 +748,7 @@ export default function AccountsPage() {
                               </button>
                             </div>
                           </div>
-                          <div>
-                            <p className="text-slate-500 mb-1">Database ID</p>
-                            <div className="bg-slate-50 rounded-lg px-3 py-2 font-mono truncate">
-                              {widget.dbID}
-                            </div>
-                          </div>
+                          
                         </div>
                       )}
 
