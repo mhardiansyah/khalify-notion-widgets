@@ -11,6 +11,7 @@ import {
   Menu,
   Link2,
   ChevronDown,
+  UserIcon,
 } from "lucide-react";
 import AutoThumbnail from "@/app/components/AutoThumbnail";
 import { useRouter, useSearchParams } from "next/navigation";
