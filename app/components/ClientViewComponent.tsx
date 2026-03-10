@@ -476,30 +476,22 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
 }
 
 function BioSection({ profile, theme }: any) {
-  // 🔥 FALLBACK TOTAL: Kita set default value secara langsung dan destrukturisasi
-  const {
-    username = "",
-    name = "Your Name",
-    avatarUrl = "", // Pastikan kalau kosong, ya beneran string kosong
-    bio = "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
-    link = "https://khlasify.notion.site",
-  } = profile || {}; // Ambil dari profile, kalau profile null, pakai default ini
+  // Gunakan data profile, tapi berikan default yang aman.
+  const safeProfile = profile || {
+    username: "",
+    name: "Your Name",
+    avatarUrl: "", // Biarkan kosong kalau tidak ada
+    bio: "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
+    link: "https://khlasify.notion.site",
+  };
 
   const formatBio = (bioText: string) => {
     if (!bioText) return null;
     return bioText.split("\n").map((line, i) => <p key={i}>{line}</p>);
   };
 
-  // 🔥 DETEKSI SUPER KETAT
-  // Hanya anggap avatar VALID jika:
-  // 1. Tidak null/kosong
-  // 2. BUKAN URL bawaan Notion (notion.so/image)
-  // 3. BUKAN nama file person.png yang lama nyangkut (mencegah cache browser sialan)
-  const isValidAvatar = 
-    Boolean(avatarUrl) && 
-    avatarUrl.trim() !== "" && 
-    !avatarUrl.includes("notion.so/image") &&
-    !avatarUrl.includes("profile_");
+  // 🔥 DETEKSI AVATAR: Apakah ada link dari backend yang valid?
+  const hasCustomAvatar = Boolean(safeProfile.avatarUrl) && safeProfile.avatarUrl.trim() !== "";
 
   return (
     <section
@@ -509,38 +501,34 @@ function BioSection({ profile, theme }: any) {
     >
       <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 flex items-center justify-center ${theme === "light" ? "border-gray-200 bg-gray-50" : "border-[#333333] bg-[#222222]"}`}>
         
-        {/* 🔥 EKSEKUSI RENDER: Gambar Kustom vs Icon Abu-abu */}
-        {isValidAvatar ? (
-          <img
-            src={avatarUrl} 
-            alt="Profile Avatar"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <UserIcon className={`w-10 h-10 ${theme === "light" ? "text-gray-300" : "text-gray-600"}`} />
-        )}
+        {/* 🔥 PAKSA RE-FETCH DENGAN CACHE BUSTING (?v=1) */}
+        <img
+          src={hasCustomAvatar ? safeProfile.avatarUrl : "/person.png?v=1"} 
+          alt="Profile Avatar"
+          className="w-full h-full object-cover"
+        />
 
       </div>
 
-      <h3 className="font-semibold text-[15px] mb-2">{name}</h3>
+      <h3 className="font-semibold text-[15px] mb-2">{safeProfile.name}</h3>
 
       <div className="text-sm space-y-1 mb-3 opacity-90">
-        {formatBio(bio)}
+        {formatBio(safeProfile.bio)}
       </div>
 
-      {link && (
+      {safeProfile.link && (
         <a
           href={
-            link.startsWith("http")
-              ? link
-              : `https://${link}`
+            safeProfile.link.startsWith("http")
+              ? safeProfile.link
+              : `https://${safeProfile.link}`
           }
           target="_blank"
           rel="noreferrer"
           className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-800 transition-colors"
         >
           <Link2 size={14} />
-          {link.replace(/^https?:\/\//, "")}
+          {safeProfile.link.replace(/^https?:\/\//, "")}
         </a>
       )}
     </section>
