@@ -499,8 +499,7 @@ function BioSection({ profile, theme }: any) {
     Boolean(avatarUrl) && 
     avatarUrl.trim() !== "" && 
     !avatarUrl.includes("notion.so/image") &&
-    !avatarUrl.includes("profile_") &&
-    !avatarUrl.includes("person.png");
+    !avatarUrl.includes("profile_");
 
   return (
     <section
