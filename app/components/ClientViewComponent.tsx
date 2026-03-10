@@ -10,7 +10,6 @@ import {
   Menu,
   Link2,
   ChevronDown,
-  LogOut, // 🔥 Tambahkan icon LogOut
 } from "lucide-react";
 import AutoThumbnail from "@/app/components/AutoThumbnail";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -96,7 +95,6 @@ export default function ClientViewComponent({
   const [openSetting, setOpenSetting] = useState(false);
 
   const params = useSearchParams();
-  const router = useRouter(); // 🔥 Tambahkan router untuk handle logout
 
   useEffect(() => {
     setCurrentTheme(theme);
@@ -129,7 +127,7 @@ export default function ClientViewComponent({
       const pinnedProp = getProp(props, "Pinned");
 
       if (hideProp?.checkbox === true) return false;
-      // PASTIKAN INI TETAP DIMATIKAN! 
+      // PASTIKAN INI TETAP DIMATIKAN! Kalau dinyalain, data yg ga ada gambarnya (kayak "What is Business Ops") langsung ke-hide!
       // if (!hasAttachment(item)) return false; 
 
       // 1. Filter Platform
@@ -144,8 +142,9 @@ export default function ClientViewComponent({
         if (!statusVals.includes(statusParam)) return false;
       }
 
-      // 3. Filter Pillar
+      // 3. Filter Pillar (Pasti Viral ada di sini)
       if (pillarParam && pillarParam !== "all") {
+        // Ekstrak text pilar, hapus spasi nyangkut, jadiin huruf kecil
         const pillarVals = getNotionValues(pillarProp).map(v => v.trim().toLowerCase());
         if (!pillarVals.includes(pillarParam)) return false;
       }
@@ -178,16 +177,6 @@ export default function ClientViewComponent({
     (params.get("pinned") && params.get("pinned")?.toLowerCase() !== "all");
 
   const shouldHideHighlight = isFilterActive && visibleData.length < 3;
-
-  /* ================= HANDLER LOGOUT ================= */
-  const handleLogout = () => {
-    // Tambahkan logika logout sesuai sistem auth kamu di sini
-    // Contoh sederhana: redirect ke halaman home atau login
-    if (confirm("Are you sure you want to log out?")) {
-       router.push("/"); // Ubah path ini sesuai route aplikasi kamu
-    }
-  };
-
 
   /* ================= RENDER ================= */
 
@@ -347,15 +336,6 @@ export default function ClientViewComponent({
                   </div>
                 )}
               </div>
-
-              {/* 🔥 TOMBOL LOGOUT */}
-              <IconButton
-                theme={currentTheme}
-                onClick={handleLogout}
-              >
-                <LogOut size={16} className="text-red-500" />
-              </IconButton>
-
             </div>
           </div>
         </header>
@@ -513,11 +493,11 @@ function BioSection({ profile, theme }: any) {
         theme === "light" ? "text-gray-900" : "text-white"
       }`}
     >
-      {safeProfile.username && (
+      {/* {safeProfile.username && (
          <h2 className="text-[22px] font-extrabold mb-4 tracking-tight">
           {safeProfile.username}
         </h2>
-      )}
+      )} */}
 
       <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 ${theme === "light" ? "border-gray-200 bg-white" : "border-[#333333] bg-[#222222]"}`}>
         <img
@@ -732,3 +712,6 @@ function hasAttachment(item: any) {
   const first = files[0];
   return !!(first?.file?.url || first?.external?.url);
 }
+
+/* ================= EMBED FILTER COMPONENT ================= */
+
