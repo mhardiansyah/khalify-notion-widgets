@@ -50,11 +50,11 @@ export default async function EmbedPage(props: EmbedPageProps) {
     // 🔥 PERBAIKAN 1: Buat object profile dari data backend
     // Kita cek dulu, kalau isPro true, baru kita pakai custom datanya.
     // Kalau belum diset (kosong), pakai default fallback.
-    const widgetProfile = isOwnerPro ? {
+   const widgetProfile = isOwnerPro ? {
       name: widgetData.customName ?? "Your Name",
       username: widgetData.customUsername ?? "username",
-      // Berikan fallback gambar default jika customAvatar kosong
-      avatarUrl: widgetData.customAvatar ? widgetData.customAvatar : "https://api.dicebear.com/7.x/notionists/svg?seed=khlasify",
+      // 🔥 UBAH BARIS INI: Ganti link dicebear menjadi "/person.png"
+      avatarUrl: widgetData.customAvatar ? widgetData.customAvatar : "/person.png",
       bio: widgetData.customBio ?? "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
       link: widgetData.customLink ?? "https://khlasify.notion.site",
       highlights: [] 

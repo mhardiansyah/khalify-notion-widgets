@@ -706,26 +706,43 @@ function DetailModal({ item, theme, onClose }: any) {
 }
 
 // 🔥 PERBAIKAN: Fungsi Sapu Jagat Khusus Ekstrak Gambar (Upload Lokal / URL Eksternal)
+// 🔥 PERBAIKAN: Fungsi Sapu Jagat Khusus Ekstrak Gambar (Upload Lokal / URL Eksternal / Cover Notion)
 function extractImage(item: any) {
   const p = item.properties;
-  const attachment = getProp(p, "Attachment");
-
-  if (!attachment) return "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
-
-  // 1. Cek tipe Files & Media -> Upload File
-  const fileUrl = attachment.files?.[0]?.file?.url;
   
-  // 2. Cek tipe Files & Media -> Embed Link (contoh: link Unsplash)
-  const externalUrl = attachment.files?.[0]?.external?.url;
+  // 1. Cek Kolom Attachment (Bisa bernama "Attachment", "File", "Gambar", dll - kita ambil dari getProp)
+  const attachment = getProp(p, "Attachment") || getProp(p, "Files & media");
   
-  // 3. Cek tipe URL (kalau kolomnya di-set jadi tipe "URL")
-  const simpleUrl = attachment.url;
-  
-  // 4. Cek tipe Text (kalau link ditaruh di kolom teks biasa)
-  const textUrl = attachment.rich_text?.[0]?.plain_text;
+  if (attachment && attachment.files && attachment.files.length > 0) {
+    const firstFile = attachment.files[0];
+    
+    // a. Cek tipe file upload lokal (disimpan di AWS S3 Notion)
+    if (firstFile.type === "file" && firstFile.file?.url) {
+      return firstFile.file.url;
+    }
+    
+    // b. Cek tipe external link (biasanya Unsplash, GDrive, dll di-embed ke dalam File)
+    if (firstFile.type === "external" && firstFile.external?.url) {
+      return firstFile.external.url;
+    }
+  }
 
-  // Return url yang ketemu, atau kembalikan ke placeholder
-  const finalUrl = fileUrl || externalUrl || simpleUrl || (textUrl?.startsWith("http") ? textUrl : null);
+  // 2. Cek apakah ada Cover Image bawaan halaman Notion (Sering dipakai user ketimbang properti file)
+  if (item.cover) {
+    if (item.cover.type === "file" && item.cover.file?.url) {
+      return item.cover.file.url;
+    }
+    if (item.cover.type === "external" && item.cover.external?.url) {
+      return item.cover.external.url;
+    }
+  }
 
-  return finalUrl || "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
+  // 3. Fallback ke properti URL biasa (kalau ada)
+  const simpleUrl = attachment?.url;
+  if (typeof simpleUrl === "string" && simpleUrl.startsWith("http")) {
+      return simpleUrl;
+  }
+
+  // 4. Jika tidak ada sama sekali, gunakan gambar dadu / placeholder
+  return "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
 }
