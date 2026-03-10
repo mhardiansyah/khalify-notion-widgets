@@ -38,12 +38,20 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-2 md:py-4">
-        {/* WRAPPER */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-4">
+      {/* 🔥 UBAH PADDING VERTICAL DI SINI 
+        Sebelumnya: py-2 md:py-4 
+        Sekarang: pt-1 pb-1.5 md:py-4 (Mode HP: Padding atas sgt kecil, padding bawah agak kecil)
+      */}
+      <div className="max-w-7xl mx-auto px-4 md:px-6 pt-1 pb-1.5 md:py-4">
+        {/* 🔥 UBAH GAP DI SINI
+          Sebelumnya: gap-2 md:gap-4
+          Sekarang: gap-1 md:gap-4 (Mode HP: Jarak antara logo dan menu nav dikurangi)
+        */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1 md:gap-4">
           
           {/* LOGO */}
-          <div className="flex justify-center md:justify-start mt-1 md:mt-0">
+          {/* 🔥 HAPUS mt-1 DI SINI biar logo bisa mepet atas */}
+          <div className="flex justify-center md:justify-start">
             <Link href="/" className="flex items-center">
               <Image
                 src="/logo-primary.png"
