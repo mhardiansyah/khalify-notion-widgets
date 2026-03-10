@@ -477,11 +477,11 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
 }
 
 function BioSection({ profile, theme }: any) {
-  // 🔥 PERBAIKAN: Hapus semua fallback bawaan ke person.png
+  // Gunakan data profile, tapi berikan default yang aman.
   const safeProfile = profile || {
     username: "",
     name: "Your Name",
-    avatarUrl: "", // Kosongkan secara default
+    avatarUrl: "", 
     bio: "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
     link: "https://khlasify.notion.site",
   };
@@ -491,10 +491,16 @@ function BioSection({ profile, theme }: any) {
     return bioText.split("\n").map((line, i) => <p key={i}>{line}</p>);
   };
 
-  // Cek apakah ada link avatar yang valid dan bukan link ke person.png (menghindari cache lama)
-  const hasAvatar = safeProfile.avatarUrl && 
-                    safeProfile.avatarUrl.trim() !== "" && 
-                    !safeProfile.avatarUrl.includes("person.png");
+  // 🔥 DETEKSI OTOMATIS: 
+  // Kita cek apakah avatar ini valid. 
+  // Kalau avatar-nya ternyata URL dari "notion.so/image" atau berisi file tertentu (kayak foto mbak kacamata yg sering di-cache Notion), kita blokir.
+  const isDefaultNotionAvatar = safeProfile.avatarUrl?.includes("notion.so/image") || 
+                                safeProfile.avatarUrl?.includes("profile_"); 
+  
+  // Avatar dianggap VALID jika ada string-nya DAN bukan default Notion.
+  const isValidAvatar = Boolean(safeProfile.avatarUrl) && 
+                        safeProfile.avatarUrl.trim() !== "" && 
+                        !isDefaultNotionAvatar;
 
   return (
     <section
@@ -504,8 +510,8 @@ function BioSection({ profile, theme }: any) {
     >
       <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 flex items-center justify-center ${theme === "light" ? "border-gray-200 bg-gray-50" : "border-[#333333] bg-[#222222]"}`}>
         
-        {/* 🔥 LOGIKA BARU: Render gambar JIKA ada URL, kalau tidak render ICON POLOS */}
-        {hasAvatar ? (
+        {/* 🔥 RENDER KONDISIONAL: Tampilkan Gambar hanya jika Valid, selain itu beri ICON */}
+        {isValidAvatar ? (
           <img
             src={safeProfile.avatarUrl} 
             alt="Profile Avatar"
