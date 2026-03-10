@@ -2,31 +2,31 @@ import { ChevronDown, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-
-
 /* ================= FUNGSI SAPU JAGAT (BACA SEMUA TIPE DATA NOTION) ================= */
 // Fungsi ini menembus tipe data Notion apapun (termasuk Rollup yang bertingkat)
 function getNotionValues(prop: any): string[] {
   if (!prop) return [];
-  
+
   if (prop.select && prop.select.name) return [prop.select.name];
   if (prop.multi_select) return prop.multi_select.map((s: any) => s.name);
   if (prop.status && prop.status.name) return [prop.status.name];
   if (prop.rich_text) return prop.rich_text.map((t: any) => t.plain_text);
   if (prop.title) return prop.title.map((t: any) => t.plain_text);
-  
+
   if (prop.type === "rollup" && prop.rollup && prop.rollup.array) {
     let results: string[] = [];
     prop.rollup.array.forEach((item: any) => {
-       if (item.type) {
-           results = results.concat(getNotionValues({ [item.type]: item[item.type] }));
-       } else {
-           results = results.concat(getNotionValues(item));
-       }
+      if (item.type) {
+        results = results.concat(
+          getNotionValues({ [item.type]: item[item.type] }),
+        );
+      } else {
+        results = results.concat(getNotionValues(item));
+      }
     });
     return results;
   }
-  
+
   return [];
 }
 
@@ -34,16 +34,18 @@ function getNotionValues(prop: any): string[] {
 function getProp(propsObj: any, key: string) {
   if (!propsObj) return null;
   if (propsObj[key]) return propsObj[key];
-  const foundKey = Object.keys(propsObj).find(k => k.trim().toLowerCase() === key.toLowerCase());
+  const foundKey = Object.keys(propsObj).find(
+    (k) => k.trim().toLowerCase() === key.toLowerCase(),
+  );
   return foundKey ? propsObj[foundKey] : null;
 }
 
 /* ================= EMBED FILTER COMPONENT ================= */
 
-export function EmbedFilter({ 
+export function EmbedFilter({
   theme = "light",
   isPro = false,
-  rawData = [] 
+  rawData = [],
 }: {
   theme?: "light" | "dark";
   isPro?: boolean;
@@ -54,24 +56,36 @@ export function EmbedFilter({
   const [open, setOpen] = useState<string | null>(null);
 
   const dynamicFilters = useMemo(() => {
-    // Inisialisasi Manual
-    const platforms = new Set<string>(["Instagram", "TikTok", "YouTube", "LinkedIn", "Threads"]);
-    const statuses = new Set<string>(["Idea", "Scripting", "Editing", "Review", "Revision", "Upload", "Completed", "Canceled"]);
-    const pillars = new Set<string>(["Education", "Entertainment", "Promotional", "Story Telling", "Behind The Scene", "Pasti Viral"]);
+    // 1. Inisialisasi Set Kosong agar sepenuhnya dinamis
+    const platforms = new Set<string>();
+    const statuses = new Set<string>();
+    const pillars = new Set<string>();
 
-    rawData.forEach(item => {
+    // 2. Loop data tetap sama (mengambil value dari tiap baris Notion)
+    rawData.forEach((item) => {
       const props = item.properties;
-      getNotionValues(getProp(props, "Platform")).forEach(v => { if(v) platforms.add(v.trim()) });
-      getNotionValues(getProp(props, "Status")).forEach(v => { if(v) statuses.add(v.trim()) });
-      getNotionValues(getProp(props, "Pillar")).forEach(v => { if(v) pillars.add(v.trim()) });
-    });
 
+      // getNotionValues sudah menangani ekstraksi dari Select/Multi-select/Status/Rollup
+      getNotionValues(getProp(props, "Platforms")).forEach((v) => {
+        if (v) platforms.add(v.trim());
+      });
+      getNotionValues(getProp(props, "Status")).forEach((v) => {
+        if (v) statuses.add(v.trim());
+      });
+      getNotionValues(getProp(props, "Pillar")).forEach((v) => {
+        if (v) pillars.add(v.trim());
+      });
+    });
+    // 3. (Opsional) Urutkan data agar rapi secara alfabetis
     const setToDict = (setObj: Set<string>, allLabel: string) => {
       const dict: Record<string, string> = { all: allLabel };
-      setObj.forEach(val => {
-        const cleanVal = val.trim();
-        dict[cleanVal.toLowerCase()] = cleanVal; 
-      });
+      // Convert ke array dan sort sebelum dimasukkan ke dictionary
+      Array.from(setObj)
+        .sort()
+        .forEach((val) => {
+          const cleanVal = val.trim();
+          dict[cleanVal.toLowerCase()] = cleanVal;
+        });
       return dict;
     };
 
@@ -82,24 +96,30 @@ export function EmbedFilter({
       pinned: {
         all: "All Posts",
         true: "Pinned Only",
-        false: "Unpinned Only"
-      }
+        false: "Unpinned Only",
+      },
     };
   }, [rawData]);
 
   const defaultValue = {
     platform: "all",
     status: "all",
-    pillar: "all",  
+    pillar: "all",
     pinned: "all",
   };
 
-  const orderedKeys = ["platform", "status", "pillar", "pinned"] as const; 
+  const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
 
   const current = {
-    platform: params.get("platform")?.replace(/\+/g, " ").trim().toLowerCase() ?? defaultValue.platform,
-    status: params.get("status")?.replace(/\+/g, " ").trim().toLowerCase() ?? defaultValue.status,
-    pillar: params.get("pillar")?.replace(/\+/g, " ").trim().toLowerCase() ?? defaultValue.pillar,
+    platform:
+      params.get("platform")?.replace(/\+/g, " ").trim().toLowerCase() ??
+      defaultValue.platform,
+    status:
+      params.get("status")?.replace(/\+/g, " ").trim().toLowerCase() ??
+      defaultValue.status,
+    pillar:
+      params.get("pillar")?.replace(/\+/g, " ").trim().toLowerCase() ??
+      defaultValue.pillar,
     pinned: params.get("pinned")?.trim().toLowerCase() ?? defaultValue.pinned,
   };
 
@@ -111,7 +131,7 @@ export function EmbedFilter({
     if (rawValue === "all") {
       newParams.delete(key);
     } else {
-      newParams.set(key, rawValue); 
+      newParams.set(key, rawValue);
     }
 
     router.push(`?${newParams.toString()}`);
@@ -145,21 +165,25 @@ export function EmbedFilter({
         className={`rounded-xl p-3 sm:p-4 space-y-3 border ${
           theme === "light"
             ? "bg-white border-gray-200"
-            : "bg-[#222222] border-[#333333] text-white" 
+            : "bg-[#222222] border-[#333333] text-white"
         }`}
       >
         <div className="grid grid-cols-1 gap-2">
           {orderedKeys.map((key) => {
             const currentRawValue = current[key];
-            const filterOptions: any = dynamicFilters[key]; 
-            
+            const filterOptions: any = dynamicFilters[key];
+
             let displayValue = currentRawValue;
-            if (key === 'pinned') {
-                displayValue = filterOptions[currentRawValue] || currentRawValue;
+            if (key === "pinned") {
+              displayValue = filterOptions[currentRawValue] || currentRawValue;
             } else {
-                 displayValue = currentRawValue === 'all' 
-                     ? filterOptions.all 
-                     : (filterOptions[currentRawValue] || currentRawValue.replace(/\b\w/g, (l:string) => l.toUpperCase()));
+              displayValue =
+                currentRawValue === "all"
+                  ? filterOptions.all
+                  : filterOptions[currentRawValue] ||
+                    currentRawValue.replace(/\b\w/g, (l: string) =>
+                      l.toUpperCase(),
+                    );
             }
 
             return (
@@ -178,12 +202,14 @@ export function EmbedFilter({
                           : "bg-purple-600/20 border-purple-500 text-purple-300"
                         : theme === "light"
                           ? "bg-gray-200 border-gray-300 text-gray-500"
-                          : "bg-[#333333] border-[#333333] text-gray-400" 
+                          : "bg-[#333333] border-[#333333] text-gray-400"
                     }
                     ${!isPro ? "cursor-not-allowed opacity-60" : ""}
                   `}
                 >
-                  <span className="truncate flex-1 text-left">{displayValue}</span>
+                  <span className="truncate flex-1 text-left">
+                    {displayValue}
+                  </span>
                   <ChevronDown
                     className={`w-4 h-4 shrink-0 ${!isPro ? "opacity-50" : ""}`}
                   />
@@ -200,20 +226,21 @@ export function EmbedFilter({
                       className={`absolute z-50 mt-2 w-56 rounded-xl border shadow-lg overflow-hidden max-h-64 overflow-y-auto ${
                         theme === "light"
                           ? "bg-white border-gray-200"
-                          : "bg-[#222222] border-[#333333]" 
+                          : "bg-[#222222] border-[#333333]"
                       }`}
                     >
                       <div
                         className={`sticky top-0 z-10 px-4 py-2 text-xs font-semibold border-b ${
                           theme === "light"
                             ? "bg-gray-50 text-gray-400 border-gray-200"
-                            : "bg-[#2A2A2A] text-gray-400 border-[#333333]" 
+                            : "bg-[#2A2A2A] text-gray-400 border-[#333333]"
                         }`}
                       >
                         {key === "pinned" ? "POSTS" : key.toUpperCase()}
                       </div>
 
-                      {Object.entries(filterOptions).map(([optKey, optLabel]) => {
+                      {Object.entries(filterOptions).map(
+                        ([optKey, optLabel]) => {
                           const isSelected = currentRawValue === optKey;
                           const finalOptLabel = optLabel as string;
 
@@ -229,15 +256,20 @@ export function EmbedFilter({
                                       : "bg-purple-600/20 text-purple-300"
                                     : theme === "light"
                                       ? "hover:bg-[#F9FAFB]"
-                                      : "hover:bg-[#333333]" 
+                                      : "hover:bg-[#333333]"
                                 }
                               `}
                             >
-                              <span className="truncate pr-2">{finalOptLabel}</span>
-                              {isSelected && <span className="text-xs shrink-0">✓</span>}
+                              <span className="truncate pr-2">
+                                {finalOptLabel}
+                              </span>
+                              {isSelected && (
+                                <span className="text-xs shrink-0">✓</span>
+                              )}
                             </button>
-                          )
-                      })}
+                          );
+                        },
+                      )}
                     </div>
                   </>
                 )}
@@ -250,7 +282,7 @@ export function EmbedFilter({
           <>
             <div
               className={`h-px my-3 ${
-                theme === "light" ? "bg-gray-200" : "bg-[#333333]" 
+                theme === "light" ? "bg-gray-200" : "bg-[#333333]"
               }`}
             />
 
@@ -285,45 +317,43 @@ export function EmbedFilter({
 
         {activeCount > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
-            {orderedKeys.map(
-              (key) => {
-                if (!isActive(key)) return null;
-                const filterOptions: any = dynamicFilters[key];
-                const currentVal = current[key];
-                
-                let badgeLabel = currentVal;
-                if (key === 'pinned') {
-                     badgeLabel = filterOptions[currentVal] as string;
-                } else {
-                     badgeLabel = filterOptions[currentVal] as string || currentVal.replace(/\b\w/g, (l:string) => l.toUpperCase());
-                }
+            {orderedKeys.map((key) => {
+              if (!isActive(key)) return null;
+              const filterOptions: any = dynamicFilters[key];
+              const currentVal = current[key];
 
-                return (
-                  <div
-                    key={key}
-                    className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                      theme === "light"
-                        ? "bg-purple-100 text-purple-700"
-                        : "bg-purple-600/20 text-purple-300"
-                    }`}
-                  >
-                    <span className="capitalize">{key === "pinned" ? "post" : key}</span>
-                    <span className="truncate max-w-[120px]">
-                      {badgeLabel}
-                    </span>
-                    <button
-                      disabled={!isPro}
-                      onClick={() =>
-                        isPro && updateFilter(key, "all")
-                      }
-                      className={!isPro ? "cursor-not-allowed opacity-50" : ""}
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                )
+              let badgeLabel = currentVal;
+              if (key === "pinned") {
+                badgeLabel = filterOptions[currentVal] as string;
+              } else {
+                badgeLabel =
+                  (filterOptions[currentVal] as string) ||
+                  currentVal.replace(/\b\w/g, (l: string) => l.toUpperCase());
               }
-            )}
+
+              return (
+                <div
+                  key={key}
+                  className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+                    theme === "light"
+                      ? "bg-purple-100 text-purple-700"
+                      : "bg-purple-600/20 text-purple-300"
+                  }`}
+                >
+                  <span className="capitalize">
+                    {key === "pinned" ? "post" : key}
+                  </span>
+                  <span className="truncate max-w-[120px]">{badgeLabel}</span>
+                  <button
+                    disabled={!isPro}
+                    onClick={() => isPro && updateFilter(key, "all")}
+                    className={!isPro ? "cursor-not-allowed opacity-50" : ""}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
