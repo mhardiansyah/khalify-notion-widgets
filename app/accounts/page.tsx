@@ -598,7 +598,7 @@ export default function AccountsPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
               {widgets.map((widget, index) => {
                 const paused = isWidgetPaused(index);
                 
