@@ -111,6 +111,7 @@ export default function ClientViewComponent({
 
   const filteredData = filtered
     .filter((item) => {
+      // 🔥 BERSAIHKAN PARAM URL: Hapus '+' dan spasi ekstra
       const platformParam = params.get("platform")?.replace(/\+/g, " ").trim().toLowerCase();
       const statusParam = params.get("status")?.replace(/\+/g, " ").trim().toLowerCase();
       const pillarParam = params.get("pillar")?.replace(/\+/g, " ").trim().toLowerCase();
@@ -118,6 +119,7 @@ export default function ClientViewComponent({
 
       const props = item.properties;
 
+      // Ambil kolom pake fungsi anti-typo
       const hideProp = getProp(props, "Hide");
       const platformProp = getProp(props, "Platform");
       const statusProp = getProp(props, "Status");
@@ -126,21 +128,25 @@ export default function ClientViewComponent({
 
       if (hideProp?.checkbox === true) return false;
 
+      // 1. Filter Platform
       if (platformParam && platformParam !== "all") {
         const platformVals = getNotionValues(platformProp).map(v => v.trim().toLowerCase());
         if (!platformVals.includes(platformParam)) return false;
       }
 
+      // 2. Filter Status
       if (statusParam && statusParam !== "all") {
         const statusVals = getNotionValues(statusProp).map(v => v.trim().toLowerCase());
         if (!statusVals.includes(statusParam)) return false;
       }
 
+      // 3. Filter Pillar (Pasti Viral ada di sini)
       if (pillarParam && pillarParam !== "all") {
         const pillarVals = getNotionValues(pillarProp).map(v => v.trim().toLowerCase());
         if (!pillarVals.includes(pillarParam)) return false;
       }
 
+      // 4. Filter Pinned
       if (pinnedParam === "true" && pinnedProp?.checkbox !== true) return false;
       if (pinnedParam === "false" && pinnedProp?.checkbox !== false) return false;
 
@@ -335,7 +341,6 @@ export default function ClientViewComponent({
         </header>
 
         {/* ================= CONTENT ================= */}
-        {/* 🔥 PERBAIKAN SPASI: Div ini hanya muncul kalau ada isinya */}
         {hasContentToRender && (
           <div className="pb-5 space-y-4 sm:space-y-6 pt-6">
             {showBio && <BioSection profile={profile} theme={currentTheme} />}
@@ -349,7 +354,6 @@ export default function ClientViewComponent({
           </div>
         )}
 
-        {/* 🔥 Visual Grid akan otomatis naik menempel header karena div atas dihilangkan */}
         {viewMode === "visual" && (
           <div className="relative">
             <VisualGrid
@@ -692,12 +696,27 @@ function DetailModal({ item, theme, onClose }: any) {
   );
 }
 
+// 🔥 PERBAIKAN: Fungsi Sapu Jagat Khusus Ekstrak Gambar (Upload Lokal / URL Eksternal)
 function extractImage(item: any) {
   const p = item.properties;
   const attachment = getProp(p, "Attachment");
-  return (
-    attachment?.files?.[0]?.file?.url ||
-    attachment?.files?.[0]?.external?.url ||
-    "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder" 
-  );
+
+  if (!attachment) return "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
+
+  // 1. Cek tipe Files & Media -> Upload File
+  const fileUrl = attachment.files?.[0]?.file?.url;
+  
+  // 2. Cek tipe Files & Media -> Embed Link (contoh: link Unsplash)
+  const externalUrl = attachment.files?.[0]?.external?.url;
+  
+  // 3. Cek tipe URL (kalau kolomnya di-set jadi tipe "URL")
+  const simpleUrl = attachment.url;
+  
+  // 4. Cek tipe Text (kalau link ditaruh di kolom teks biasa)
+  const textUrl = attachment.rich_text?.[0]?.plain_text;
+
+  // Return url yang ketemu, atau kembalikan ke placeholder
+  const finalUrl = fileUrl || externalUrl || simpleUrl || (textUrl?.startsWith("http") ? textUrl : null);
+
+  return finalUrl || "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
 }
