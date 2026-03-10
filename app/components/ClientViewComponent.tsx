@@ -476,11 +476,16 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
 }
 
 function BioSection({ profile, theme }: any) {
-  // 🔥 PERBAIKAN: Ganti avatarUrl default dari "/logo-bulat.png" menjadi "/person.png"
+  // 🔥 PERBAIKAN: Gunakan nilai fallback dengan lebih agresif
+  const defaultAvatar = "/person.png";
+  
+  // Deteksi manual apakah avatar benar-benar kosong
+  const hasCustomAvatar = profile?.avatarUrl && profile.avatarUrl.trim() !== "";
+  const finalAvatarUrl = hasCustomAvatar ? profile.avatarUrl : defaultAvatar;
+
   const safeProfile = profile || {
     username: "",
     name: "Your Name",
-    avatarUrl: "/person.png", // <--- UBAH DI SINI
     bio: "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
     link: "https://khlasify.notion.site",
   };
@@ -496,16 +501,9 @@ function BioSection({ profile, theme }: any) {
         theme === "light" ? "text-gray-900" : "text-white"
       }`}
     >
-      {/* {safeProfile.username && (
-         <h2 className="text-[22px] font-extrabold mb-4 tracking-tight">
-          {safeProfile.username}
-        </h2>
-      )} */}
-
       <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 ${theme === "light" ? "border-gray-200 bg-white" : "border-[#333333] bg-[#222222]"}`}>
         <img
-          // 🔥 Pastikan di sini juga pakai fallback "/person.png" jika URL kosong
-          src={safeProfile.avatarUrl || "/person.png"} 
+          src={finalAvatarUrl} // 🔥 Pakai variabel yang sudah dipastikan
           alt="Profile Avatar"
           className="w-full h-full object-cover"
         />
