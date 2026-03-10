@@ -503,7 +503,7 @@ function BioSection({ profile, theme }: any) {
 
       <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 ${theme === "light" ? "border-gray-200 bg-white" : "border-[#333333] bg-[#222222]"}`}>
         <img
-          src={safeProfile.avatarUrl}
+          src={safeProfile.avatarUrl || "/person.png"}
           alt="Profile Avatar"
           className="w-full h-full object-cover"
         />
