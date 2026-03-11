@@ -722,20 +722,34 @@ function extractImage(item: any) {
 }
 
 // 🔥 PERBAIKAN 5: Fungsi Baru untuk Ekstrak Semua Gambar (Mendukung Carousel dan Unsplash/Eksternal)
+// 🔥 PERBAIKAN 5: Fungsi Baru untuk Ekstrak Semua Gambar (Mendukung Carousel dan Unsplash/Eksternal/YouTube)
 function extractAllImages(item: any) {
   const p = item.properties;
-  // Cek kolom "Attachment" atau "Files & media"
-  const attachment = getProp(p, "Attachment") || getProp(p, "Files & media");
+  // Cek kolom yang mungkin menyimpan gambar/link
+  const attachment = getProp(p, "Attachment") || getProp(p, "Files & media") || getProp(p, "Image Source") || getProp(p, "Image");
   
   let urls: string[] = [];
 
-  if (attachment && attachment.files && attachment.files.length > 0) {
-    // Kumpulkan semua url (baik file lokal maupun external link seperti Unsplash)
-    urls = attachment.files.map((f: any) => {
-      if (f.type === "file" && f.file?.url) return f.file.url;
-      if (f.type === "external" && f.external?.url) return f.external.url;
-      return null;
-    }).filter(Boolean); // Buang yang bernilai null
+  if (attachment) {
+    // KONDISI 1: Jika properti adalah tipe "Files & media" (berisi array file/gambar)
+    if (attachment.files && attachment.files.length > 0) {
+      urls = attachment.files.map((f: any) => {
+        if (f.type === "file" && f.file?.url) return f.file.url;
+        if (f.type === "external" && f.external?.url) return f.external.url;
+        return null;
+      }).filter(Boolean); 
+    } 
+    // KONDISI 2: Jika properti adalah tipe "URL" murni (seperti di screenshot DB kamu)
+    else if (attachment.type === "url" && attachment.url) {
+      urls.push(attachment.url);
+    } 
+    // KONDISI 3: Jika properti adalah tipe Text biasa tapi isinya link
+    else if (attachment.type === "rich_text" && attachment.rich_text && attachment.rich_text.length > 0) {
+       const textVal = attachment.rich_text[0].plain_text;
+       if (textVal && textVal.startsWith("http")) {
+           urls.push(textVal);
+       }
+    }
   }
 
   // Jika masih kosong, cek bagian cover halaman Notion
@@ -745,13 +759,6 @@ function extractAllImages(item: any) {
      } else if (item.cover.type === "external" && item.cover.external?.url) {
         urls.push(item.cover.external.url);
      }
-  }
-
-  // Jika MASIH kosong, cek apakah propertinya sendiri bertipe URL murni
-  if (urls.length === 0 && attachment?.url) {
-    if (typeof attachment.url === "string" && attachment.url.startsWith("http")) {
-      urls.push(attachment.url);
-    }
   }
 
   // Jika tetap kosong, kembalikan array berisi placeholder
