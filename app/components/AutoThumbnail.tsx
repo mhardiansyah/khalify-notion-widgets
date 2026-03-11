@@ -11,39 +11,56 @@ export default function AutoThumbnail({
   className = "",
   style = {},
 }: {
-  src: string;
+  src: string | string[]; // 🔥 Menerima string (lama) atau array string (Carousel baru)
   className?: string;
   style?: React.CSSProperties;
 }) {
   const [thumb, setThumb] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Ambil gambar pertama jika src adalah array (untuk sementara mendukung single display)
+  const imageSrc = Array.isArray(src) ? src[0] : src;
+
   useEffect(() => {
-    if (!src) return;
+    if (!imageSrc) return;
 
     setLoading(true);
     setThumb(null);
 
-    const isVideo = /(mp4|mov|avi|webm|mkv)(?=($|\?|&))/i.test(src);
+    const isVideo = /(mp4|mov|avi|webm|mkv)(?=($|\?|&))/i.test(imageSrc);
 
     if (!isVideo) {
       // IMAGE LOADING
       const img = new Image();
-      img.src = src;
+      img.src = imageSrc;
       img.onload = () => {
-        setThumb(src);
+        setThumb(imageSrc);
         setLoading(false);
       };
-      img.onerror = () => {
-        setThumb(FALLBACK_IMAGE); 
-        setLoading(false);
+      // 🔥 PERBAIKAN DARI DOKUMEN: Gunakan Microlink untuk ekstrak gambar eksternal (Unsplash, dll) yang gagal dimuat langsung
+      img.onerror = async () => {
+        try {
+          const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(imageSrc)}`);
+          const data = await res.json();
+          
+          if (data.status === "success" && data.data?.image?.url) {
+            setThumb(data.data.image.url);
+          } else {
+            setThumb(FALLBACK_IMAGE);
+          }
+        } catch (error) {
+          console.error("Gagal ekstrak link preview:", error);
+          setThumb(FALLBACK_IMAGE);
+        } finally {
+          setLoading(false);
+        }
       };
       return;
     }
 
     // VIDEO LOADING + THUMBNAIL GENERATION
     const video = document.createElement("video");
-    video.src = src;
+    video.src = imageSrc;
     video.crossOrigin = "anonymous";
     video.muted = true;
     video.currentTime = 0.1;
@@ -66,7 +83,7 @@ export default function AutoThumbnail({
       setThumb(FALLBACK_IMAGE);
       setLoading(false);
     };
-  }, [src]);
+  }, [imageSrc]);
 
   return (
     <div

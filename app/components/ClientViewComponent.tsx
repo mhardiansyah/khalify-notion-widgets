@@ -112,7 +112,6 @@ export default function ClientViewComponent({
 
   const filteredData = filtered
     .filter((item) => {
-      // 🔥 BERSAIHKAN PARAM URL: Hapus '+' dan spasi ekstra
       const platformParam = params.get("platform")?.replace(/\+/g, " ").trim().toLowerCase();
       const statusParam = params.get("status")?.replace(/\+/g, " ").trim().toLowerCase();
       const pillarParam = params.get("pillar")?.replace(/\+/g, " ").trim().toLowerCase();
@@ -120,7 +119,6 @@ export default function ClientViewComponent({
 
       const props = item.properties;
 
-      // Ambil kolom pake fungsi anti-typo
       const hideProp = getProp(props, "Hide");
       const platformProp = getProp(props, "Platform");
       const statusProp = getProp(props, "Status");
@@ -129,25 +127,21 @@ export default function ClientViewComponent({
 
       if (hideProp?.checkbox === true) return false;
 
-      // 1. Filter Platform
       if (platformParam && platformParam !== "all") {
         const platformVals = getNotionValues(platformProp).map(v => v.trim().toLowerCase());
         if (!platformVals.includes(platformParam)) return false;
       }
 
-      // 2. Filter Status
       if (statusParam && statusParam !== "all") {
         const statusVals = getNotionValues(statusProp).map(v => v.trim().toLowerCase());
         if (!statusVals.includes(statusParam)) return false;
       }
 
-      // 3. Filter Pillar
       if (pillarParam && pillarParam !== "all") {
         const pillarVals = getNotionValues(pillarProp).map(v => v.trim().toLowerCase());
         if (!pillarVals.includes(pillarParam)) return false;
       }
 
-      // 4. Filter Pinned
       if (pinnedParam === "true" && pinnedProp?.checkbox !== true) return false;
       if (pinnedParam === "false" && pinnedProp?.checkbox !== false) return false;
 
@@ -476,11 +470,10 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
 }
 
 function BioSection({ profile, theme }: any) {
-  // 🔥 FALLBACK TOTAL: Kita set default value secara langsung
   const {
     username = "",
     name = "Your Name",
-    avatarUrl = "", // Pastikan kalau kosong, ya beneran string kosong
+    avatarUrl = "", 
     bio = "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
     link = "https://khlasify.notion.site",
   } = profile || {};
@@ -490,16 +483,11 @@ function BioSection({ profile, theme }: any) {
     return bioText.split("\n").map((line, i) => <p key={i}>{line}</p>);
   };
 
-  // 🔥 DETEKSI SUPER KETAT: BLOKIR SI MBAK KACAMATA
-  // Hanya anggap avatar VALID jika:
-  // 1. Tidak null/kosong
-  // 2. BUKAN URL bawaan Notion (notion.so/image)
-  // 3. BUKAN API dicebear notionists (ini dalangnya mbak kacamata!)
   const isValidAvatar = 
     Boolean(avatarUrl) && 
     avatarUrl.trim() !== "" && 
     !avatarUrl.includes("notion.so/image") &&
-    !avatarUrl.includes("dicebear.com/7.x/notionists"); // <-- INI YANG BLOKIR DIA
+    !avatarUrl.includes("dicebear.com/7.x/notionists"); 
 
   return (
     <section
@@ -509,12 +497,15 @@ function BioSection({ profile, theme }: any) {
     >
       <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 flex items-center justify-center ${theme === "light" ? "border-gray-200 bg-gray-50" : "border-[#333333] bg-[#222222]"}`}>
         
-        {/* 🔥 EKSEKUSI RENDER: Gambar Kustom vs person.png lokal */}
-        <img
-          src={isValidAvatar ? avatarUrl : "/person.png"} 
-          alt="Profile Avatar"
-          className="w-full h-full object-cover"
-        />
+        {isValidAvatar ? (
+          <img
+            src={avatarUrl} 
+            alt="Profile Avatar"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <UserIcon className={`w-10 h-10 ${theme === "light" ? "text-gray-300" : "text-gray-600"}`} />
+        )}
 
       </div>
 
@@ -613,7 +604,9 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
     >
       {filtered.map((item: any, i: number) => {
         const name = getProp(item.properties, "Name")?.title?.[0]?.plain_text || "Untitled";
-        const image = extractImage(item);
+        
+        // 🔥 PERBAIKAN 1: Gunakan extractAllImages
+        const images = extractAllImages(item); 
         const pinned = getProp(item.properties, "Pinned")?.checkbox;
         
         const publishDateRaw = getProp(item.properties, "Publish Date")?.date?.start;
@@ -640,7 +633,8 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
               </div>
             )}
 
-            <AutoThumbnail src={image} />
+            {/* 🔥 PERBAIKAN 2: Kirim array images ke AutoThumbnail */}
+            <AutoThumbnail src={images} />
 
             <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
                {publishDateStr && (
@@ -669,7 +663,9 @@ function DetailModal({ item, theme, onClose }: any) {
   }, []);
 
   const name = getProp(item.properties, "Name")?.title?.[0]?.plain_text || "Untitled";
-  const image = extractImage(item);
+  
+  // 🔥 PERBAIKAN 3: Gunakan extractAllImages
+  const images = extractAllImages(item);
 
   return (
     <div
@@ -686,18 +682,22 @@ function DetailModal({ item, theme, onClose }: any) {
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full"
+          className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full z-10"
         >
           <X size={18} />
         </button>
 
-        <div className="flex flex-col lg:flex-row">
+        <div className="flex flex-col lg:flex-row relative">
           <div className="lg:w-2/3 bg-black flex items-center justify-center">
-            <img
-              src={image}
-              alt={name}
-              className="object-contain max-w-full max-h-[80vh]"
-            />
+            
+            {/* 🔥 PERBAIKAN 4: Gunakan AutoThumbnail alih-alih tag img biasa */}
+            <div className="w-full h-[80vh] flex items-center justify-center relative">
+              <AutoThumbnail 
+                src={images} 
+                style={{ objectFit: "contain" }} 
+              />
+            </div>
+
           </div>
         </div>
       </div>
@@ -705,44 +705,59 @@ function DetailModal({ item, theme, onClose }: any) {
   );
 }
 
-// 🔥 PERBAIKAN: Fungsi Sapu Jagat Khusus Ekstrak Gambar (Upload Lokal / URL Eksternal)
-// 🔥 PERBAIKAN: Fungsi Sapu Jagat Khusus Ekstrak Gambar (Upload Lokal / URL Eksternal / Cover Notion)
+// 🔥 Fungsi Sapu Jagat (Lama) tetap dibiarkan untuk backward compatibility jika ada fitur lain yang memanggilnya, tapi sudah diganti oleh extractAllImages
 function extractImage(item: any) {
   const p = item.properties;
-  
-  // 1. Cek Kolom Attachment (Bisa bernama "Attachment", "File", "Gambar", dll - kita ambil dari getProp)
+  const attachment = getProp(p, "Attachment") || getProp(p, "Files & media");
+
+  if (!attachment) return "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
+
+  const fileUrl = attachment.files?.[0]?.file?.url;
+  const externalUrl = attachment.files?.[0]?.external?.url;
+  const simpleUrl = attachment.url;
+  const textUrl = attachment.rich_text?.[0]?.plain_text;
+  const finalUrl = fileUrl || externalUrl || simpleUrl || (textUrl?.startsWith("http") ? textUrl : null);
+
+  return finalUrl || "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
+}
+
+// 🔥 PERBAIKAN 5: Fungsi Baru untuk Ekstrak Semua Gambar (Mendukung Carousel dan Unsplash/Eksternal)
+function extractAllImages(item: any) {
+  const p = item.properties;
+  // Cek kolom "Attachment" atau "Files & media"
   const attachment = getProp(p, "Attachment") || getProp(p, "Files & media");
   
+  let urls: string[] = [];
+
   if (attachment && attachment.files && attachment.files.length > 0) {
-    const firstFile = attachment.files[0];
-    
-    // a. Cek tipe file upload lokal (disimpan di AWS S3 Notion)
-    if (firstFile.type === "file" && firstFile.file?.url) {
-      return firstFile.file.url;
-    }
-    
-    // b. Cek tipe external link (biasanya Unsplash, GDrive, dll di-embed ke dalam File)
-    if (firstFile.type === "external" && firstFile.external?.url) {
-      return firstFile.external.url;
+    // Kumpulkan semua url (baik file lokal maupun external link seperti Unsplash)
+    urls = attachment.files.map((f: any) => {
+      if (f.type === "file" && f.file?.url) return f.file.url;
+      if (f.type === "external" && f.external?.url) return f.external.url;
+      return null;
+    }).filter(Boolean); // Buang yang bernilai null
+  }
+
+  // Jika masih kosong, cek bagian cover halaman Notion
+  if (urls.length === 0 && item.cover) {
+     if (item.cover.type === "file" && item.cover.file?.url) {
+        urls.push(item.cover.file.url);
+     } else if (item.cover.type === "external" && item.cover.external?.url) {
+        urls.push(item.cover.external.url);
+     }
+  }
+
+  // Jika MASIH kosong, cek apakah propertinya sendiri bertipe URL murni
+  if (urls.length === 0 && attachment?.url) {
+    if (typeof attachment.url === "string" && attachment.url.startsWith("http")) {
+      urls.push(attachment.url);
     }
   }
 
-  // 2. Cek apakah ada Cover Image bawaan halaman Notion (Sering dipakai user ketimbang properti file)
-  if (item.cover) {
-    if (item.cover.type === "file" && item.cover.file?.url) {
-      return item.cover.file.url;
-    }
-    if (item.cover.type === "external" && item.cover.external?.url) {
-      return item.cover.external.url;
-    }
+  // Jika tetap kosong, kembalikan array berisi placeholder
+  if (urls.length === 0) {
+    return ["https://api.dicebear.com/7.x/shapes/svg?seed=placeholder"];
   }
 
-  // 3. Fallback ke properti URL biasa (kalau ada)
-  const simpleUrl = attachment?.url;
-  if (typeof simpleUrl === "string" && simpleUrl.startsWith("http")) {
-      return simpleUrl;
-  }
-
-  // 4. Jika tidak ada sama sekali, gunakan gambar dadu / placeholder
-  return "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
-}
+  return urls;
+}   
