@@ -612,12 +612,19 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
       }}
     >
       {filtered.map((item: any, i: number) => {
+
+        const name =
+          item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
+        const image = extractAllImages(item);
+        const pinned = item.properties?.Pinned?.checkbox;
+=======
         const name = getProp(item.properties, "Name")?.title?.[0]?.plain_text || "Untitled";
         const image = extractImage(item);
         const pinned = getProp(item.properties, "Pinned")?.checkbox;
         
         const publishDateRaw = getProp(item.properties, "Publish Date")?.date?.start;
         const publishDateStr = formatDate(publishDateRaw);
+
 
         return (
           <div
@@ -668,8 +675,13 @@ function DetailModal({ item, theme, onClose }: any) {
     };
   }, []);
 
+
+  const name = item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
+  const image = extractAllImages(item);
+=======
   const name = getProp(item.properties, "Name")?.title?.[0]?.plain_text || "Untitled";
   const image = extractImage(item);
+
 
   return (
     <div
@@ -693,11 +705,12 @@ function DetailModal({ item, theme, onClose }: any) {
 
         <div className="flex flex-col lg:flex-row">
           <div className="lg:w-2/3 bg-black flex items-center justify-center">
-            <img
-              src={image}
-              alt={name}
-              className="object-contain max-w-full max-h-[80vh]"
-            />
+            <div className="w-full h-[80vh] flex items-center justify-center">
+              <AutoThumbnail 
+                src={image} 
+                style={{ objectFit: "contain" }} 
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -709,6 +722,31 @@ function DetailModal({ item, theme, onClose }: any) {
 // 🔥 PERBAIKAN: Fungsi Sapu Jagat Khusus Ekstrak Gambar (Upload Lokal / URL Eksternal / Cover Notion)
 function extractImage(item: any) {
   const p = item.properties;
+
+  return (
+    p.Attachment?.files?.[0]?.file?.url ||
+    p.Attachment?.files?.[0]?.external?.url ||
+    "/placeholder.png"
+  );
+}
+
+function hasAttachment(item: any) {
+  const files = item.properties?.Attachment?.files;
+  if (!files || files.length === 0) return false;
+
+  const first = files[0];
+  return !!(first?.file?.url || first?.external?.url);
+}
+
+function extractAllImages(item: any) {
+  const files = item.properties?.Attachment?.files;
+  if (!files || files.length === 0) return ["/placeholder.png"];
+
+  // Ambil semua url dari array files
+  return files.map(
+    (f: any) => f?.file?.url || f?.external?.url || "/placeholder.png"
+  );
+
   
   // 1. Cek Kolom Attachment (Bisa bernama "Attachment", "File", "Gambar", dll - kita ambil dari getProp)
   const attachment = getProp(p, "Attachment") || getProp(p, "Files & media");
@@ -745,4 +783,5 @@ function extractImage(item: any) {
 
   // 4. Jika tidak ada sama sekali, gunakan gambar dadu / placeholder
   return "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
+
 }
