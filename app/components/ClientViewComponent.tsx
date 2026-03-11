@@ -2,7 +2,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-// 🔥 Tambahkan Link2 di sini untuk icon link di bio
 import {
   Pin,
   X,
@@ -605,7 +604,6 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
       {filtered.map((item: any, i: number) => {
         const name = getProp(item.properties, "Name")?.title?.[0]?.plain_text || "Untitled";
         
-        // 🔥 PERBAIKAN 1: Gunakan extractAllImages
         const images = extractAllImages(item); 
         const pinned = getProp(item.properties, "Pinned")?.checkbox;
         
@@ -633,7 +631,6 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
               </div>
             )}
 
-            {/* 🔥 PERBAIKAN 2: Kirim array images ke AutoThumbnail */}
             <AutoThumbnail src={images} />
 
             <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
@@ -662,9 +659,6 @@ function DetailModal({ item, theme, onClose }: any) {
     };
   }, []);
 
-  const name = getProp(item.properties, "Name")?.title?.[0]?.plain_text || "Untitled";
-  
-  // 🔥 PERBAIKAN 3: Gunakan extractAllImages
   const images = extractAllImages(item);
 
   return (
@@ -690,7 +684,6 @@ function DetailModal({ item, theme, onClose }: any) {
         <div className="flex flex-col lg:flex-row relative">
           <div className="lg:w-2/3 bg-black flex items-center justify-center">
             
-            {/* 🔥 PERBAIKAN 4: Gunakan AutoThumbnail alih-alih tag img biasa */}
             <div className="w-full h-[80vh] flex items-center justify-center relative">
               <AutoThumbnail 
                 src={images} 
@@ -705,45 +698,24 @@ function DetailModal({ item, theme, onClose }: any) {
   );
 }
 
-// 🔥 Fungsi Sapu Jagat (Lama) tetap dibiarkan untuk backward compatibility jika ada fitur lain yang memanggilnya, tapi sudah diganti oleh extractAllImages
-function extractImage(item: any) {
-  const p = item.properties;
-  const attachment = getProp(p, "Attachment") || getProp(p, "Files & media");
-
-  if (!attachment) return "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
-
-  const fileUrl = attachment.files?.[0]?.file?.url;
-  const externalUrl = attachment.files?.[0]?.external?.url;
-  const simpleUrl = attachment.url;
-  const textUrl = attachment.rich_text?.[0]?.plain_text;
-  const finalUrl = fileUrl || externalUrl || simpleUrl || (textUrl?.startsWith("http") ? textUrl : null);
-
-  return finalUrl || "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
-}
-
-// 🔥 PERBAIKAN 5: Fungsi Baru untuk Ekstrak Semua Gambar (Mendukung Carousel dan Unsplash/Eksternal)
-// 🔥 PERBAIKAN 5: Fungsi Baru untuk Ekstrak Semua Gambar (Mendukung Carousel dan Unsplash/Eksternal/YouTube)
+// 🔥 PERBAIKAN 5: Fungsi Baru untuk Ekstrak Semua Gambar & Link (Agresif)
 function extractAllImages(item: any) {
   const p = item.properties;
-  // Cek kolom yang mungkin menyimpan gambar/link
   const attachment = getProp(p, "Attachment") || getProp(p, "Files & media") || getProp(p, "Image Source") || getProp(p, "Image");
   
   let urls: string[] = [];
 
   if (attachment) {
-    // KONDISI 1: Jika properti adalah tipe "Files & media" (berisi array file/gambar)
     if (attachment.files && attachment.files.length > 0) {
-      urls = attachment.files.map((f: any) => {
-        if (f.type === "file" && f.file?.url) return f.file.url;
-        if (f.type === "external" && f.external?.url) return f.external.url;
-        return null;
-      }).filter(Boolean); 
+      attachment.files.forEach((f: any) => {
+        if (f.file?.url) urls.push(f.file.url);
+        else if (f.external?.url) urls.push(f.external.url);
+        else if (f.name && f.name.startsWith("http")) urls.push(f.name);
+      });
     } 
-    // KONDISI 2: Jika properti adalah tipe "URL" murni (seperti di screenshot DB kamu)
     else if (attachment.type === "url" && attachment.url) {
       urls.push(attachment.url);
     } 
-    // KONDISI 3: Jika properti adalah tipe Text biasa tapi isinya link
     else if (attachment.type === "rich_text" && attachment.rich_text && attachment.rich_text.length > 0) {
        const textVal = attachment.rich_text[0].plain_text;
        if (textVal && textVal.startsWith("http")) {
@@ -752,7 +724,6 @@ function extractAllImages(item: any) {
     }
   }
 
-  // Jika masih kosong, cek bagian cover halaman Notion
   if (urls.length === 0 && item.cover) {
      if (item.cover.type === "file" && item.cover.file?.url) {
         urls.push(item.cover.file.url);
@@ -761,7 +732,6 @@ function extractAllImages(item: any) {
      }
   }
 
-  // Jika tetap kosong, kembalikan array berisi placeholder
   if (urls.length === 0) {
     return ["https://api.dicebear.com/7.x/shapes/svg?seed=placeholder"];
   }
