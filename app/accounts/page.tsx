@@ -11,18 +11,32 @@ import {
   Edit2,
   Eye,
   EyeOff,
-  MoreVertical,
   ExternalLink,
   Crown,
   User as UserIcon,
   Trash2Icon,
-  Loader2, // Tambah icon loading
+  X,
+  Save,
+  Link as LinkIcon,
+  AlignLeft,
+  Image as ImageIcon,
+  AtSign,
+  Loader2,
+  Lock,
+  LogOut,
+  AlertTriangle,
 } from "lucide-react";
 
-import { deleteWidget, getWidgetsByUser } from "../lib/widget.api";
-// Pastikan fungsi ini sudah ada di lib lo (sesuai contoh sebelumnya)
+import {
+  deleteWidget,
+  getWidgetsByUser,
+  removeWidgetAvatar,
+  updateWidgetBranding,
+  uploadWidgetAvatar,
+} from "../lib/widget.api";
 import { getPaymentLink, checkPaymentStatus } from "../lib/payment.api";
 import { toast, Toaster } from "sonner";
+import { api } from "../lib/axios";
 
 interface Widget {
   id: string;
@@ -32,6 +46,11 @@ interface Widget {
   profileId: string;
   name: string;
   link: string;
+  customName?: string;
+  customUsername?: string;
+  customBio?: string;
+  customAvatar?: string;
+  customLink?: string;
 }
 
 type JwtPayload = {
@@ -45,23 +64,39 @@ export default function AccountsPage() {
   const router = useRouter();
 
   const [user, setUser] = useState<{ email?: string; name?: string } | null>(
-    null,
+    null
   );
   const [loading, setLoading] = useState(true);
-
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [showTokens, setShowTokens] = useState<Record<string, boolean>>({});
   const [openDetails, setOpenDetails] = useState<Record<string, boolean>>({});
+  const [isPro, setIsPro] = useState(false);
 
-  const [isPro, setIsPro] = useState(false); // State PRO sekarang dinamis
+  // State Edit Modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    customName: "",
+    customUsername: "",
+    customBio: "",
+    customLink: "",
+  });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // 🔥 State baru untuk proses hapus avatar
+  const [isDeletingAvatar, setIsDeletingAvatar] = useState(false);
+
+  // State untuk Modal
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isFileTooLargeModalOpen, setIsFileTooLargeModalOpen] = useState(false);
+
   const FREE_WIDGET_LIMIT = 1;
-
   const isWidgetPaused = (index: number) =>
     !isPro && index >= FREE_WIDGET_LIMIT;
   const disabledClass = "opacity-50 pointer-events-none select-none";
 
-  // 1. Inisialisasi Auth & Status PRO
-  // 1. Inisialisasi Auth & Status PRO
   useEffect(() => {
     const token = cookies.get("login_token");
 
@@ -75,27 +110,17 @@ export default function AccountsPage() {
       const userEmail = decoded.email;
       setUser({ email: userEmail, name: decoded.name });
 
-      // --- LOGIC BARU: CEK STATUS SAAT LOAD HALAMAN ---
-      // --- LOGIC BARU: CEK STATUS SAAT LOAD HALAMAN ---
       const performStatusCheck = async () => {
         if (!userEmail) return;
-        console.log("📡 First Load: Checking Payment Status for", userEmail);
         try {
           const res = await checkPaymentStatus(userEmail);
-          console.log("💳 Status Response:", res);
-
           if (res.data && res.data.isPro) {
             setIsPro(true);
-            console.log("✅ Status Updated to PRO");
-          } else {
-            console.log("❌ Status remains FREE");
           }
         } catch (err) {
           console.error("Gagal cek status:", err);
         }
       };
-
-      // Jalankan pengecekan
       performStatusCheck();
     } catch (e) {
       router.replace("/auth/login");
@@ -104,21 +129,12 @@ export default function AccountsPage() {
     }
   }, [router]);
 
-  // 2. Load Widgets
   useEffect(() => {
     const loadWidgets = async () => {
       try {
         const jwt = cookies.get("login_token");
-        console.log(
-          "🔍 Checking login_token:",
-          jwt ? "Token Found" : "No Token",
-        );
         if (!jwt) return;
-
-        console.log("📦 Fetching Widgets...");
         const res = await getWidgetsByUser(jwt);
-        console.log("📊 Widgets Loaded:", res.data);
-
         if (res?.success) {
           setWidgets(res.data);
         }
@@ -126,22 +142,135 @@ export default function AccountsPage() {
         console.error("🚨 LOAD WIDGET ERROR:", e);
       }
     };
-
     loadWidgets();
   }, []);
 
-  // 3. LOGIC UPGRADE & POLLING
+  const openEditModal = (widget: Widget) => {
+    if (!isPro) {
+      toast.error("Fitur Custom Branding hanya untuk akun PRO!");
+      return;
+    }
+    setEditingWidgetId(widget.id);
+
+    setEditFormData({
+      customName: widget.customName || "",
+      customUsername: widget.customUsername || "",
+      customBio: widget.customBio || "",
+      customLink: widget.customLink || "",
+    });
+
+    setAvatarFile(null);
+    setAvatarPreview(widget.customAvatar || null);
+
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveBranding = async () => {
+    if (!editingWidgetId) return;
+    setIsSaving(true);
+
+    try {
+      const currentWidget = widgets.find((w) => w.id === editingWidgetId);
+      if (!currentWidget) return;
+
+      let finalAvatarUrl = currentWidget.customAvatar;
+
+      if (avatarFile) {
+        toast.loading("Uploading avatar...");
+        const uploadRes = await uploadWidgetAvatar(
+          currentWidget.id,
+          avatarFile
+        );
+
+        if (uploadRes?.success && uploadRes?.data?.url) {
+          finalAvatarUrl = uploadRes.data.url;
+        } else {
+          toast.dismiss();
+          toast.error("Gagal mengupload gambar.");
+          console.error("Upload avatar error:", uploadRes);
+          setIsSaving(false);
+          return;
+        }
+        toast.dismiss();
+      }
+
+      const payload = {
+        ...editFormData,
+        customAvatar: finalAvatarUrl,
+      };
+
+      const res = await updateWidgetBranding(editingWidgetId, payload);
+
+      if (res?.success) {
+        toast.success("Widget branding berhasil diupdate!");
+
+        setWidgets((prev) =>
+          prev.map((w) =>
+            w.id === editingWidgetId ? { ...w, ...payload } : w
+          )
+        );
+        setIsEditModalOpen(false);
+      } else {
+        toast.error("Gagal update widget");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.dismiss();
+      toast.error("Terjadi kesalahan saat menyimpan");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 🔥 Fungsi Handler Baru untuk Hapus Avatar
+  // 🔥 Fungsi Handler Baru untuk Hapus Avatar
+  const handleRemoveAvatar = async () => {
+    if (!editingWidgetId) return;
+    
+    const confirmDelete = window.confirm("Apakah Anda yakin ingin menghapus foto profil ini?");
+    if (!confirmDelete) return;
+
+    setIsDeletingAvatar(true);
+    toast.loading("Menghapus avatar...");
+
+    try {
+      // 🔥 Panggil dari widget.api.ts
+      const res = await removeWidgetAvatar(editingWidgetId);
+
+      if (res?.success) {
+        toast.dismiss();
+        toast.success("Avatar berhasil dihapus");
+        
+        // Update state lokal agar preview langsung hilang
+        setAvatarPreview(null);
+        setAvatarFile(null);
+        
+        // Update data widget utama agar perubahan tersimpan di tabel
+        setWidgets((prev) =>
+          prev.map((w) =>
+            w.id === editingWidgetId ? { ...w, customAvatar: undefined } : w
+          )
+        );
+      } else {
+        toast.dismiss();
+        toast.error("Gagal menghapus avatar");
+      }
+    } catch (error) {
+      console.error("Gagal hapus avatar:", error);
+      toast.dismiss();
+      toast.error("Terjadi kesalahan koneksi");
+    } finally {
+      setIsDeletingAvatar(false);
+    }
+  };
+
   const handleUpgrade = async () => {
     try {
-      // Tidak ada overlay loading, cukup toast sederhana
       toast.loading("Membuka halaman pembayaran...");
-
       const res = await getPaymentLink();
       toast.dismiss();
-
       if (res?.paymentLink) {
         window.location.href = res.paymentLink;
-        toast.info("Silakan selesaikan pembayaran, lalu refresh halaman ini.");
       }
     } catch (error) {
       toast.dismiss();
@@ -149,12 +278,12 @@ export default function AccountsPage() {
     }
   };
 
-  const toggleTokenVisibility = (id: string) => {
-    setShowTokens((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleTokenVisibility = (uiKey: string) => {
+    setShowTokens((prev) => ({ ...prev, [uiKey]: !prev[uiKey] }));
   };
 
-  const toggleDetails = (id: string) => {
-    setOpenDetails((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleDetails = (uiKey: string) => {
+    setOpenDetails((prev) => ({ ...prev, [uiKey]: !prev[uiKey] }));
   };
 
   const handleDeleteWidget = (widgetId: string) => {
@@ -177,7 +306,7 @@ export default function AccountsPage() {
     });
   };
 
-  const handleLogout = () => {
+  const confirmLogout = () => {
     cookies.remove("access_token");
     cookies.remove("login_token");
     cookies.remove("login_email");
@@ -189,14 +318,253 @@ export default function AccountsPage() {
     expiredAt: "Nov 2, 2025",
   };
 
-  if (loading) return <div className="p-10">Loading...</div>;
+  // 🔥 Cari tahu apakah widget yang sedang diedit saat ini memiliki avatar yang SUDAH tersimpan di DB
+  const currentEditingWidget = widgets.find(w => w.id === editingWidgetId);
+  const hasSavedAvatar = !!currentEditingWidget?.customAvatar;
+
+  if (loading)
+    return (
+      <div className="p-10 flex items-center gap-2">
+        <Loader2 className="animate-spin text-purple-600" /> Loading...
+      </div>
+    );
 
   return (
     <>
       <Navbar />
       <Toaster position="top-center" richColors />
 
-      {/* OVERLAY LOADING SAAT POLLING */}
+      {/* MODAL KONFIRMASI LOGOUT */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 text-center flex flex-col items-center">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
+              <LogOut className="w-8 h-8 ml-1" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">
+              Ready to leave?
+            </h3>
+            <p className="text-sm text-slate-500 mb-6 px-4">
+              Anda akan keluar dari sesi saat ini. Anda harus masuk kembali
+              untuk mengakses dashboard Anda.
+            </p>
+            <div className="flex w-full gap-3">
+              <button
+                onClick={() => setIsLogoutModalOpen(false)}
+                className="flex-1 py-2.5 rounded-xl font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="flex-1 py-2.5 rounded-xl font-medium text-white bg-red-500 hover:bg-red-600 shadow-md shadow-red-200 transition"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PERINGATAN UKURAN FILE */}
+      {isFileTooLargeModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 text-center flex flex-col items-center">
+            <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">
+              File Terlalu Besar
+            </h3>
+            <p className="text-sm text-slate-500 mb-6 px-4">
+              Ukuran gambar maksimal yang diizinkan adalah 2MB. Silakan pilih
+              gambar dengan ukuran yang lebih kecil.
+            </p>
+            <button
+              onClick={() => setIsFileTooLargeModalOpen(false)}
+              className="w-full py-2.5 rounded-xl font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 transition"
+            >
+              Mengerti
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL EDIT POPUP --- */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="px-6 py-4 border-b flex items-center justify-between bg-gray-50">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <Edit2 className="w-5 h-5 text-purple-600" />
+                Customize Widget Bio
+              </h3>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-2 hover:bg-gray-200 rounded-full transition"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+              {/* FOTO PROFIL UPLOAD */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-500 uppercase flex items-center justify-between w-full">
+                  <span className="flex items-center gap-1">
+                     <ImageIcon className="w-3 h-3" /> Picture
+                  </span>
+                  {/* 🔥 TOMBOL HAPUS FOTO (Hanya muncul jika di DB sudah ada fotonya) */}
+                  {hasSavedAvatar && (
+                     <button
+                       type="button"
+                       onClick={handleRemoveAvatar}
+                       disabled={isDeletingAvatar}
+                       className="text-[10px] text-red-500 hover:underline flex items-center gap-1 disabled:opacity-50"
+                     >
+                       {isDeletingAvatar ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2Icon className="w-3 h-3" />}
+                       Remove Picture
+                     </button>
+                  )}
+                </label>
+                <div className="flex items-center gap-4">
+                  {/* Lingkaran Preview Foto */}
+                  <div className="w-14 h-14 rounded-full border border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
+                    {avatarPreview ? (
+                      <img
+                        src={avatarPreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <UserIcon className="w-6 h-6 text-gray-300" />
+                    )}
+                  </div>
+
+                  {/* Tombol Input File */}
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/jpg, image/webp"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 2 * 1024 * 1024) {
+                            setIsFileTooLargeModalOpen(true);
+                            e.target.value = "";
+                            return;
+                          }
+                          setAvatarFile(file);
+                          setAvatarPreview(URL.createObjectURL(file));
+                        }
+                      }}
+                      className="block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-xs file:font-semibold
+                        file:bg-purple-50 file:text-purple-700
+                        hover:file:bg-purple-100 transition cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
+                    <UserIcon className="w-3 h-3" /> Display Name
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition"
+                    placeholder="e.g. Naufal Dev"
+                    value={editFormData.customName}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        customName: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
+                    <AtSign className="w-3 h-3" /> Username
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition"
+                    placeholder="@naufal"
+                    value={editFormData.customUsername}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        customUsername: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
+                  <AlignLeft className="w-3 h-3" /> Bio / Description
+                </label>
+                <textarea
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition resize-none h-24"
+                  placeholder="Tell something about your notion page..."
+                  value={editFormData.customBio}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, customBio: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1">
+                  <LinkIcon className="w-3 h-3" /> External Link
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition"
+                  placeholder="https://mysite.com"
+                  value={editFormData.customLink}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      customLink: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-xl transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveBranding}
+                disabled={isSaving}
+                className="px-5 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-xl transition shadow-md shadow-purple-200 flex items-center gap-2 disabled:opacity-70"
+              >
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 overflow-x-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-10">
@@ -211,9 +579,13 @@ export default function AccountsPage() {
                   <p className="font-medium text-slate-900">{user?.email}</p>
                 </div>
                 <span
-                  className={`px-4 py-1 rounded-full text-xs font-bold ${isPro ? "bg-green-100 text-green-700" : "bg-purple-100 text-purple-700"}`}
+                  className={`px-4 py-1 rounded-full text-xs font-bold ${
+                    isPro
+                      ? "bg-green-100 text-green-700"
+                      : "bg-purple-100 text-purple-700"
+                  }`}
                 >
-                  {isPro ? "Pro" : "Starter"}
+                  {isPro ? "PRO" : "Starter"}
                 </span>
               </div>
 
@@ -241,25 +613,25 @@ export default function AccountsPage() {
               </div>
 
               <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                {/* TOMBOL UPGRADE DINAMIS */}
                 {!isPro ? (
                   <button
                     onClick={handleUpgrade}
-                    className="flex items-center gap-2 text-sm font-semibold text-purple-600 bg-purple-50 px-4 py-2 rounded-xl hover:bg-purple-100 transition"
+                    className="flex items-center justify-center gap-2 text-sm font-semibold text-purple-600 bg-purple-50 px-4 py-2 rounded-xl hover:bg-purple-100 transition"
                   >
                     <Crown className="w-4 h-4" />
                     Upgrade to PRO
                   </button>
                 ) : (
                   <span className="text-sm text-green-600 font-medium flex items-center gap-1">
-                    <Crown className="w-4 h-4" /> Anda sudah berlangganan PRO
+                    {/* <Crown className="w-4 h-4" /> Anda sudah berlangganan PRO */}
                   </span>
                 )}
 
                 <button
-                  onClick={handleLogout}
-                  className="text-sm text-red-500 hover:underline"
+                  onClick={() => setIsLogoutModalOpen(true)}
+                  className="flex items-center justify-center gap-2 text-sm font-medium text-red-500 hover:text-red-600 transition hover:bg-red-50 px-4 py-2 rounded-xl"
                 >
+                  <LogOut className="w-4 h-4" />
                   Logout
                 </button>
               </div>
@@ -290,19 +662,27 @@ export default function AccountsPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
               {widgets.map((widget, index) => {
                 const paused = isWidgetPaused(index);
+                
+                const uiKey = `${widget.id}-${index}`; 
+
                 return (
                   <div
-                    key={widget.id}
-                    className={`rounded-2xl border bg-white shadow-sm transition ${paused ? "opacity-70 grayscale-[0.5]" : "hover:shadow-md"}`}
+                    key={uiKey} 
+                    className={`rounded-2xl border bg-white shadow-sm transition ${
+                      paused ? "opacity-70 grayscale-[0.5]" : "hover:shadow-md"
+                    }`}
                   >
                     <div className="flex items-start justify-between p-5 gap-3">
                       <div>
                         <p className="text-sm font-medium text-slate-900 break-all">
-                          Widget #{widget.id.slice(0, 6).toUpperCase()}
+                          {isPro && widget.customUsername
+                            ? widget.customUsername
+                            : `Widget #${widget.id.slice(0, 6).toUpperCase()}`}
                         </p>
+
                         {paused ? (
                           <span className="inline-flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full mt-1">
                             ● Paused (Upgrade Pro)
@@ -313,18 +693,48 @@ export default function AccountsPage() {
                           </span>
                         )}
                       </div>
-                      <button
-                        onClick={() => handleDeleteWidget(widget.id)}
-                        className="p-2 rounded-lg hover:bg-red-50 transition group"
-                      >
-                        <Trash2Icon className="w-5 h-5 text-slate-400 group-hover:text-red-500" />
-                      </button>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            if (!isPro) {
+                              toast.info(
+                                "Upgrade to PRO to customize widget bio",
+                                {
+                                  icon: "👑",
+                                }
+                              );
+                              return;
+                            }
+                            openEditModal(widget);
+                          }}
+                          disabled={paused}
+                          className={`p-2 rounded-lg transition group ${
+                            isPro
+                              ? "hover:bg-blue-50 text-slate-400 hover:text-blue-600 cursor-pointer"
+                              : "text-slate-300 cursor-not-allowed opacity-60"
+                          }`}
+                          title={isPro ? "Edit Bio" : "Pro Feature Only"}
+                        >
+                          <Edit2 className="w-5 h-5" />
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteWidget(widget.id)}
+                          className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition group"
+                          title="Delete"
+                        >
+                          <Trash2Icon className="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="px-5 pb-4">
                       <p className="text-xs text-slate-500 mb-1">Embed Link</p>
                       <div
-                        className={`flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-xl px-3 py-2 ${paused ? disabledClass : ""}`}
+                        className={`flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-xl px-3 py-2 ${
+                          paused ? disabledClass : ""
+                        }`}
                       >
                         <p className="text-xs font-mono truncate flex-1 text-slate-700">
                           {widget.link}
@@ -353,51 +763,81 @@ export default function AccountsPage() {
 
                     <button
                       disabled={paused}
-                      onClick={() => toggleDetails(widget.id)}
-                      className={`w-full flex items-center justify-between px-5 py-3 text-xs text-slate-500 border-t hover:bg-slate-50 transition ${!openDetails[widget.id] ? "rounded-b-2xl" : ""} ${paused ? disabledClass : ""}`}
+                      onClick={() => toggleDetails(uiKey)} 
+                      className={`w-full flex items-center justify-between px-5 py-3 text-xs text-slate-500 border-t hover:bg-slate-50 transition ${
+                        !openDetails[uiKey] ? "rounded-b-2xl" : "" 
+                      } ${paused ? disabledClass : ""}`}
                     >
-                      Show Advanced Details {openDetails[widget.id] ? "▲" : "▼"}
+                      Show Advanced Details {openDetails[uiKey] ? "▲" : "▼"}
                     </button>
 
-                    {openDetails[widget.id] && !paused && (
-                      <div className="px-5 pb-5 space-y-3 text-xs rounded-b-2xl">
-                        <div>
-                          <p className="text-slate-500 mb-1">Widget ID</p>
-                          <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
-                            <span className="font-mono flex-1 truncate">
-                              {widget.id}
-                            </span>
+                    <div className="relative">
+                      {openDetails[uiKey] && !paused && (
+                        <div
+                          className={`px-5 pb-5 space-y-3 text-xs rounded-b-2xl ${
+                            !isPro ? "blur-[3px] select-none pointer-events-none" : ""
+                          }`}
+                        >
+                          <div>
+                            <p className="text-slate-500 mb-1">Widget ID</p>
+                            <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                              <span className="font-mono flex-1 truncate">
+                                {widget.id}
+                              </span>
+                            </div>
                           </div>
+                          <div>
+                            <p className="text-slate-500 mb-1">Database ID</p>
+                            <div className="bg-slate-50 rounded-lg px-3 py-2 font-mono truncate">
+                              {widget.dbID}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 mb-1">
+                              Integration Token
+                            </p>
+                            <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                              <span className="font-mono flex-1 truncate">
+                                {showTokens[uiKey]
+                                  ? widget.token
+                                  : "••••••••••••••••••"}
+                              </span>
+                              <button
+                                onClick={() => toggleTokenVisibility(uiKey)}
+                              >
+                                {showTokens[uiKey] ? (
+                                  <EyeOff className="w-4 h-4 text-slate-400" />
+                                ) : (
+                                  <Eye className="w-4 h-4 text-slate-400" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                          
                         </div>
-                        <div>
-                          <p className="text-slate-500 mb-1">
-                            Integration Token
-                          </p>
-                          <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
-                            <span className="font-mono flex-1 truncate">
-                              {showTokens[widget.id]
-                                ? widget.token
-                                : "••••••••••••••••••"}
-                            </span>
+                      )}
+
+                      {openDetails[uiKey] && !paused && !isPro && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/40 rounded-b-2xl pb-4">
+                          <div className="bg-white px-4 py-3 rounded-xl shadow-lg border border-purple-100 flex flex-col items-center text-center">
+                            <Lock className="w-6 h-6 text-purple-500 mb-2" />
+                            <p className="text-sm font-bold text-slate-800 mb-1">
+                              PRO Feature
+                            </p>
+                            <p className="text-[11px] text-slate-500 mb-3 px-2">
+                              Upgrade to access advanced API tokens and database
+                              IDs.
+                            </p>
                             <button
-                              onClick={() => toggleTokenVisibility(widget.id)}
+                              onClick={handleUpgrade}
+                              className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition flex items-center gap-1.5"
                             >
-                              {showTokens[widget.id] ? (
-                                <EyeOff className="w-4 h-4 text-slate-400" />
-                              ) : (
-                                <Eye className="w-4 h-4 text-slate-400" />
-                              )}
+                              <Crown className="w-3.5 h-3.5" /> Upgrade Now
                             </button>
                           </div>
                         </div>
-                        <div>
-                          <p className="text-slate-500 mb-1">Database ID</p>
-                          <div className="bg-slate-50 rounded-lg px-3 py-2 font-mono truncate">
-                            {widget.dbID}
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 );
               })}

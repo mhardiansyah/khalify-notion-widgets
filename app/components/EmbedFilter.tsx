@@ -1,75 +1,132 @@
-"use client";
-
 import { ChevronDown, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const filterOptions = {
-  platform: ["All Platform", "Instagram", "Tiktok", "Others"],
-  status: ["All Status", "Not started", "In progress", "Done"],
-  pillar: [
-    "All Pillars",
-    "Tips and How to",
-    "Client Wins",
-    "Offer and Service",
-    "Other",
-    "Behind the Scenes",
-  ],
-  pinned: ["All Posts", "Pinned Only", "Unpinned Only"],
-};
 
-const defaultValue = {
-  platform: "All Platform",
-  status: "All Status",
-  pillar: "All Pillars",  
-  pinned: "All Posts",
-};
 
-const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
+function getNotionValues(prop: any): string[] {
+  if (!prop) return [];
+  
+  if (prop.select && prop.select.name) return [prop.select.name];
+  if (prop.multi_select) return prop.multi_select.map((s: any) => s.name);
+  if (prop.status && prop.status.name) return [prop.status.name];
+  if (prop.rich_text) return prop.rich_text.map((t: any) => t.plain_text);
+  if (prop.title) return prop.title.map((t: any) => t.plain_text);
+  
+  if (prop.type === "rollup" && prop.rollup && prop.rollup.array) {
+    let results: string[] = [];
+    prop.rollup.array.forEach((item: any) => {
+       if (item.type) {
+           results = results.concat(getNotionValues({ [item.type]: item[item.type] }));
+       } else {
+           results = results.concat(getNotionValues(item));
+       }
+    });
+    return results;
+  }
+  
+  return [];
+}
 
-export default function EmbedFilter({
+function getProp(propsObj: any, key: string) {
+  if (!propsObj) return null;
+  if (propsObj[key]) return propsObj[key];
+  const foundKey = Object.keys(propsObj).find(
+    (k) => k.trim().toLowerCase() === key.toLowerCase(),
+  );
+  return foundKey ? propsObj[foundKey] : null;
+}
+
+export function EmbedFilter({
   theme = "light",
   isPro = false,
+  rawData = [],
 }: {
   theme?: "light" | "dark";
   isPro?: boolean;
+  rawData?: any[];
 }) {
   const router = useRouter();
   const params = useSearchParams();
   const [open, setOpen] = useState<string | null>(null);
 
-  const current = {
-    platform: params.get("platform") ?? defaultValue.platform,
-    status: params.get("status") ?? defaultValue.status,
-    pillar: params.get("pillar") ?? defaultValue.pillar,
-    pinned:
-      params.get("pinned") === "true"
-        ? "Pinned Only"
-        : params.get("pinned") === "false"
-          ? "Unpinned Only"
-          : defaultValue.pinned,
+  const dynamicFilters = useMemo(() => {
+    // 1. Inisialisasi Set Kosong agar sepenuhnya dinamis
+    const platforms = new Set<string>();
+    const statuses = new Set<string>();
+    const pillars = new Set<string>();
+
+    // 2. Loop data tetap sama (mengambil value dari tiap baris Notion)
+    rawData.forEach((item) => {
+      const props = item.properties;
+
+      // getNotionValues sudah menangani ekstraksi dari Select/Multi-select/Status/Rollup
+      getNotionValues(getProp(props, "Platform")).forEach((v) => {
+        if (v) platforms.add(v.trim());
+      });
+      getNotionValues(getProp(props, "Status")).forEach((v) => {
+        if (v) statuses.add(v.trim());
+      });
+      getNotionValues(getProp(props, "Pillar")).forEach((v) => {
+        if (v) pillars.add(v.trim());
+      });
+    });
+    // 3. (Opsional) Urutkan data agar rapi secara alfabetis
+    const setToDict = (setObj: Set<string>, allLabel: string) => {
+      const dict: Record<string, string> = { all: allLabel };
+      // Convert ke array dan sort sebelum dimasukkan ke dictionary
+      Array.from(setObj)
+        .sort()
+        .forEach((val) => {
+          const cleanVal = val.trim();
+          dict[cleanVal.toLowerCase()] = cleanVal;
+        });
+      return dict;
+    };
+
+    return {
+      platform: setToDict(platforms, "All Platform"),
+      status: setToDict(statuses, "All Status"),
+      pillar: setToDict(pillars, "All Pillars"),
+      pinned: {
+        all: "All Posts",
+        true: "Pinned Only",
+        false: "Unpinned Only",
+      },
+    };
+  }, [rawData]);
+
+  const defaultValue = {
+    platform: "all",
+    status: "all",
+    pillar: "all",
+    pinned: "all",
   };
 
-  const updateFilter = (key: string, value: string) => {
+  const orderedKeys = ["platform", "status", "pillar", "pinned"] as const;
+
+  const current = {
+    platform:
+      params.get("platform")?.replace(/\+/g, " ").trim().toLowerCase() ??
+      defaultValue.platform,
+    status:
+      params.get("status")?.replace(/\+/g, " ").trim().toLowerCase() ??
+      defaultValue.status,
+    pillar:
+      params.get("pillar")?.replace(/\+/g, " ").trim().toLowerCase() ??
+      defaultValue.pillar,
+    pinned: params.get("pinned")?.trim().toLowerCase() ?? defaultValue.pinned,
+  };
+
+  const updateFilter = (key: string, rawValue: string) => {
     if (!isPro) return;
 
     const newParams = new URLSearchParams(params.toString());
 
-    if (value === defaultValue[key as keyof typeof defaultValue]) {
+    if (rawValue === "all") {
       newParams.delete(key);
     } else {
-      if (key === "pinned") {
-        newParams.set(
-          key,
-          value === "Pinned Only"
-            ? "true"
-            : value === "Unpinned Only"
-              ? "false"
-              : "all",
-        );
-      } else {
-        newParams.set(key, value);
-      }
+      newParams.set(key, rawValue);
     }
 
     router.push(`?${newParams.toString()}`);
@@ -92,9 +149,8 @@ export default function EmbedFilter({
     router.push(`?${newParams.toString()}`);
   };
 
-  const isActive = (key: string) =>
-    current[key as keyof typeof current] !==
-    defaultValue[key as keyof typeof defaultValue];
+  const isActive = (key: keyof typeof current) =>
+    current[key] !== defaultValue[key];
 
   const activeCount = orderedKeys.filter(isActive).length;
 
@@ -104,12 +160,26 @@ export default function EmbedFilter({
         className={`rounded-xl p-3 sm:p-4 space-y-3 border ${
           theme === "light"
             ? "bg-white border-gray-200"
-            : "bg-[#1F2A3C] border-[#2A3550] text-white"
+            : "bg-[#222222] border-[#333333] text-white"
         }`}
       >
         <div className="grid grid-cols-1 gap-2">
           {orderedKeys.map((key) => {
-            const value = current[key];
+            const currentRawValue = current[key];
+            const filterOptions: any = dynamicFilters[key];
+
+            let displayValue = currentRawValue;
+            if (key === "pinned") {
+              displayValue = filterOptions[currentRawValue] || currentRawValue;
+            } else {
+              displayValue =
+                currentRawValue === "all"
+                  ? filterOptions.all
+                  : filterOptions[currentRawValue] ||
+                    currentRawValue.replace(/\b\w/g, (l: string) =>
+                      l.toUpperCase(),
+                    );
+            }
 
             return (
               <div key={key} className="relative w-full">
@@ -127,12 +197,14 @@ export default function EmbedFilter({
                           : "bg-purple-600/20 border-purple-500 text-purple-300"
                         : theme === "light"
                           ? "bg-gray-200 border-gray-300 text-gray-500"
-                          : "bg-[#2A3550] border-[#2A3550] text-gray-400"
+                          : "bg-[#333333] border-[#333333] text-gray-400"
                     }
                     ${!isPro ? "cursor-not-allowed opacity-60" : ""}
                   `}
                 >
-                  <span className="truncate flex-1">{value}</span>
+                  <span className="truncate flex-1 text-left">
+                    {displayValue}
+                  </span>
                   <ChevronDown
                     className={`w-4 h-4 shrink-0 ${!isPro ? "opacity-50" : ""}`}
                   />
@@ -146,42 +218,53 @@ export default function EmbedFilter({
                     />
 
                     <div
-                      className={`absolute z-50 mt-2 w-56 rounded-xl border shadow-lg overflow-hidden ${
+                      className={`absolute z-50 mt-2 w-56 rounded-xl border shadow-lg overflow-hidden max-h-64 overflow-y-auto ${
                         theme === "light"
                           ? "bg-white border-gray-200"
-                          : "bg-[#1F2A3C] border-[#2A3550]"
+                          : "bg-[#222222] border-[#333333]"
                       }`}
                     >
                       <div
-                        className={`px-4 py-2 text-xs font-semibold border-b ${
+                        className={`sticky top-0 z-10 px-4 py-2 text-xs font-semibold border-b ${
                           theme === "light"
-                            ? "text-gray-400 border-gray-200"
-                            : "text-gray-400 border-[#2A3550]"
+                            ? "bg-gray-50 text-gray-400 border-gray-200"
+                            : "bg-[#2A2A2A] text-gray-400 border-[#333333]"
                         }`}
                       >
-                        {key.toUpperCase()}
+                        {key === "pinned" ? "POSTS" : key.toUpperCase()}
                       </div>
 
-                      {filterOptions[key].map((opt) => (
-                        <button
-                          key={opt}
-                          onClick={() => updateFilter(key, opt)}
-                          className={`w-full px-4 py-3 flex items-center justify-between text-sm
-                            ${
-                              value === opt
-                                ? theme === "light"
-                                  ? "bg-purple-50 text-purple-700"
-                                  : "bg-purple-600/20 text-purple-300"
-                                : theme === "light"
-                                  ? "hover:bg-[#F9FAFB]"
-                                  : "hover:bg-[#24304A]"
-                            }
-                          `}
-                        >
-                          <span>{opt}</span>
-                          {value === opt && <span className="text-xs">✓</span>}
-                        </button>
-                      ))}
+                      {Object.entries(filterOptions).map(
+                        ([optKey, optLabel]) => {
+                          const isSelected = currentRawValue === optKey;
+                          const finalOptLabel = optLabel as string;
+
+                          return (
+                            <button
+                              key={optKey}
+                              onClick={() => updateFilter(key, optKey)}
+                              className={`w-full px-4 py-3 flex items-center justify-between text-sm text-left
+                                ${
+                                  isSelected
+                                    ? theme === "light"
+                                      ? "bg-purple-50 text-purple-700"
+                                      : "bg-purple-600/20 text-purple-300"
+                                    : theme === "light"
+                                      ? "hover:bg-[#F9FAFB]"
+                                      : "hover:bg-[#333333]"
+                                }
+                              `}
+                            >
+                              <span className="truncate pr-2">
+                                {finalOptLabel}
+                              </span>
+                              {isSelected && (
+                                <span className="text-xs shrink-0">✓</span>
+                              )}
+                            </button>
+                          );
+                        },
+                      )}
                     </div>
                   </>
                 )}
@@ -189,24 +272,29 @@ export default function EmbedFilter({
             );
           })}
         </div>
-        
 
         {!isPro && (
           <>
             <div
-              className={`h-px my-3 ${
-                theme === "light" ? "bg-gray-200" : "bg-[#2A3550]"
+              className={`h-px my-2 ${
+                theme === "light" ? "bg-gray-200" : "bg-[#333333]"
               }`}
             />
-
-            <button
-              onClick={() => {
-                window.open("https://khlasify.myr.id/pl/content-pro", "_blank");
-              }}
-              className="w-full py-3 text-sm font-semibold text-purple-600 hover:bg-purple-50 transition rounded-2xl"
-            >
-              Upgrade to PRO
-            </button>
+            {/* 🔥 EFEK HOVER UPGRADE TO PRO DISAMAKAN DENGAN SETTINGS */}
+            <div className="px-1 pb-1">
+              <button
+                onClick={() => {
+                  window.open("https://khlasify.myr.id/pl/content-pro", "_blank");
+                }}
+                className={`w-full py-2.5 text-sm font-semibold rounded-lg transition ${
+                  theme === "light"
+                    ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
+                    : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30"
+                }`}
+              >
+                Upgrade to PRO
+              </button>
+            </div>
           </>
         )}
 
@@ -230,33 +318,45 @@ export default function EmbedFilter({
 
         {activeCount > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
-            {orderedKeys.map(
-              (key) =>
-                isActive(key) && (
-                  <div
-                    key={key}
-                    className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                      theme === "light"
-                        ? "bg-purple-100 text-purple-700"
-                        : "bg-purple-600/20 text-purple-300"
-                    }`}
+            {orderedKeys.map((key) => {
+              if (!isActive(key)) return null;
+              const filterOptions: any = dynamicFilters[key];
+              const currentVal = current[key];
+
+              let badgeLabel = currentVal;
+              if (key === "pinned") {
+                badgeLabel = filterOptions[currentVal] as string;
+              } else {
+                badgeLabel =
+                  (filterOptions[currentVal] as string) ||
+                  currentVal.replace(/\b\w/g, (l: string) => l.toUpperCase());
+              }
+
+              return (
+                <div
+                  key={key}
+                  className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+                    theme === "light"
+                      ? "bg-purple-100 text-purple-700"
+                      : "bg-purple-600/20 text-purple-300"
+                  }`}
+                >
+                  <span className="truncate max-w-[200px]">
+                    <span className="capitalize font-medium">
+                      {key === "pinned" ? "post" : key}:
+                    </span>{" "}
+                    {badgeLabel}
+                  </span>
+                  <button
+                    disabled={!isPro}
+                    onClick={() => isPro && updateFilter(key, "all")}
+                    className={!isPro ? "cursor-not-allowed opacity-50" : ""}
                   >
-                    <span className="capitalize">{key}</span>
-                    <span className="truncate max-w-[120px]">
-                      {current[key]}
-                    </span>
-                    <button
-                      disabled={!isPro}
-                      onClick={() =>
-                        isPro && updateFilter(key, defaultValue[key])
-                      }
-                      className={!isPro ? "cursor-not-allowed opacity-50" : ""}
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ),
-            )}
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

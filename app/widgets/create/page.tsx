@@ -5,7 +5,9 @@ import Navbar from "@/app/components/Navbar";
 import FinishStep from "@/app/components/finish-step";
 import { useRouter } from "next/navigation";
 import cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode"; // 🔥 Import jwtDecode
 import { createWidget } from "@/app/lib/widget.api";
+import { checkPaymentStatus } from "@/app/lib/payment.api"; // 🔥 Import fungsi cek status
 import CreateTokenStep from "@/app/components/CreateTokenStep";
 import InputTokenStep from "@/app/components/InputTokenStep";
 import TemplateStep from "@/app/components/TemplateStep";
@@ -23,20 +25,49 @@ export default function CreateWidgetPageMerged() {
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<{ jwt: string } | null>(null);
+  const [user, setUser] = useState<{ jwt: string; email?: string } | null>(null); // Tambah email ke state
   const [showTokenInput, setShowTokenInput] = useState(false);
   const [showLoginAlert, setShowLoginAlert] = useState(false);
+  
+  // 🔥 State untuk status Pro
+  const [isPro, setIsPro] = useState(false);
 
   const router = useRouter();
 
-  // 🔐 soft guard → popup instead of redirect
+  // 🔐 soft guard → popup instead of redirect & Cek Status Pro
   useEffect(() => {
     const jwt = cookies.get("login_token");
     if (!jwt) {
       setShowLoginAlert(true);
       return;
     }
-    setUser({ jwt });
+    
+    let userEmail = "";
+    try {
+        const decoded = jwtDecode<any>(jwt);
+        userEmail = decoded.email;
+        setUser({ jwt, email: userEmail });
+    } catch (e) {
+        console.error("Gagal mendecode JWT", e);
+        setShowLoginAlert(true);
+        return;
+    }
+
+    // 🔥 Cek status payment pengguna
+    const performStatusCheck = async () => {
+        if (!userEmail) return;
+        try {
+          const res = await checkPaymentStatus(userEmail);
+          if (res.data && res.data.isPro) {
+            setIsPro(true);
+          }
+        } catch (err) {
+          console.error("Gagal cek status:", err);
+        }
+      };
+      
+      performStatusCheck();
+
   }, []);
 
   const handleGenerateWidget = async (dbId: string, name: string) => {
@@ -76,7 +107,7 @@ export default function CreateWidgetPageMerged() {
               Please login first to create your widget.
             </p>
 
-            <div className="flex justify-center gap-3">           
+            <div className="flex justify-center gap-3">          
               <button
                 onClick={() => router.push("/")}
                 className="px-4 py-2 rounded-lg bg-gray-200"
@@ -132,7 +163,8 @@ export default function CreateWidgetPageMerged() {
             {/* CONTENT */}
             <div className="bg-gray-50 p-4 sm:p-6 md:p-8 rounded-xl shadow">
 
-              {step === 1 && <TemplateStep onConfirm={() => setStep(2)} />}
+              {/* 🔥 Meneruskan status isPro ke TemplateStep */}
+              {step === 1 && <TemplateStep onConfirm={() => setStep(2)} isPro={isPro} />}
 
               {step === 2 && (
                 <>

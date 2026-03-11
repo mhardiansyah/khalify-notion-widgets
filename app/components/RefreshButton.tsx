@@ -30,14 +30,12 @@ export default function RefreshButton({
       className={`
         w-9 h-9
         flex items-center justify-center
-        rounded-full border
-        transition
+        rounded-full border transition
+        ${loading ? "opacity-60 cursor-not-allowed" : ""}
         ${
-          loading
-            ? "opacity-60 cursor-not-allowed"
-            : theme === "light"
-            ? "hover:bg-[#F9FAFB]"
-            : "hover:bg-[#24304A]"
+          theme === "light"
+            ? "border-gray-200 hover:bg-[#F9FAFB] text-gray-900"
+            : "border-[#333333] hover:bg-[#333333] text-white"
         }
       `}
     >

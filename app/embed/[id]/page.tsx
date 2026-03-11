@@ -1,4 +1,5 @@
-export const dynamic = "force-dynamic"; // Pastikan dynamic agar selalu fetch baru
+// app/embed/[id]/page.tsx
+export const dynamic = "force-dynamic";
 
 import ClientViewComponent from "@/app/components/ClientViewComponent";
 import { queryDatabase } from "@/app/lib/notion-server";
@@ -14,41 +15,58 @@ export default async function EmbedPage(props: EmbedPageProps) {
     const params = await props.params;
     const searchParams = await props.searchParams;
 
+    const widgetId = params.id;
     const dbID = searchParams.db;
 
-    if (!dbID) {
-      return <p className="text-red-500 text-center mt-10">Invalid embed params</p>;
+    if (!widgetId || !dbID) {
+      return (
+        <p className="text-red-500 text-center mt-10">Invalid embed params</p>
+      );
     }
 
-    // 1. Fetch Widget Detail dari Backend
-    // Endpoint ini harus mengembalikan data widget + profile pemiliknya
-    const widgetRes = await axios.get(
-      `https://khalify-be.vercel.app/widgets/detail/${dbID}`,
-      { headers: { 'Cache-Control': 'no-store' } } // 🔥 PENTING: Agar tidak cache response lama
+    const response = await axios.get(
+      `https://khlasify-widget-be.vercel.app/widgets/detail/${dbID}`,
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
     );
 
-    if (!widgetRes.data?.success || !widgetRes.data?.data?.length) {
-      return <p className="text-red-500 text-center mt-10">Widget not found</p>;
+    const widgetRes = response.data;
+
+    if (!widgetRes?.success || !widgetRes?.data?.length) {
+      return (
+        <p className="text-red-500 text-center mt-10">Widget not found</p>
+      );
     }
 
-    const widgetData = widgetRes.data.data[0];
+    const widgetData = widgetRes.data[0];
     const token = widgetData.token;
+    const isOwnerPro = widgetData.isPro === true;
 
-    // 2. Ambil Status PRO dari Profile Pemilik Widget
-    // Karena Backend sudah di-include 'profile', kita bisa akses profile.isPro
-    const isOwnerPro = widgetData.profile?.isPro ?? false; 
-
-    // console.log("DEBUG: Owner is PRO?", isOwnerPro); 
-
-    // 3. Query Notion Data
+    // 🔥 PERBAIKAN 1: Buat object profile dari data backend
+    // Kita cek dulu, kalau isPro true, baru kita pakai custom datanya.
+    // Kalau belum diset (kosong), pakai default fallback.
+   const widgetProfile = isOwnerPro ? {
+      name: widgetData.customName ?? "Your Name",
+      username: widgetData.customUsername ?? "username",
+      // 🔥 UBAH BARIS INI: Ganti link dicebear menjadi "/person.png"
+      avatarUrl: widgetData.customAvatar ? widgetData.customAvatar : "/person.png",
+      bio: widgetData.customBio ?? "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
+      link: widgetData.customLink ?? "https://khlasify.notion.site",
+      highlights: [] 
+    } : null;
     const notionData = await queryDatabase(token, dbID);
 
     return (
       <ClientViewComponent
         filtered={notionData}
-        profile={null}
+        profile={widgetProfile} // 🔥 PERBAIKAN 2: Kirim data profil yang sudah disusun
         theme="light"
-        isPro={isOwnerPro} // 🔥 Kirim status terbaru ke client
+        isPro={isOwnerPro}
       />
     );
   } catch (err) {

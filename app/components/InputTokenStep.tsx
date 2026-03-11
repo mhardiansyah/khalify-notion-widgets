@@ -7,6 +7,7 @@ import {
   Loader2,
   Folder,
   Sparkles,
+  Ban, // 🔥 Tambahkan icon Ban untuk database yang sudah dipakai
 } from "lucide-react";
 import { getNotionDatabases } from "@/app/lib/widget.api";
 
@@ -116,27 +117,48 @@ export default function InputTokenStep({
 
           {databases.map((db) => {
             const active = selectedDb?.id === db.id;
+            // 🔥 Cek apakah database ini sudah dijadikan widget
+            const isAlreadyWidget = db.isAlreadyWidget === true;
+            
+            // Tombol di-disable jika sedang loading ATAU jika database sudah jadi widget
+            const isDisabled = loadingCreate || isAlreadyWidget;
 
             return (
               <button
                 key={db.id}
-                onClick={() => setSelectedDb({ id: db.id, name: db.name })}
-                disabled={loadingCreate}
-                className={`w-full p-4 border rounded-lg text-left transition-all
+                onClick={() => {
+                    // Proteksi ekstra: Mencegah state update jika tombol di-klik (meskipun di-disable)
+                    if (isDisabled) return;
+                    setSelectedDb({ id: db.id, name: db.name });
+                }}
+                disabled={isDisabled}
+                className={`relative w-full p-4 border rounded-lg text-left transition-all overflow-hidden
                   ${
                     active
                       ? "border-purple-600 bg-purple-50 scale-[1.01]"
-                      : "hover:border-purple-400"
+                      : isAlreadyWidget
+                        ? "bg-gray-100 border-gray-200" // Warna khusus untuk disabled
+                        : "hover:border-purple-400"
                   }
-                  ${loadingCreate ? "opacity-60 cursor-not-allowed" : ""}
+                  ${isDisabled ? "cursor-not-allowed opacity-70" : ""}
                 `}
               >
-                <div className="flex gap-3">
-                  <Folder className="w-5 h-5 text-yellow-500 mt-0.5" />
-                  <div>
-                    <p className="font-medium">{db.name}</p>
+                <div className={`flex gap-3 items-start ${isAlreadyWidget ? "grayscale" : ""}`}>
+                  <Folder className={`w-5 h-5 mt-0.5 ${isAlreadyWidget ? "text-gray-400" : "text-yellow-500"}`} />
+                  <div className="flex-1">
+                    <p className={`font-medium ${isAlreadyWidget ? "text-gray-500 line-through" : ""}`}>
+                        {db.name}
+                    </p>
                     <p className="text-xs text-gray-500 break-all">{db.id}</p>
                   </div>
+                  
+                  {/* 🔥 Tambahkan label visual agar user tahu kenapa tidak bisa dipilih */}
+                  {isAlreadyWidget && (
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-red-500 bg-red-50 px-2 py-1 rounded-md shrink-0 border border-red-100">
+                          <Ban className="w-3 h-3" />
+                          Already Used
+                      </span>
+                  )}
                 </div>
               </button>
             );

@@ -3,6 +3,9 @@
 
 import { useEffect, useState } from "react";
 
+// 🔥 PAKE INI BIAR GAK ERROR LAGI
+const FALLBACK_IMAGE = "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
+
 export default function AutoThumbnail({
   src,
   className = "",
@@ -31,6 +34,7 @@ export default function AutoThumbnail({
         setThumb(src);
         setLoading(false);
       };
+
       img.onerror = async () => {
         try {
           const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(src)}`);
@@ -47,6 +51,11 @@ export default function AutoThumbnail({
         } finally {
           setLoading(false);
         }
+=======
+      img.onerror = () => {
+        setThumb(FALLBACK_IMAGE); 
+        setLoading(false);
+
       };
       return;
     }
@@ -73,7 +82,7 @@ export default function AutoThumbnail({
     });
 
     video.onerror = () => {
-      setThumb("/video-placeholder.png");
+      setThumb(FALLBACK_IMAGE);
       setLoading(false);
     };
   }, [src]);
@@ -90,7 +99,7 @@ export default function AutoThumbnail({
     >
       {/* Thumbnail */}
       <img
-        src={thumb || "/video-placeholder.png"}
+        src={thumb || FALLBACK_IMAGE}
         className={className}
         style={{
           objectFit: "cover",
