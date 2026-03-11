@@ -760,4 +760,4 @@ function extractAllImages(item: any) {
   }
 
   return urls;
-}   
+}
