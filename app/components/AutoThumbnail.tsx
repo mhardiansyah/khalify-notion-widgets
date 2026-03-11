@@ -31,9 +31,22 @@ export default function AutoThumbnail({
         setThumb(src);
         setLoading(false);
       };
-      img.onerror = () => {
-        setThumb("/placeholder.png");
-        setLoading(false);
+      img.onerror = async () => {
+        try {
+          const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(src)}`);
+          const data = await res.json();
+          
+          if (data.status === "success" && data.data?.image?.url) {
+            setThumb(data.data.image.url);
+          } else {
+            setThumb("/placeholder.png");
+          }
+        } catch (error) {
+          console.error("Gagal ekstrak link preview:", error);
+          setThumb("/placeholder.png");
+        } finally {
+          setLoading(false);
+        }
       };
       return;
     }
