@@ -6,12 +6,19 @@ import { useEffect, useState } from "react";
 // 🔥 PAKE INI BIAR GAK ERROR LAGI
 const FALLBACK_IMAGE = "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
 
+// 🔥 FUNGSI BARU: Mendeteksi & Ekstrak ID YouTube dari link apapun
+const getYoutubeId = (url: string) => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2].length === 11 ? match[2] : null;
+};
+
 export default function AutoThumbnail({
   src,
   className = "",
   style = {},
 }: {
-  src: string | string[]; // 🔥 Menerima string (lama) atau array string (Carousel baru)
+  src: string | string[]; // Menerima string (lama) atau array string (Carousel baru)
   className?: string;
   style?: React.CSSProperties;
 }) {
@@ -22,22 +29,36 @@ export default function AutoThumbnail({
   const imageSrc = Array.isArray(src) ? src[0] : src;
 
   useEffect(() => {
-    if (!imageSrc) return;
+    if (!imageSrc) {
+      setThumb(FALLBACK_IMAGE);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setThumb(null);
 
+    // 🔥 1. CEK YOUTUBE: Jika ini link YT, langsung tembak ke server gambar YouTube
+    const ytId = getYoutubeId(imageSrc);
+    if (ytId) {
+      setThumb(`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`);
+      setLoading(false);
+      return;
+    }
+
+    // 2. CEK FORMAT VIDEO LOKAL (MP4 dll)
     const isVideo = /(mp4|mov|avi|webm|mkv)(?=($|\?|&))/i.test(imageSrc);
 
     if (!isVideo) {
-      // IMAGE LOADING
+      // 3. IMAGE LOADING BIASA
       const img = new Image();
       img.src = imageSrc;
       img.onload = () => {
         setThumb(imageSrc);
         setLoading(false);
       };
-      // 🔥 PERBAIKAN DARI DOKUMEN: Gunakan Microlink untuk ekstrak gambar eksternal (Unsplash, dll) yang gagal dimuat langsung
+      
+      // 🔥 JIKA GAGAL DIMUAT (Misal link Unsplash HTML), PAKAI MICROLINK
       img.onerror = async () => {
         try {
           const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(imageSrc)}`);
@@ -58,7 +79,7 @@ export default function AutoThumbnail({
       return;
     }
 
-    // VIDEO LOADING + THUMBNAIL GENERATION
+    // 4. VIDEO LOADING + THUMBNAIL GENERATION (Khusus file .mp4 asli)
     const video = document.createElement("video");
     video.src = imageSrc;
     video.crossOrigin = "anonymous";
