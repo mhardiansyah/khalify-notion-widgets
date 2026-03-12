@@ -1,22 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import {
-  Pin,
-  X,
-  ExternalLink,
-  Settings,
-  Menu,
-  Link2,
-  ChevronDown,
-  UserIcon,
-} from "lucide-react";
+import { useState, useEffect } from "react";
+import { Pin, X, ExternalLink, Settings, Menu } from "lucide-react";
 import AutoThumbnail from "@/app/components/AutoThumbnail";
-import { useRouter, useSearchParams } from "next/navigation";
+import { EmbedFilter } from "@/app/components/EmbedFilter";
+import RefreshButton from "@/app/components/RefreshButton";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import RefreshButton from "./RefreshButton";
-import { EmbedFilter } from "./EmbedFilter";
 
 /* ================= TYPES ================= */
 
@@ -30,7 +21,6 @@ type Profile = {
   username?: string;
   avatarUrl?: string;
   bio?: string;
-  link?: string;
   highlights?: Highlight[];
 };
 
@@ -40,40 +30,6 @@ interface Props {
   theme?: "light" | "dark";
   gridColumns?: number;
   isPro?: boolean;
-}
-
-/* ================= FUNGSI SAPU JAGAT ================= */
-function getNotionValues(prop: any): string[] {
-  if (!prop) return [];
-  
-  if (prop.select && prop.select.name) return [prop.select.name];
-  if (prop.multi_select) return prop.multi_select.map((s: any) => s.name);
-  if (prop.status && prop.status.name) return [prop.status.name];
-  if (prop.rich_text) return prop.rich_text.map((t: any) => t.plain_text);
-  if (prop.title) return prop.title.map((t: any) => t.plain_text);
-  
-  if (prop.type === "rollup" && prop.rollup && prop.rollup.array) {
-    let results: string[] = [];
-    prop.rollup.array.forEach((item: any) => {
-       if (item.type) {
-           results = results.concat(getNotionValues({ [item.type]: item[item.type] }));
-       } else {
-           results = results.concat(getNotionValues(item));
-       }
-    });
-    return results;
-  }
-  
-  return [];
-}
-
-function getProp(propsObj: any, key: string) {
-  if (!propsObj) return null;
-  if (propsObj[key]) return propsObj[key];
-  const foundKey = Object.keys(propsObj).find(
-    (k) => k.trim().toLowerCase() === key.toLowerCase(),
-  );
-  return foundKey ? propsObj[foundKey] : null;
 }
 
 /* ================= MAIN ================= */
@@ -103,52 +59,40 @@ export default function ClientViewComponent({
   const bg =
     currentTheme === "light"
       ? "bg-white text-gray-900"
-      : "bg-[#191919] text-white";
+      : "bg-[#1A2332] text-white";
 
-  const cardBg = currentTheme === "light" ? "bg-white" : "bg-[#222222]";
+  const cardBg = currentTheme === "light" ? "bg-white" : "bg-[#1F2A3C]";
 
   /* ================= FILTER LOGIC ================= */
 
   const filteredData = filtered
     .filter((item) => {
-      const platformParam = params.get("platform")?.replace(/\+/g, " ").trim().toLowerCase();
-      const statusParam = params.get("status")?.replace(/\+/g, " ").trim().toLowerCase();
-      const pillarParam = params.get("pillar")?.replace(/\+/g, " ").trim().toLowerCase();
-      const pinnedParam = params.get("pinned"); 
+      const platform = params.get("platform");
+      const status = params.get("status");
+      const pinned = params.get("pinned");
 
       const props = item.properties;
 
-      const hideProp = getProp(props, "Hide");
-      const platformProp = getProp(props, "Platform");
-      const statusProp = getProp(props, "Status");
-      const pillarProp = getProp(props, "Pillar");
-      const pinnedProp = getProp(props, "Pinned");
+      if (props.Hide?.checkbox === true) return false;
 
-      if (hideProp?.checkbox === true) return false;
+      if (!hasAttachment(item)) return false;
 
-      if (platformParam && platformParam !== "all") {
-        const platformVals = getNotionValues(platformProp).map(v => v.trim().toLowerCase());
-        if (!platformVals.includes(platformParam)) return false;
+      if (platform && platform !== "All Platform") {
+        if (props.Platform?.select?.name !== platform) return false;
       }
 
-      if (statusParam && statusParam !== "all") {
-        const statusVals = getNotionValues(statusProp).map(v => v.trim().toLowerCase());
-        if (!statusVals.includes(statusParam)) return false;
+      if (status && status !== "All Status") {
+        if (props.Status?.select?.name !== status) return false;
       }
 
-      if (pillarParam && pillarParam !== "all") {
-        const pillarVals = getNotionValues(pillarProp).map(v => v.trim().toLowerCase());
-        if (!pillarVals.includes(pillarParam)) return false;
-      }
-
-      if (pinnedParam === "true" && pinnedProp?.checkbox !== true) return false;
-      if (pinnedParam === "false" && pinnedProp?.checkbox !== false) return false;
+      if (pinned === "true" && props.Pinned?.checkbox !== true) return false;
+      if (pinned === "false" && props.Pinned?.checkbox !== false) return false;
 
       return true;
     })
     .sort((a, b) => {
-      const aPinned = getProp(a.properties, "Pinned")?.checkbox ? 1 : 0;
-      const bPinned = getProp(b.properties, "Pinned")?.checkbox ? 1 : 0;
+      const aPinned = a.properties?.Pinned?.checkbox ? 1 : 0;
+      const bPinned = b.properties?.Pinned?.checkbox ? 1 : 0;
       return bPinned - aPinned;
     });
 
@@ -158,18 +102,6 @@ export default function ClientViewComponent({
   const isExactlyLimit = !isPro && filteredData.length === LIMIT_FREE;
 
   const visibleData = isPro ? filteredData : filteredData.slice(0, LIMIT_FREE);
-
-  const displayUsername = profile?.username || "";
-
-  const isFilterActive = 
-    (params.get("platform") && params.get("platform")?.toLowerCase() !== "all") ||
-    (params.get("status") && params.get("status")?.toLowerCase() !== "all") ||
-    (params.get("pillar") && params.get("pillar")?.toLowerCase() !== "all") ||
-    (params.get("pinned") && params.get("pinned")?.toLowerCase() !== "all");
-
-  const shouldHideHighlight = isFilterActive && visibleData.length < 3;
-
-  const hasContentToRender = showBio || (showHighlight && !shouldHideHighlight);
 
   /* ================= RENDER ================= */
 
@@ -182,25 +114,19 @@ export default function ClientViewComponent({
     ${
       currentTheme === "light"
         ? "bg-white/80 border-gray-200"
-        : "bg-[#191919]/90 border-[#333333]" 
+        : "bg-[#1A2332]/90 border-[#2A3550]"
     }`}
         >
           <div className="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {isPro && displayUsername.trim() !== "" ? (
-                <span className="font-bold text-lg tracking-tight truncate max-w-[150px] sm:max-w-[200px]">
-                  {displayUsername}
-                </span>
-              ) : (
-                <Image
-                  src="/logo-primary.png"
-                  alt="Khlasify"
-                  width={110}
-                  height={28}
-                  priority
-                  className="select-none"
-                />
-              )}
+              <Image
+                src="/logo-primary.png"
+                alt="Khlasify"
+                width={110}
+                height={28}
+                priority
+                className="select-none"
+              />
             </div>
 
             <div className="flex items-center gap-2">
@@ -210,17 +136,14 @@ export default function ClientViewComponent({
               <div className="relative">
                 <IconButton
                   theme={currentTheme}
-                  onClick={() => {
-                    setShowFilterBar((s) => !s);
-                    setOpenSetting(false);
-                  }}
+                  onClick={() => setShowFilterBar((s) => !s)}
                 >
                   <Menu size={16} />
                 </IconButton>
 
                 {showFilterBar && (
                   <div className="absolute right-0 top-full mt-2 z-50 w-56">
-                    <EmbedFilter theme={currentTheme} isPro={isPro} rawData={filtered} />
+                    <EmbedFilter theme={currentTheme} isPro={isPro} />
                   </div>
                 )}
               </div>
@@ -229,10 +152,7 @@ export default function ClientViewComponent({
               <div className="relative">
                 <IconButton
                   theme={currentTheme}
-                  onClick={() => {
-                    setOpenSetting((s) => !s);
-                    setShowFilterBar(false);
-                  }}
+                  onClick={() => setOpenSetting((s) => !s)}
                 >
                   <Settings size={16} />
                 </IconButton>
@@ -243,7 +163,7 @@ export default function ClientViewComponent({
                   ${
                     currentTheme === "light"
                       ? "bg-white border-gray-200"
-                      : "bg-[#222222] border-[#333333]" 
+                      : "bg-[#1F2A3C] border-[#2A3550]"
                   }`}
                   >
                     <SettingToggle
@@ -274,58 +194,54 @@ export default function ClientViewComponent({
                       }
                     />
 
+                    {/* DIVIDER */}
                     <div
                       className={`h-px my-1 ${
                         currentTheme === "light"
                           ? "bg-gray-200"
-                          : "bg-[#333333]" 
+                          : "bg-[#2A3550]"
                       }`}
                     />
 
-                    {/* PRO CTA */}
-                    <div className="px-2 pb-2 pt-1">
-                        {isPro ? (
-                          <button
-                            onClick={() => {
-                              window.open(
-                                "https://widget.khlasify.com/accounts",
-                                "_blank"
-                              );
-                            }}
-                            className={`
-                          w-full py-2.5 text-sm font-semibold rounded-lg
-                          transition
-          ${
-            currentTheme === "light"
-              ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
-              : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30" 
-          }
-              `}
-                          >
-                            Edit profile
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              window.open(
-                                "https://khlasify.myr.id/pl/content-pro",
-                                "_blank",
-                              );
-                            }}
-                            className={`
-          w-full py-2.5 text-sm font-semibold rounded-lg
-          transition
-          ${
-            currentTheme === "light"
-              ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
-              : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30" 
-          }
-              `}
-                          >
-                            Upgrade to PRO
-                          </button>
-                        )}
-                    </div>
+                    {/* 🔥 PRO CTA */}
+                    {isPro ? (
+                      <button
+                        onClick={() => {
+                          alert("Open customize bio");
+                        }}
+                        className={`
+                      w-full py-3 text-sm font-semibold
+                      transition
+      ${
+        currentTheme === "light"
+          ? "text-purple-600 hover:bg-[#F9FAFB]"
+          : "text-purple-400 hover:bg-[#24304A]"
+      }
+          `}
+                      >
+                        Click here to customize your bio
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          window.open(
+                            "https://khlasify.myr.id/pl/content-pro",
+                            "_blank",
+                          );
+                        }}
+                        className={`
+      w-full py-3 text-sm font-semibold
+      transition
+      ${
+        currentTheme === "light"
+          ? "text-purple-600 hover:bg-[#F9FAFB]"
+          : "text-purple-400 hover:bg-[#24304A]"
+      }
+          `}
+                      >
+                        Upgrade to PRO
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -334,18 +250,18 @@ export default function ClientViewComponent({
         </header>
 
         {/* ================= CONTENT ================= */}
-        {hasContentToRender && (
-          <div className="pb-5 space-y-4 sm:space-y-6 pt-6">
-            {showBio && <BioSection profile={profile} theme={currentTheme} />}
+        <div className="pb-5 space-y-4 sm:space-y-6">
+          {showBio && profile && (
+            <BioSection profile={profile} theme={currentTheme} />
+          )}
 
-            {showHighlight && !shouldHideHighlight && (
-              <HighlightSection
-                highlights={profile?.highlights}
-                theme={currentTheme}
-              />
-            )}
-          </div>
-        )}
+          {showHighlight && profile?.highlights && (
+            <HighlightSection
+              highlights={profile.highlights}
+              theme={currentTheme}
+            />
+          )}
+        </div>
 
         {viewMode === "visual" && (
           <div className="relative">
@@ -373,7 +289,7 @@ export default function ClientViewComponent({
           />
         )}
 
-        {/* FREE LIMIT BAR */}
+        {/* 🔔 FREE LIMIT BAR */}
         {(isExactlyLimit || isOverLimit) && (
           <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-xl">
             <div
@@ -384,15 +300,17 @@ export default function ClientViewComponent({
         ${
           currentTheme === "light"
             ? "bg-white/90 text-gray-900 border border-gray-200"
-            : "bg-[#222222]/90 text-white border border-[#333333]" 
+            : "bg-[#1F2A3C]/90 text-white border border-[#2A3550]"
         }
       `}
             >
+              {/* TEXT */}
               <p className="text-xs sm:text-sm font-medium">
                 You’ve reached your free limit of{" "}
                 <span className="font-semibold">9 posts</span>.
               </p>
 
+              {/* BUTTON → HANYA JIKA > 9 */}
               {isOverLimit && (
                 <button
                   onClick={() =>
@@ -431,7 +349,7 @@ function IconButton({ children, onClick, theme }: any) {
     <button
       onClick={onClick}
       className={`w-9 h-9 flex items-center justify-center rounded-full border transition
-          ${theme === "light" ? "hover:bg-[#F9FAFB] border-gray-200" : "hover:bg-[#333333] border-[#333333] text-gray-400 hover:text-white"}
+          ${theme === "light" ? "hover:bg-[#F9FAFB]" : "hover:bg-[#24304A]"}
         `}
     >
       {children}
@@ -447,8 +365,8 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
         if (!disabled) onChange();
       }}
       className={`
-        w-full px-4 py-3 flex items-center justify-between text-sm transition
-        ${theme === "light" ? "hover:bg-[#F9FAFB]" : "hover:bg-[#333333] text-gray-300"} 
+        w-full px-4 py-3 flex items-center justify-between text-sm rounded-xl transition
+        ${theme === "light" ? "hover:bg-[#F9FAFB]" : "hover:bg-[#24304A]"}
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
       `}
     >
@@ -469,113 +387,39 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
 }
 
 function BioSection({ profile, theme }: any) {
-  const {
-    username = "",
-    name = "Your Name",
-    avatarUrl = "", 
-    bio = "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
-    link = "https://khlasify.notion.site",
-  } = profile || {};
-
-  const formatBio = (bioText: string) => {
-    if (!bioText) return null;
-    return bioText.split("\n").map((line, i) => <p key={i}>{line}</p>);
-  };
-
-  const isValidAvatar = 
-    Boolean(avatarUrl) && 
-    avatarUrl.trim() !== "" && 
-    !avatarUrl.includes("notion.so/image") &&
-    !avatarUrl.includes("dicebear.com/7.x/notionists"); 
-
   return (
     <section
-      className={`flex flex-col items-start text-left w-full px-1 ${
-        theme === "light" ? "text-gray-900" : "text-white"
+      className={`border rounded-2xl p-4 flex gap-4 ${
+        theme === "light"
+          ? "bg-white border-gray-200"
+          : "bg-[#1F2A3C] border-[#2A3550]"
       }`}
     >
-      <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 flex items-center justify-center ${theme === "light" ? "border-gray-200 bg-gray-50" : "border-[#333333] bg-[#222222]"}`}>
-        
-        {isValidAvatar ? (
-          <img
-            src={avatarUrl} 
-            alt="Profile Avatar"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <UserIcon className={`w-10 h-10 ${theme === "light" ? "text-gray-300" : "text-gray-600"}`} />
+      <div className="w-16 h-16 rounded-full bg-gray-300" />
+      <div>
+        <h2 className="font-semibold">{profile.name}</h2>
+        {profile.bio && (
+          <p className="text-xs text-gray-500 mt-1">{profile.bio}</p>
         )}
-
       </div>
-
-      <h3 className="font-semibold text-[15px] mb-2">{name}</h3>
-
-      <div className="text-sm space-y-1 mb-3 opacity-90">
-        {formatBio(bio)}
-      </div>
-
-      {link && (
-        <a
-          href={
-            link.startsWith("http")
-              ? link
-              : `https://${link}`
-          }
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-800 transition-colors"
-        >
-          <Link2 size={14} />
-          {link.replace(/^https?:\/\//, "")}
-        </a>
-      )}
     </section>
   );
 }
 
 function HighlightSection({ highlights, theme }: any) {
-  const displayHighlights =
-    !highlights || highlights.length === 0
-      ? [
-          { title: "Highlight", image: "" },
-          { title: "Highlight", image: "" },
-          { title: "Highlight", image: "" },
-          { title: "Highlight", image: "" },
-        ]
-      : highlights;
-
   return (
     <section
       className={`border rounded-2xl p-4 ${
         theme === "light"
-          ? "bg-gray-50 border-gray-200 text-gray-900"
-          : "bg-[#222222] border-[#333333] text-gray-300" 
+          ? "bg-gray-50 border-gray-200"
+          : "bg-[#1F2A3C] border-[#2A3550]"
       }`}
     >
-      <div className="flex gap-4 overflow-x-auto pb-1 items-center">
-        {displayHighlights.map((h: any, i: number) => (
-          <div
-            key={i}
-            className="min-w-[64px] flex flex-col items-center gap-2"
-          >
-            <div
-              className={`w-16 h-16 rounded-full border-2 overflow-hidden flex items-center justify-center shrink-0 ${
-                theme === "light"
-                  ? "bg-gray-100 border-gray-200"
-                  : "bg-[#333333] border-[#444444]" 
-              }`}
-            >
-              {h.image && (
-                <img
-                  src={h.image}
-                  alt={h.title}
-                  className="w-full h-full object-cover"
-                />
-              )}
-            </div>
-            <p className="text-[12px] font-medium text-center truncate w-full px-1">
-              {h.title}
-            </p>
+      <div className="flex gap-3 overflow-x-auto">
+        {highlights.map((h: any, i: number) => (
+          <div key={i} className="min-w-[72px] text-center">
+            <div className="w-14 h-14 rounded-full bg-gray-300 mx-auto mb-1" />
+            <p className="text-[11px]">{h.title}</p>
           </div>
         ))}
       </div>
@@ -584,45 +428,27 @@ function HighlightSection({ highlights, theme }: any) {
 }
 
 function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "";
-    const options: Intl.DateTimeFormatOptions = { 
-      day: 'numeric', 
-      month: 'long', 
-      year: 'numeric' 
-    };
-    return new Date(dateString).toLocaleDateString('id-ID', options);
-  };
-
   return (
     <div
-      className="grid" 
+      className="grid gap-px"
       style={{
         gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
       }}
     >
       {filtered.map((item: any, i: number) => {
-        const name = getProp(item.properties, "Name")?.title?.[0]?.plain_text || "Untitled";
-        
-        const images = extractAllImages(item); 
-        const pinned = getProp(item.properties, "Pinned")?.checkbox;
-        
-        const publishDateRaw = getProp(item.properties, "Publish Date")?.date?.start;
-        const publishDateStr = formatDate(publishDateRaw);
+        // 🔥 MENGGUNAKAN FUNGSI BARU extractAllImages
+        const images = extractAllImages(item);
+        const pinned = item.properties?.Pinned?.checkbox;
 
         return (
           <div
             key={i}
             onClick={() => onSelect(item)}
-            className={`relative group overflow-hidden aspect-[4/5] cursor-pointer hover:-translate-y-1 transition ${cardBg} border ${theme === "dark" ? "border-[#333333]" : "border-gray-100"}`}
-            style={{ 
-               marginRight: i % 3 !== 2 ? '-1px' : '0',
-               marginBottom: '-1px'
-            }}
+            className={`relative group overflow-hidden aspect-[4/5] cursor-pointer hover:-translate-y-1 transition ${cardBg}`}
           >
             {pinned && (
               <div
-                className="absolute top-2.5 right-2.5 z-20
+                className="absolute top-2.5 right-2.5 z-10
                   w-6 h-6 rounded-2xl
                   bg-black/40
                   flex items-center justify-center"
@@ -631,19 +457,8 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
               </div>
             )}
 
+            {/* 🔥 MENGIRIM ARRAY GAMBAR KE AUTOTHUMBNAIL */}
             <AutoThumbnail src={images} />
-
-            <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-               {publishDateStr && (
-                 <p className="text-white/80 text-[10px] sm:text-xs font-medium mb-0.5">
-                   {publishDateStr}
-                 </p>
-               )}
-               <p className="text-white text-xs sm:text-sm font-bold line-clamp-2 leading-tight">
-                 {name}
-               </p>
-            </div>
-
           </div>
         );
       })}
@@ -659,6 +474,8 @@ function DetailModal({ item, theme, onClose }: any) {
     };
   }, []);
 
+  const name = item.properties?.Name?.title?.[0]?.plain_text || "Untitled";
+  // 🔥 MENGGUNAKAN FUNGSI BARU extractAllImages
   const images = extractAllImages(item);
 
   return (
@@ -671,26 +488,22 @@ function DetailModal({ item, theme, onClose }: any) {
         className={`w-full max-w-5xl rounded-2xl overflow-hidden ${
           theme === "light"
             ? "bg-gray-50 border-gray-200"
-            : "bg-[#222222] border-[#333333]" 
+            : "bg-[#1F2A3C] border-[#2A3550]"
         }`}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full z-10"
+          className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full z-[60]"
         >
           <X size={18} />
         </button>
 
-        <div className="flex flex-col lg:flex-row relative">
-          <div className="lg:w-2/3 bg-black flex items-center justify-center">
-            
-            <div className="w-full h-[80vh] flex items-center justify-center relative">
-              <AutoThumbnail 
-                src={images} 
-                style={{ objectFit: "contain" }} 
-              />
+        <div className="flex flex-col lg:flex-row">
+          <div className="w-full lg:w-2/3 bg-black flex items-center justify-center relative min-h-[50vh]">
+            {/* 🔥 MENGGANTI TAG <img> DENGAN AUTOTHUMBNAIL AGAR CAROUSEL MUNCUL DI MODAL */}
+            <div className="w-full h-[80vh] flex items-center justify-center">
+              <AutoThumbnail src={images} style={{ objectFit: "contain" }} />
             </div>
-
           </div>
         </div>
       </div>
@@ -698,43 +511,32 @@ function DetailModal({ item, theme, onClose }: any) {
   );
 }
 
-// 🔥 PERBAIKAN 5: Fungsi Baru untuk Ekstrak Semua Gambar & Link (Agresif)
-function extractAllImages(item: any) {
+/* ================= HELPER FUNCTIONS ================= */
+
+// Fungsi lama (sudah tidak dipakai tapi bisa dibiarkan untuk jaga-jaga)
+function extractImage(item: any) {
   const p = item.properties;
-  const attachment = getProp(p, "Attachment") || getProp(p, "Files & media") || getProp(p, "Image Source") || getProp(p, "Image");
-  
-  let urls: string[] = [];
+  return (
+    p.Attachment?.files?.[0]?.file?.url ||
+    p.Attachment?.files?.[0]?.external?.url ||
+    "/placeholder.png"
+  );
+}
 
-  if (attachment) {
-    if (attachment.files && attachment.files.length > 0) {
-      attachment.files.forEach((f: any) => {
-        if (f.file?.url) urls.push(f.file.url);
-        else if (f.external?.url) urls.push(f.external.url);
-        else if (f.name && f.name.startsWith("http")) urls.push(f.name);
-      });
-    } 
-    else if (attachment.type === "url" && attachment.url) {
-      urls.push(attachment.url);
-    } 
-    else if (attachment.type === "rich_text" && attachment.rich_text && attachment.rich_text.length > 0) {
-       const textVal = attachment.rich_text[0].plain_text;
-       if (textVal && textVal.startsWith("http")) {
-           urls.push(textVal);
-       }
-    }
-  }
+// 🔥 FUNGSI BARU: Mengambil SEMUA gambar menjadi array
+function extractAllImages(item: any) {
+  const files = item.properties?.Attachment?.files;
+  if (!files || files.length === 0) return ["/placeholder.png"];
 
-  if (urls.length === 0 && item.cover) {
-     if (item.cover.type === "file" && item.cover.file?.url) {
-        urls.push(item.cover.file.url);
-     } else if (item.cover.type === "external" && item.cover.external?.url) {
-        urls.push(item.cover.external.url);
-     }
-  }
+  return files.map(
+    (f: any) => f?.file?.url || f?.external?.url || "/placeholder.png",
+  );
+}
 
-  if (urls.length === 0) {
-    return ["https://api.dicebear.com/7.x/shapes/svg?seed=placeholder"];
-  }
+function hasAttachment(item: any) {
+  const files = item.properties?.Attachment?.files;
+  if (!files || files.length === 0) return false;
 
-  return urls;
+  const first = files[0];
+  return !!(first?.file?.url || first?.external?.url);
 }
