@@ -513,30 +513,39 @@ function DetailModal({ item, theme, onClose }: any) {
 
 /* ================= HELPER FUNCTIONS ================= */
 
-// Fungsi lama (sudah tidak dipakai tapi bisa dibiarkan untuk jaga-jaga)
+// Fungsi lama (diperbarui menggunakan fungsi baru agar selaras jika masih dipanggil)
 function extractImage(item: any) {
-  const p = item.properties;
-  return (
-    p.Attachment?.files?.[0]?.file?.url ||
-    p.Attachment?.files?.[0]?.external?.url ||
-    "/placeholder.png"
-  );
+  const images = extractAllImages(item);
+  return images[0];
 }
 
-// 🔥 FUNGSI BARU: Mengambil SEMUA gambar menjadi array
+// 🔥 FUNGSI BARU: Cerdas mendeteksi kolom "Upload" (files) & "Link" (url)
 function extractAllImages(item: any) {
-  const files = item.properties?.Attachment?.files;
-  if (!files || files.length === 0) return ["/placeholder.png"];
+  const p = item.properties;
+  if (!p) return ["/placeholder.png"];
 
-  return files.map(
-    (f: any) => f?.file?.url || f?.external?.url || "/placeholder.png",
-  );
+  // 1. Cek properti tipe "files" (Mencakup kolom "Upload", "Attachment", dll)
+  for (const key in p) {
+    if (p[key]?.type === "files" && p[key]?.files?.length > 0) {
+      return p[key].files.map(
+        (f: any) => f?.file?.url || f?.external?.url || "/placeholder.png",
+      );
+    }
+  }
+
+  // 2. Cek properti tipe "url" (Mencakup kolom "Link", "Canva", dll)
+  for (const key in p) {
+    if (p[key]?.type === "url" && p[key]?.url) {
+      return [p[key].url]; // Dibungkus array agar support Carousel
+    }
+  }
+
+  // Jika tidak ada gambar/link sama sekali
+  return ["/placeholder.png"];
 }
 
+// 🔥 Diperbarui: Mengecek attachment menggunakan fungsi deteksi cerdas di atas
 function hasAttachment(item: any) {
-  const files = item.properties?.Attachment?.files;
-  if (!files || files.length === 0) return false;
-
-  const first = files[0];
-  return !!(first?.file?.url || first?.external?.url);
+  const images = extractAllImages(item);
+  return images.length > 0 && images[0] !== "/placeholder.png";
 }
