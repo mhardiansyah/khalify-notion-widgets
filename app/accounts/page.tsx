@@ -287,7 +287,8 @@ export default function AccountsPage() {
   };
 
   const handleDeleteWidget = (widgetId: string) => {
-    toast.warning("Hapus widget?", {
+    // 🔥 PERBAIKAN: Gunakan toast biasa tapi custom render agar tidak ada double box
+    toast("Hapus widget?", {
       description: "Widget yang dihapus tidak bisa dikembalikan.",
       action: {
         label: "Hapus",
@@ -302,6 +303,16 @@ export default function AccountsPage() {
             toast.error("Gagal menghapus widget");
           }
         },
+      },
+      // Berikan style inline yang menimpa default bawaan sonner
+      style: {
+        background: '#fff',
+        border: '1px solid #fee2e2', // Red border ringan
+        color: '#1e293b'
+      },
+      cancel: {
+        label: 'Batal',
+        onClick: () => toast.dismiss(),
       },
     });
   };
