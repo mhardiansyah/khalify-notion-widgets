@@ -3,7 +3,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 export const api = axios.create({
-    baseURL: "https://khlasify-widget-be.vercel.app", // Pastikan URL bener
+    baseURL: "http://localhost:4545", // Pastikan URL bener
     headers: {
         "Content-Type": "application/json",
     },
