@@ -343,7 +343,6 @@ export default function AccountsPage() {
   return (
     <>
       <Navbar />
-      <Toaster position="top-center" richColors />
 
       {/* MODAL KONFIRMASI LOGOUT */}
       {isLogoutModalOpen && (

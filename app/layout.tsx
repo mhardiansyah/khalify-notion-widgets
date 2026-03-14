@@ -31,12 +31,15 @@ export default function RootLayout({
         {children}
         <Toaster
           position="top-center"
+          richColors // 🔥 Tambahkan ini agar warna success (hijau) & error (merah) otomatis aktif
           toastOptions={{
             duration: 4000,
             style: {
               borderRadius: "12px",
-              background: "#111",
-              color: "#fff",
+              background: "#ffffff", // Putih bersih menyatu dengan tema web
+              color: "#1e293b", // Warna teks abu-abu gelap (slate-800)
+              border: "1px solid #e2e8f0", // Border abu-abu sangat tipis
+              boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.05)", // Bayangan (shadow) lembut
             },
           }}
         />
