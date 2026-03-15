@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 const FALLBACK_IMAGE = "https://api.dicebear.com/7.x/shapes/svg?seed=placeholder";
 
+// 🔥 FUNGSI SUPER AKURAT: Ambil ID YouTube dari link
 const getYoutubeId = (url: string) => {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
   const match = url.match(regExp);
@@ -24,18 +25,18 @@ export default function AutoThumbnail({
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   
-  // Array dinamis yang memuat gambar, mendukung Canva multi-slide
+  // 🔥 Sistem Array Pintar & Caching
   const [dynamicSrcArray, setDynamicSrcArray] = useState<string[]>([]);
   const [resolvedThumbs, setResolvedThumbs] = useState<Record<number, string>>({});
 
-  // Reset state saat `src` props berubah
   useEffect(() => {
-    setDynamicSrcArray(Array.isArray(src) ? src : [src]);
+    const initialArray = Array.isArray(src) ? src : [src];
+    // Pastikan tidak ada link yang kosong
+    setDynamicSrcArray(initialArray.filter(Boolean));
     setCurrentIndex(0);
     setResolvedThumbs({});
   }, [src]);
 
-  // Gambar yang sedang aktif diproses
   const activeSrc = dynamicSrcArray[currentIndex];
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export default function AutoThumbnail({
       return;
     }
 
+    // Jika URL ini sudah pernah dicari thumbnailnya, langsung load dari cache
     if (resolvedThumbs[currentIndex]) {
       setThumb(resolvedThumbs[currentIndex]);
       setLoading(false);
@@ -54,7 +56,9 @@ export default function AutoThumbnail({
     setLoading(true);
     setThumb(null);
 
+    // ==========================================
     // 1. CEK YOUTUBE
+    // ==========================================
     const ytId = getYoutubeId(activeSrc);
     if (ytId) {
       const ytUrl = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
@@ -64,90 +68,119 @@ export default function AutoThumbnail({
       return;
     }
 
-    // 2. CEK FORMAT VIDEO LOKAL
-    const isVideo = /(mp4|mov|avi|webm|mkv)(?=($|\?|&))/i.test(activeSrc);
-
-    if (!isVideo) {
-      // 3. IMAGE LOADING BIASA
-      const img = new Image();
-      img.src = activeSrc;
-
-      img.onload = () => {
-        setThumb(activeSrc);
-        setResolvedThumbs(prev => ({ ...prev, [currentIndex]: activeSrc }));
-        setLoading(false);
-      };
-
-      // 4. JIKA BUKAN GAMBAR LOKAL (CANVA/UNSPLASH)
-      img.onerror = async () => {
-        try {
-          const isCanva = activeSrc.includes("canva.com");
-
-          if (isCanva) {
-             // 🔥 Ambil dari API internal untuk Canva
-            const res = await fetch(`/api/embed/thumbnail?url=${encodeURIComponent(activeSrc)}`);
-            const data = await res.json();
-
-            if (data.thumbnails && data.thumbnails.length > 0) {
-              setThumb(data.thumbnails[0]);
-              setResolvedThumbs(prev => ({ ...prev, [currentIndex]: data.thumbnails[0] }));
-              
-              // Jika ini *pertama* kali render dan ternyata Canva punya banyak slide, 
-              // perbarui `dynamicSrcArray` menjadi array slide tersebut.
-              if (dynamicSrcArray.length === 1 && data.thumbnails.length > 1) {
-                setDynamicSrcArray(data.thumbnails);
-              }
-            } else {
-              setThumb(FALLBACK_IMAGE);
+    // ==========================================
+    // 2. CEK CANVA (Auto-Expand Carousel Magic)
+    // ==========================================
+    if (activeSrc.includes("canva.com")) {
+      fetch(`/api/embed/thumbnail?url=${encodeURIComponent(activeSrc)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.thumbnails && data.thumbnails.length > 0) {
+            setThumb(data.thumbnails[0]);
+            setResolvedThumbs(prev => ({ ...prev, [currentIndex]: data.thumbnails[0] }));
+            
+            // 🔥 MAGIC: Kalau awalnya kita cuma punya 1 link Canva, 
+            // kita sulap array-nya jadi berisikan semua slide Canva (Carousel Otomatis!)
+            if (dynamicSrcArray.length === 1 && data.thumbnails.length > 1) {
+              setDynamicSrcArray(data.thumbnails);
             }
           } else {
-             // Untuk URL Eksternal lain (misal: Unsplash yang gagal muat sebagai <img>)
-            const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(activeSrc)}&screenshot=true`);
-            const data = await res.json();
-
-            const thumbUrl = data.data?.screenshot?.url || data.data?.image?.url;
-            
-            if (data.status === "success" && thumbUrl) {
-              setThumb(thumbUrl);
-              setResolvedThumbs(prev => ({ ...prev, [currentIndex]: thumbUrl }));
-            } else {
-              setThumb(FALLBACK_IMAGE);
-            }
+            setThumb(FALLBACK_IMAGE);
           }
-        } catch (error) {
-          setThumb(FALLBACK_IMAGE);
-        } finally {
-          setLoading(false);
-        }
+        })
+        .catch(() => setThumb(FALLBACK_IMAGE))
+        .finally(() => setLoading(false));
+      return;
+    }
+
+    // ==========================================
+    // 3. CEK UNSPLASH / WEB LAIN (Langsung ke Microlink)
+    // ==========================================
+    if (activeSrc.includes("unsplash.com")) {
+      fetch(`https://api.microlink.io/?url=${encodeURIComponent(activeSrc)}&screenshot=true`)
+        .then(res => res.json())
+        .then(data => {
+          const thumbUrl = data.data?.screenshot?.url || data.data?.image?.url;
+          if (data.status === "success" && thumbUrl) {
+            setThumb(thumbUrl);
+            setResolvedThumbs(prev => ({ ...prev, [currentIndex]: thumbUrl }));
+          } else {
+            setThumb(FALLBACK_IMAGE);
+          }
+        })
+        .catch(() => setThumb(FALLBACK_IMAGE))
+        .finally(() => setLoading(false));
+      return;
+    }
+
+    // ==========================================
+    // 4. CEK FORMAT VIDEO LOKAL (MP4 dll)
+    // ==========================================
+    const isVideo = /(mp4|mov|avi|webm|mkv)(?=($|\?|&))/i.test(activeSrc);
+
+    if (isVideo) {
+      const video = document.createElement("video");
+      video.src = activeSrc;
+      video.crossOrigin = "anonymous";
+      video.muted = true;
+      video.currentTime = 0.1;
+
+      video.addEventListener("loadeddata", () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 640;
+        canvas.height = 360;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/png");
+        
+        setThumb(dataUrl);
+        setResolvedThumbs(prev => ({ ...prev, [currentIndex]: dataUrl }));
+        setLoading(false);
+      });
+
+      video.onerror = () => {
+        setThumb(FALLBACK_IMAGE);
+        setLoading(false);
       };
       return;
     }
 
-    // 5. VIDEO LOKAL
-    const video = document.createElement("video");
-    video.src = activeSrc;
-    video.crossOrigin = "anonymous";
-    video.muted = true;
-    video.currentTime = 0.1;
+    // ==========================================
+    // 5. IMAGE LOKAL & FALLBACK TERAKHIR
+    // ==========================================
+    const img = new Image();
+    img.src = activeSrc;
 
-    video.addEventListener("loadeddata", () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = 640;
-      canvas.height = 360;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/png");
-      setThumb(dataUrl);
-      setResolvedThumbs(prev => ({ ...prev, [currentIndex]: dataUrl }));
-      setLoading(false);
-    });
-
-    video.onerror = () => {
-      setThumb(FALLBACK_IMAGE);
+    img.onload = () => {
+      setThumb(activeSrc);
+      setResolvedThumbs(prev => ({ ...prev, [currentIndex]: activeSrc }));
       setLoading(false);
     };
-  }, [activeSrc, currentIndex]); // Pastikan dependensi ini tepat
+
+    img.onerror = async () => {
+      // Jika ternyata link web acak (bukan gambar), minta tolong Microlink nyekrinsut!
+      try {
+        const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(activeSrc)}&screenshot=true`);
+        const data = await res.json();
+        
+        const thumbUrl = data.data?.screenshot?.url || data.data?.image?.url;
+        
+        if (data.status === "success" && thumbUrl) {
+          setThumb(thumbUrl);
+          setResolvedThumbs(prev => ({ ...prev, [currentIndex]: thumbUrl }));
+        } else {
+          setThumb(FALLBACK_IMAGE);
+        }
+      } catch (error) {
+        setThumb(FALLBACK_IMAGE);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  }, [activeSrc, currentIndex, dynamicSrcArray.length]);
 
   return (
     <div
@@ -167,7 +200,7 @@ export default function AutoThumbnail({
           (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
         }}
         style={{
-          objectFit: "cover", // Gunakan cover untuk grid, modal bisa ditimpa melalui props.style
+          objectFit: "cover",
           width: "100%",
           height: "100%",
           opacity: loading ? 0 : 1,
@@ -190,7 +223,6 @@ export default function AutoThumbnail({
         />
       )}
 
-      {/* 🔥 Render Navigasi Carousel hanya jika array memiliki lebih dari 1 gambar */}
       {dynamicSrcArray.length > 1 && (
         <>
           <button
@@ -217,7 +249,6 @@ export default function AutoThumbnail({
             &#8594;
           </button>
 
-          {/* Indikator Titik Carousel */}
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-20 overflow-x-auto max-w-[80%] hide-scrollbar">
             {dynamicSrcArray.map((_, idx) => (
               <div
