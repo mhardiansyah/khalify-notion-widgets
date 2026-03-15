@@ -24,16 +24,18 @@ export default function AutoThumbnail({
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   
-  // 🔥 Sistem Array Pintar & Caching
+  // Array dinamis yang memuat gambar, mendukung Canva multi-slide
   const [dynamicSrcArray, setDynamicSrcArray] = useState<string[]>([]);
   const [resolvedThumbs, setResolvedThumbs] = useState<Record<number, string>>({});
 
+  // Reset state saat `src` props berubah
   useEffect(() => {
     setDynamicSrcArray(Array.isArray(src) ? src : [src]);
     setCurrentIndex(0);
     setResolvedThumbs({});
   }, [src]);
 
+  // Gambar yang sedang aktif diproses
   const activeSrc = dynamicSrcArray[currentIndex];
 
   useEffect(() => {
@@ -43,7 +45,6 @@ export default function AutoThumbnail({
       return;
     }
 
-    // Jika URL ini sudah pernah dicari thumbnailnya, langsung load dari cache
     if (resolvedThumbs[currentIndex]) {
       setThumb(resolvedThumbs[currentIndex]);
       setLoading(false);
@@ -77,12 +78,13 @@ export default function AutoThumbnail({
         setLoading(false);
       };
 
-      // 4. JIKA BUKAN GAMBAR LOKAL (MISAL CANVA/UNSPLASH)
+      // 4. JIKA BUKAN GAMBAR LOKAL (CANVA/UNSPLASH)
       img.onerror = async () => {
         try {
           const isCanva = activeSrc.includes("canva.com");
 
           if (isCanva) {
+             // 🔥 Ambil dari API internal untuk Canva
             const res = await fetch(`/api/embed/thumbnail?url=${encodeURIComponent(activeSrc)}`);
             const data = await res.json();
 
@@ -90,8 +92,8 @@ export default function AutoThumbnail({
               setThumb(data.thumbnails[0]);
               setResolvedThumbs(prev => ({ ...prev, [currentIndex]: data.thumbnails[0] }));
               
-              // 🔥 Jaga-jaga: Ekspansi Carousel HANYA JIKA attachment Notionnya cuma 1 link Canva.
-              // Kalau dicampur foto, jangan rusak susunan carousel aslinya.
+              // Jika ini *pertama* kali render dan ternyata Canva punya banyak slide, 
+              // perbarui `dynamicSrcArray` menjadi array slide tersebut.
               if (dynamicSrcArray.length === 1 && data.thumbnails.length > 1) {
                 setDynamicSrcArray(data.thumbnails);
               }
@@ -99,11 +101,10 @@ export default function AutoThumbnail({
               setThumb(FALLBACK_IMAGE);
             }
           } else {
-            // Unsplash & Link lain
+             // Untuk URL Eksternal lain (misal: Unsplash yang gagal muat sebagai <img>)
             const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(activeSrc)}&screenshot=true`);
             const data = await res.json();
 
-            // 🔥 PERBAIKAN: HAPUS fallback ke `data.data.logo.url`
             const thumbUrl = data.data?.screenshot?.url || data.data?.image?.url;
             
             if (data.status === "success" && thumbUrl) {
@@ -146,7 +147,7 @@ export default function AutoThumbnail({
       setThumb(FALLBACK_IMAGE);
       setLoading(false);
     };
-  }, [activeSrc, currentIndex, dynamicSrcArray.length]);
+  }, [activeSrc, currentIndex]); // Pastikan dependensi ini tepat
 
   return (
     <div
@@ -166,7 +167,7 @@ export default function AutoThumbnail({
           (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
         }}
         style={{
-          objectFit: "cover",
+          objectFit: "cover", // Gunakan cover untuk grid, modal bisa ditimpa melalui props.style
           width: "100%",
           height: "100%",
           opacity: loading ? 0 : 1,
@@ -189,6 +190,7 @@ export default function AutoThumbnail({
         />
       )}
 
+      {/* 🔥 Render Navigasi Carousel hanya jika array memiliki lebih dari 1 gambar */}
       {dynamicSrcArray.length > 1 && (
         <>
           <button
@@ -215,6 +217,7 @@ export default function AutoThumbnail({
             &#8594;
           </button>
 
+          {/* Indikator Titik Carousel */}
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-20 overflow-x-auto max-w-[80%] hide-scrollbar">
             {dynamicSrcArray.map((_, idx) => (
               <div
