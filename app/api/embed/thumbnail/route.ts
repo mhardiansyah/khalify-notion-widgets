@@ -11,18 +11,11 @@ async function fetchCanvaThumbnail(url: string): Promise<string | null> {
     `https://www.canva.com/oembed?url=${encodeURIComponent(cleanUrl)}`
   );
 
-  // ✅ Log status respons Canva agar kita tahu persis apa yang terjadi
-  console.log(`📡 Status Canva OEmbed: ${canvaRes.status} ${canvaRes.statusText}`);
-
   if (!canvaRes.ok) {
-    // Baca isi error response dari Canva untuk debugging
-    const errorText = await canvaRes.text();
-    console.log(`❌ Canva OEmbed menolak: ${errorText.substring(0, 200)}`);
     return null;
   }
 
   const data = await canvaRes.json();
-  console.log(`✅ Canva OEmbed berhasil:`, JSON.stringify(data).substring(0, 300));
   return data.thumbnail_url ?? null;
 }
 
@@ -34,13 +27,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Parameter URL diperlukan." }, { status: 400 });
   }
 
-  console.log(`\n🚀 API thumbnail dipanggil dengan URL: ${url}`);
-
   const baseUrl = url
     .replace(/\/edit(\?.*)?$/, "/view")
     .replace(/\/view[\?#].*$/, "/view");
-
-  console.log(`🧹 URL setelah dibersihkan: ${baseUrl}`);
 
   try {
     const thumbnails: string[] = [];
@@ -73,17 +62,19 @@ export async function GET(request: NextRequest) {
 
       // Fallback terakhir: Microlink
       console.log(`🔄 Mencoba Microlink sebagai fallback...`);
+      // 🔥 PERBAIKAN 1: Tambahkan parameter screenshot=true
       const microlinkRes = await fetch(
-        `https://api.microlink.io/?url=${encodeURIComponent(url)}`
+        `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true`
       );
       const microlinkData = await microlinkRes.json();
-      console.log(`📦 Microlink response:`, JSON.stringify(microlinkData).substring(0, 300));
 
       if (microlinkData.status === "success") {
+        // 🔥 PERBAIKAN 2: HAPUS microlinkData.data.logo.url AGAR LOGO "C" TIDAK MUNCUL!
         const thumbUrl =
+          microlinkData.data?.screenshot?.url || 
           microlinkData.data?.image?.url ||
-          microlinkData.data?.logo?.url ||
           null;
+          
         return NextResponse.json({ thumbnail_url: thumbUrl, thumbnails: thumbUrl ? [thumbUrl] : [], source: "microlink", pages: 1 });
       }
 
