@@ -122,7 +122,7 @@ export default function ClientViewComponent({
 
       // Ambil kolom pake fungsi anti-typo
       const hideProp = getProp(props, "Hide");
-      const platformProp = getProp(props, "Platform");
+      const platformProp = getProp(props, "Platforms");
       const statusProp = getProp(props, "Status");
       const pillarProp = getProp(props, "Pillar");
       const pinnedProp = getProp(props, "Pinned");
@@ -131,7 +131,7 @@ export default function ClientViewComponent({
 
       // 1. Filter Platform
       if (platformParam && platformParam !== "all") {
-        const platformVals = getNotionValues(platformProp).map(v => v.trim().toLowerCase());
+        const platformVals = getNotionValues(platformProp).flatMap(v => v.split(',').map(s => s.trim().toLowerCase()));
         if (!platformVals.includes(platformParam)) return false;
       }
 
@@ -705,17 +705,21 @@ function extractAllImages(item: any): string[] {
   const p = item.properties;
   const images: string[] = [];
   
-  // 1. Cek Kolom Attachment (Upload Lokal)
-  const attachment = getProp(p, "Attachment") || getProp(p, "Files & media");
-  if (attachment && attachment.files && attachment.files.length > 0) {
-    attachment.files.forEach((fileObj: any) => {
-      if (fileObj.type === "file" && fileObj.file?.url) {
-        images.push(fileObj.file.url);
-      } else if (fileObj.type === "external" && fileObj.external?.url) {
-        images.push(fileObj.external.url);
-      }
-    });
-  }
+  // 1. Cek Kolom File/Attachment (Upload Lokal / Kolom "Upload" dari CSV)
+  // Menambahkan array target props agar aman menangkap data CSV Anda
+  const fileProps = ["Attachment", "Files & media", "Upload", "Image"];
+  fileProps.forEach((propName) => {
+    const targetProp = getProp(p, propName);
+    if (targetProp && targetProp.files && targetProp.files.length > 0) {
+      targetProp.files.forEach((fileObj: any) => {
+        if (fileObj.type === "file" && fileObj.file?.url) {
+          images.push(fileObj.file.url);
+        } else if (fileObj.type === "external" && fileObj.external?.url) {
+          images.push(fileObj.external.url);
+        }
+      });
+    }
+  });
 
   // 2. Cek apakah ada Cover Image bawaan Notion
   if (item.cover) {
@@ -734,6 +738,7 @@ function extractAllImages(item: any): string[] {
   }
 
   // 4. Fallback ke properti string URL biasa (kalau masih ada)
+  const attachment = getProp(p, "Attachment") || getProp(p, "Files & media") || getProp(p, "Upload");
   const simpleUrl = attachment?.url;
   if (typeof simpleUrl === "string" && simpleUrl.startsWith("http")) {
       images.push(simpleUrl);

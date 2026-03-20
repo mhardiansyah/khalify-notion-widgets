@@ -36,11 +36,25 @@ export default function AutoThumbnail({
 
   const activeSrc = dynamicSrcArray[currentIndex];
 
+  // 🔥 DETEKSI CANVA SECARA CERDAS
+  const isCanvaLink = typeof activeSrc === "string" && activeSrc.includes("canva.com/design");
+  
+  // Format URL Embed Canva NATIVE
+  const canvaEmbedUrl = isCanvaLink 
+    ? activeSrc.replace(/\/edit(\?.*)?$/, "/view").replace(/\/view[\?#].*$/, "/view") + "?embed"
+    : "";
+
   useEffect(() => {
     if (!activeSrc) {
       setThumb(FALLBACK_IMAGE);
       setLoading(false);
       return;
+    }
+
+    // 🚀 BYPASS: Jika Canva, jangan proses sebagai gambar biasa. Iframe akan urus semuanya!
+    if (isCanvaLink) {
+       setLoading(true); // Loading diserahkan ke onLoad iframe di bawah
+       return;
     }
 
     // Jika URL ini sudah pernah dicari thumbnailnya, langsung load dari cache
@@ -77,33 +91,12 @@ export default function AutoThumbnail({
         setLoading(false);
       };
 
-      // 4. JIKA BUKAN GAMBAR LOKAL (MISAL CANVA/UNSPLASH)
+      // 4. FALLBACK MICROLINK (HANYA UNTUK WEBSITE LAIN SELAIN CANVA)
       img.onerror = async () => {
         try {
-          const isCanva = activeSrc.includes("canva.com");
-
-          if (isCanva) {
-            const res = await fetch(`/api/embed/thumbnail?url=${encodeURIComponent(activeSrc)}`);
-            const data = await res.json();
-
-            if (data.thumbnails && data.thumbnails.length > 0) {
-              setThumb(data.thumbnails[0]);
-              setResolvedThumbs(prev => ({ ...prev, [currentIndex]: data.thumbnails[0] }));
-              
-              // 🔥 Jaga-jaga: Ekspansi Carousel HANYA JIKA attachment Notionnya cuma 1 link Canva.
-              // Kalau dicampur foto, jangan rusak susunan carousel aslinya.
-              if (dynamicSrcArray.length === 1 && data.thumbnails.length > 1) {
-                setDynamicSrcArray(data.thumbnails);
-              }
-            } else {
-              setThumb(FALLBACK_IMAGE);
-            }
-          } else {
-            // Unsplash & Link lain
             const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(activeSrc)}&screenshot=true`);
             const data = await res.json();
 
-            // 🔥 PERBAIKAN: HAPUS fallback ke `data.data.logo.url`
             const thumbUrl = data.data?.screenshot?.url || data.data?.image?.url;
             
             if (data.status === "success" && thumbUrl) {
@@ -112,7 +105,6 @@ export default function AutoThumbnail({
             } else {
               setThumb(FALLBACK_IMAGE);
             }
-          }
         } catch (error) {
           setThumb(FALLBACK_IMAGE);
         } finally {
@@ -146,7 +138,7 @@ export default function AutoThumbnail({
       setThumb(FALLBACK_IMAGE);
       setLoading(false);
     };
-  }, [activeSrc, currentIndex, dynamicSrcArray.length]);
+  }, [activeSrc, currentIndex, isCanvaLink]);
 
   return (
     <div
@@ -159,22 +151,42 @@ export default function AutoThumbnail({
         borderRadius: "4px",
       }}
     >
-      <img
-        src={thumb || FALLBACK_IMAGE}
-        className={className}
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
-        }}
-        style={{
-          objectFit: "cover",
-          width: "100%",
-          height: "100%",
-          opacity: loading ? 0 : 1,
-          transition: "opacity 0.4s ease",
-          ...style,
-        }}
-        alt="thumbnail"
-      />
+      {/* 🚀 RENDER CANVA SEBAGAI IFRAME, SISANYA SEBAGAI IMAGE */}
+      {isCanvaLink ? (
+        <iframe
+          src={canvaEmbedUrl}
+          className={className}
+          loading="lazy"
+          allowFullScreen
+          allow="fullscreen"
+          onLoad={() => setLoading(false)}
+          style={{
+            width: "100%",
+            height: "100%",
+            border: "none",
+            opacity: loading ? 0 : 1,
+            transition: "opacity 0.4s ease",
+            ...style,
+          }}
+        />
+      ) : (
+        <img
+          src={thumb || FALLBACK_IMAGE}
+          className={className}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+          }}
+          style={{
+            objectFit: "cover",
+            width: "100%",
+            height: "100%",
+            opacity: loading ? 0 : 1,
+            transition: "opacity 0.4s ease",
+            ...style,
+          }}
+          alt="thumbnail"
+        />
+      )}
 
       {loading && (
         <div
@@ -189,7 +201,8 @@ export default function AutoThumbnail({
         />
       )}
 
-      {dynamicSrcArray.length > 1 && (
+      {/* TAMPILKAN TOMBOL NAVIGASI MANUAL HANYA JIKA BUKAN CANVA (Karena Canva sudah punya tombol sendiri) */}
+      {!isCanvaLink && dynamicSrcArray.length > 1 && (
         <>
           <button
             onClick={(e) => {
