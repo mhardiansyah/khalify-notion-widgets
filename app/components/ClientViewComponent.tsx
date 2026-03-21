@@ -112,6 +112,7 @@ export default function ClientViewComponent({
 
   const filteredData = filtered
     .filter((item) => {
+      // 🔥 BERSAIHKAN PARAM URL: Hapus '+' dan spasi ekstra
       const platformParam = params.get("platform")?.replace(/\+/g, " ").trim().toLowerCase();
       const statusParam = params.get("status")?.replace(/\+/g, " ").trim().toLowerCase();
       const pillarParam = params.get("pillar")?.replace(/\+/g, " ").trim().toLowerCase();
@@ -119,29 +120,34 @@ export default function ClientViewComponent({
 
       const props = item.properties;
 
+      // Ambil kolom pake fungsi anti-typo
       const hideProp = getProp(props, "Hide");
-      const platformProp = getProp(props, "Platform");
+      const platformProp = getProp(props, "Platforms");
       const statusProp = getProp(props, "Status");
       const pillarProp = getProp(props, "Pillar");
       const pinnedProp = getProp(props, "Pinned");
 
       if (hideProp?.checkbox === true) return false;
 
+      // 1. Filter Platform
       if (platformParam && platformParam !== "all") {
-        const platformVals = getNotionValues(platformProp).map(v => v.trim().toLowerCase());
+        const platformVals = getNotionValues(platformProp).flatMap(v => v.split(',').map(s => s.trim().toLowerCase()));
         if (!platformVals.includes(platformParam)) return false;
       }
 
+      // 2. Filter Status
       if (statusParam && statusParam !== "all") {
         const statusVals = getNotionValues(statusProp).map(v => v.trim().toLowerCase());
         if (!statusVals.includes(statusParam)) return false;
       }
 
+      // 3. Filter Pillar
       if (pillarParam && pillarParam !== "all") {
         const pillarVals = getNotionValues(pillarProp).map(v => v.trim().toLowerCase());
         if (!pillarVals.includes(pillarParam)) return false;
       }
 
+      // 4. Filter Pinned
       if (pinnedParam === "true" && pinnedProp?.checkbox !== true) return false;
       if (pinnedParam === "false" && pinnedProp?.checkbox !== false) return false;
 
@@ -487,7 +493,7 @@ function BioSection({ profile, theme }: any) {
     Boolean(avatarUrl) && 
     avatarUrl.trim() !== "" && 
     !avatarUrl.includes("notion.so/image") &&
-    !avatarUrl.includes("dicebear.com/7.x/notionists"); 
+    !avatarUrl.includes("dicebear.com/7.x/notionists");
 
   return (
     <section
@@ -496,17 +502,11 @@ function BioSection({ profile, theme }: any) {
       }`}
     >
       <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 flex items-center justify-center ${theme === "light" ? "border-gray-200 bg-gray-50" : "border-[#333333] bg-[#222222]"}`}>
-        
-        {isValidAvatar ? (
-          <img
-            src={avatarUrl} 
-            alt="Profile Avatar"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <UserIcon className={`w-10 h-10 ${theme === "light" ? "text-gray-300" : "text-gray-600"}`} />
-        )}
-
+        <img
+          src={isValidAvatar ? avatarUrl : "/person.png"} 
+          alt="Profile Avatar"
+          className="w-full h-full object-cover"
+        />
       </div>
 
       <h3 className="font-semibold text-[15px] mb-2">{name}</h3>
@@ -605,10 +605,10 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
       {filtered.map((item: any, i: number) => {
         const name = getProp(item.properties, "Name")?.title?.[0]?.plain_text || "Untitled";
         
-        // 🔥 Ekstrak gambar (Carousel ready)
-        const images = extractAllImages(item); 
-        const pinned = getProp(item.properties, "Pinned")?.checkbox;
+        // 🔥 MENGGUNAKAN FUNGSI BARU UNTUK MENDAPATKAN ARRAY GAMBAR (MENDUKUNG CAROUSEL)
+        const images = extractAllImages(item);
         
+        const pinned = getProp(item.properties, "Pinned")?.checkbox;
         const publishDateRaw = getProp(item.properties, "Publish Date")?.date?.start;
         const publishDateStr = formatDate(publishDateRaw);
 
@@ -633,6 +633,7 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
               </div>
             )}
 
+            {/* 🔥 MENGIRIM ARRAY KE AUTOTHUMBNAIL */}
             <AutoThumbnail src={images} />
 
             <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
@@ -645,7 +646,6 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
                  {name}
                </p>
             </div>
-
           </div>
         );
       })}
@@ -662,6 +662,7 @@ function DetailModal({ item, theme, onClose }: any) {
   }, []);
 
   const name = getProp(item.properties, "Name")?.title?.[0]?.plain_text || "Untitled";
+  // 🔥 MENGGUNAKAN FUNGSI BARU UNTUK MODAL
   const images = extractAllImages(item);
 
   return (
@@ -684,13 +685,11 @@ function DetailModal({ item, theme, onClose }: any) {
           <X size={18} />
         </button>
 
-        <div className="flex flex-col lg:flex-row relative">
+        <div className="flex flex-col lg:flex-row">
           <div className="w-full lg:w-2/3 bg-black flex items-center justify-center relative min-h-[50vh]">
             <div className="w-full h-[80vh] flex items-center justify-center">
-              <AutoThumbnail 
-                src={images} 
-                style={{ objectFit: "contain" }} 
-              />
+               {/* 🔥 MENGGANTI TAG <img> LAMA AGAR CAROUSEL BISA BEKERJA DI MODAL */}
+               <AutoThumbnail src={images} style={{ objectFit: "contain" }} />
             </div>
           </div>
         </div>
@@ -699,40 +698,30 @@ function DetailModal({ item, theme, onClose }: any) {
   );
 }
 
-// 🔥 FUNGSI SAPU JAGAT BRUTAL: Apapun tipe propertinya, kalau namanya cocok dan isinya link, tangkap!
+/* ================= HELPER FUNCTIONS ================= */
+
+// 🔥 PERBAIKAN: Fungsi Sapu Jagat untuk mendeteksi SEMUA gambar menjadi Array (Carousel Ready)
 function extractAllImages(item: any): string[] {
   const p = item.properties;
   const images: string[] = [];
-
-  // 1. Kolom prioritas yang umumnya diisi user
-  const targetColumns = ["Attachment", "Files & media", "Image Source", "Image", "Cover", "Thumbnail", "Media", "Link", "URL", "Video"];
-
-  targetColumns.forEach(colName => {
-    const col = getProp(p, colName);
-    if (!col) return;
-
-    // A. Tipe Files / Upload (Bisa foto dari komputer atau "Embed Link" dari Notion)
-    if (col.type === "files" || col.files) {
-      col.files.forEach((f: any) => {
-        if (f.file?.url) images.push(f.file.url);
-        else if (f.external?.url) images.push(f.external.url);
-        else if (f.name?.startsWith("http")) images.push(f.name);
+  
+  // 1. Cek Kolom File/Attachment (Upload Lokal / Kolom "Upload" dari CSV)
+  // Menambahkan array target props agar aman menangkap data CSV Anda
+  const fileProps = ["Attachment", "Files & media", "Upload", "Image"];
+  fileProps.forEach((propName) => {
+    const targetProp = getProp(p, propName);
+    if (targetProp && targetProp.files && targetProp.files.length > 0) {
+      targetProp.files.forEach((fileObj: any) => {
+        if (fileObj.type === "file" && fileObj.file?.url) {
+          images.push(fileObj.file.url);
+        } else if (fileObj.type === "external" && fileObj.external?.url) {
+          images.push(fileObj.external.url);
+        }
       });
-    } 
-    // B. Tipe URL Murni (Sering buat taruh link YT / Unsplash)
-    else if (col.type === "url" && col.url) {
-      images.push(col.url);
-    } 
-    // C. Tipe Text Biasa / Rich Text yang isinya link HTTP
-    else if (col.type === "rich_text" && col.rich_text && col.rich_text.length > 0) {
-      const textVal = col.rich_text[0]?.plain_text?.trim();
-      if (textVal && textVal.startsWith("http")) {
-        images.push(textVal);
-      }
     }
   });
 
-  // 2. Ekstrak Cover Image bawaan halaman Notion jika masih kosong
+  // 2. Cek apakah ada Cover Image bawaan Notion
   if (item.cover) {
     if (item.cover.type === "file" && item.cover.file?.url) {
       images.push(item.cover.file.url);
@@ -741,21 +730,25 @@ function extractAllImages(item: any): string[] {
     }
   }
 
-  // 3. Jika belum nemu apa-apa dari nama kolom yang spesifik, cari di SEMUA kolom bertipe URL
-  if (images.length === 0) {
-    for (const key in p) {
-      if (p[key]?.type === "url" && p[key]?.url) {
-        images.push(p[key].url);
-      }
+  // 3. Cek properti tipe URL (Mencakup kolom "Link", "Canva", dll dari file CSV-mu)
+  for (const key in p) {
+    if (p[key]?.type === "url" && p[key]?.url) {
+      images.push(p[key].url);
     }
   }
 
-  // 4. Bersihkan hasil dari null/kosong dan hilangkan duplikasi URL
-  const uniqueImages = Array.from(new Set(images.filter(Boolean)));
-
-  if (uniqueImages.length === 0) {
-    return ["https://api.dicebear.com/7.x/shapes/svg?seed=placeholder"];
+  // 4. Fallback ke properti string URL biasa (kalau masih ada)
+  const attachment = getProp(p, "Attachment") || getProp(p, "Files & media") || getProp(p, "Upload");
+  const simpleUrl = attachment?.url;
+  if (typeof simpleUrl === "string" && simpleUrl.startsWith("http")) {
+      images.push(simpleUrl);
   }
 
-  return uniqueImages;
+  // 5. Jika tetap kosong, gunakan gambar dadu
+  if (images.length === 0) {
+     images.push("https://api.dicebear.com/7.x/shapes/svg?seed=placeholder");
+  }
+
+  // Filter duplikat agar jika ada URL yang sama tidak dirender 2x di Carousel
+  return Array.from(new Set(images));
 }

@@ -7,16 +7,23 @@ async function fetchCanvaThumbnail(url: string): Promise<string | null> {
 
   console.log(`🔍 Mengirim ke Canva OEmbed: ${cleanUrl}`);
 
-  const canvaRes = await fetch(
-    `https://www.canva.com/oembed?url=${encodeURIComponent(cleanUrl)}`
-  );
+  try {
+    // 🔥 PERBAIKAN FATAL: Menggunakan endpoint API Canva yang terbaru!
+    const canvaRes = await fetch(
+      `https://api.canva.com/_spi/presentation/_oembed?url=${encodeURIComponent(cleanUrl)}`
+    );
 
-  if (!canvaRes.ok) {
+    if (!canvaRes.ok) {
+      console.log(`❌ API Canva Menolak: Status ${canvaRes.status} ${canvaRes.statusText}`);
+      return null;
+    }
+
+    const data = await canvaRes.json();
+    return data.thumbnail_url ?? null;
+  } catch (err) {
+    console.error("Fetch Canva error:", err);
     return null;
   }
-
-  const data = await canvaRes.json();
-  return data.thumbnail_url ?? null;
 }
 
 export async function GET(request: NextRequest) {
@@ -27,28 +34,45 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Parameter URL diperlukan." }, { status: 400 });
   }
 
-  const baseUrl = url
-    .replace(/\/edit(\?.*)?$/, "/view")
-    .replace(/\/view[\?#].*$/, "/view");
+  const isCanva = url.toLowerCase().includes("canva.com");
 
   try {
-    const thumbnails: string[] = [];
-    let page = 1;
-    const MAX_PAGES = 20;
+    // ==========================================
+    // LOGIKA KHUSUS CANVA (Hanya pakai OEmbed)
+    // ==========================================
+    if (isCanva) {
+      const baseUrl = url
+        .replace(/\/edit(\?.*)?$/, "/view")
+        .replace(/\/view[\?#].*$/, "/view");
 
-    while (page <= MAX_PAGES) {
-      const pageUrl = `${baseUrl}#${page}`;
-      const thumb = await fetchCanvaThumbnail(pageUrl);
+      const thumbnails: string[] = [];
+      let page = 1;
+      const MAX_PAGES = 20;
 
-      if (!thumb) break;
-      if (page > 1 && thumb === thumbnails[0]) break;
+      // 1. Coba ambil multiple pages (Carousel)
+      while (page <= MAX_PAGES) {
+        const pageUrl = `${baseUrl}#${page}`;
+        const thumb = await fetchCanvaThumbnail(pageUrl);
 
-      thumbnails.push(thumb);
-      page++;
-    }
+        if (!thumb) break;
+        if (page > 1 && thumb === thumbnails[0]) break;
 
-    if (thumbnails.length === 0) {
-      console.log(`⚠️ Loop halaman gagal, mencoba tanpa fragment...`);
+        thumbnails.push(thumb);
+        page++;
+      }
+
+      if (thumbnails.length > 0) {
+        console.log(`🎉 Berhasil mendapat ${thumbnails.length} thumbnail Canva!`);
+        return NextResponse.json({
+          thumbnail_url: thumbnails[0],
+          thumbnails,
+          source: "canva-oembed",
+          pages: thumbnails.length,
+        });
+      }
+
+      // 2. Fallback tanpa hashtag page (Single Image)
+      console.log(`⚠️ Loop gagal, mencoba fetch single page Canva...`);
       const fallbackThumb = await fetchCanvaThumbnail(baseUrl);
 
       if (fallbackThumb) {
@@ -60,34 +84,33 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // Fallback terakhir: Microlink
-      console.log(`🔄 Mencoba Microlink sebagai fallback...`);
-      // 🔥 PERBAIKAN 1: Tambahkan parameter screenshot=true
+      console.log(`❌ Link Canva ditolak API. Kemungkinan besar belum diset "Anyone with the link".`);
+      return NextResponse.json({ error: "Link Canva belum public" }, { status: 403 });
+
+    } 
+    // ==========================================
+    // LOGIKA UNTUK WEBSITE LAIN (Pakai Microlink)
+    // ==========================================
+    else {
+      console.log(`🔄 Mencoba Microlink untuk link non-Canva...`);
       const microlinkRes = await fetch(
         `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true`
       );
       const microlinkData = await microlinkRes.json();
 
       if (microlinkData.status === "success") {
-        // 🔥 PERBAIKAN 2: HAPUS microlinkData.data.logo.url AGAR LOGO "C" TIDAK MUNCUL!
         const thumbUrl =
           microlinkData.data?.screenshot?.url || 
           microlinkData.data?.image?.url ||
           null;
           
-        return NextResponse.json({ thumbnail_url: thumbUrl, thumbnails: thumbUrl ? [thumbUrl] : [], source: "microlink", pages: 1 });
+        if (thumbUrl) {
+          return NextResponse.json({ thumbnail_url: thumbUrl, thumbnails: [thumbUrl], source: "microlink", pages: 1 });
+        }
       }
 
       return NextResponse.json({ error: "Thumbnail tidak ditemukan." }, { status: 404 });
     }
-
-    console.log(`🎉 Berhasil mendapat ${thumbnails.length} thumbnail`);
-    return NextResponse.json({
-      thumbnail_url: thumbnails[0],
-      thumbnails,
-      source: "canva-oembed",
-      pages: thumbnails.length,
-    });
 
   } catch (error) {
     console.error("💥 Error di API route:", error);
