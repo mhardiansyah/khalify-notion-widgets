@@ -61,8 +61,15 @@ export function EmbedFilter({
       const props = item.properties;
 
       // getNotionValues sudah menangani ekstraksi dari Select/Multi-select/Status/Rollup
-      getNotionValues(getProp(props, "Platform")).forEach((v) => {
-        if (v) platforms.add(v.trim());
+      const targetPlatformProp = getProp(props, "Platforms") || getProp(props, "Platform");
+      getNotionValues(targetPlatformProp).forEach((v) => {
+        if (v) {
+          // Pecah string berdasarkan koma (jika rollup menyatukan teks)
+          v.split(",").forEach((splitVal) => {
+            const cleanVal = splitVal.trim();
+            if (cleanVal) platforms.add(cleanVal);
+          });
+        }
       });
       getNotionValues(getProp(props, "Status")).forEach((v) => {
         if (v) statuses.add(v.trim());
