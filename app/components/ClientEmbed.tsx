@@ -42,7 +42,7 @@ export default function EmbedClient({ initialData }: any) {
           const name = item.name;
 
           return (
-            <div
+            <div  
               key={i}
               className="relative group bg-gray-900 rounded-lg overflow-hidden"
             >

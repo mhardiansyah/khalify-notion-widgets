@@ -46,25 +46,25 @@ interface Props {
 /* ================= FUNGSI SAPU JAGAT ================= */
 function getNotionValues(prop: any): string[] {
   if (!prop) return [];
-  
+
   if (prop.select && prop.select.name) return [prop.select.name];
   if (prop.multi_select) return prop.multi_select.map((s: any) => s.name);
   if (prop.status && prop.status.name) return [prop.status.name];
   if (prop.rich_text) return prop.rich_text.map((t: any) => t.plain_text);
   if (prop.title) return prop.title.map((t: any) => t.plain_text);
-  
+
   if (prop.type === "rollup" && prop.rollup && prop.rollup.array) {
     let results: string[] = [];
     prop.rollup.array.forEach((item: any) => {
-       if (item.type) {
-           results = results.concat(getNotionValues({ [item.type]: item[item.type] }));
-       } else {
-           results = results.concat(getNotionValues(item));
-       }
+      if (item.type) {
+        results = results.concat(getNotionValues({ [item.type]: item[item.type] }));
+      } else {
+        results = results.concat(getNotionValues(item));
+      }
     });
     return results;
   }
-  
+
   return [];
 }
 
@@ -116,7 +116,7 @@ export default function ClientViewComponent({
       const platformParam = params.get("platform")?.replace(/\+/g, " ").trim().toLowerCase();
       const statusParam = params.get("status")?.replace(/\+/g, " ").trim().toLowerCase();
       const pillarParam = params.get("pillar")?.replace(/\+/g, " ").trim().toLowerCase();
-      const pinnedParam = params.get("pinned"); 
+      const pinnedParam = params.get("pinned");
 
       const props = item.properties;
 
@@ -168,7 +168,7 @@ export default function ClientViewComponent({
 
   const displayUsername = profile?.username || "";
 
-  const isFilterActive = 
+  const isFilterActive =
     (params.get("platform") && params.get("platform")?.toLowerCase() !== "all") ||
     (params.get("status") && params.get("status")?.toLowerCase() !== "all") ||
     (params.get("pillar") && params.get("pillar")?.toLowerCase() !== "all") ||
@@ -181,16 +181,15 @@ export default function ClientViewComponent({
   /* ================= RENDER ================= */
 
   return (
-    <main className={`${bg} min-h-screen w-full overflow-x-hidden`}>
+    <main className={`${bg} min-h-screen w-full overflow-x-hidden overflow-y-hidden`}>
       <div className="max-w-7xl mx-auto px-5">
         {/* ================= HEADER ================= */}
         <header
           className={`sticky top-0 z-40 border-b backdrop-blur
-    ${
-      currentTheme === "light"
-        ? "bg-white/80 border-gray-200"
-        : "bg-[#191919]/90 border-[#333333]" 
-    }`}
+    ${currentTheme === "light"
+              ? "bg-white/80 border-gray-200"
+              : "bg-[#191919]/90 border-[#333333]"
+            }`}
         >
           <div className="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -247,11 +246,10 @@ export default function ClientViewComponent({
                 {openSetting && (
                   <div
                     className={`absolute right-0 top-full mt-2 z-50 w-56 rounded-xl border shadow overflow-hidden
-                  ${
-                    currentTheme === "light"
-                      ? "bg-white border-gray-200"
-                      : "bg-[#222222] border-[#333333]" 
-                  }`}
+                  ${currentTheme === "light"
+                        ? "bg-white border-gray-200"
+                        : "bg-[#222222] border-[#333333]"
+                      }`}
                   >
                     <SettingToggle
                       theme={currentTheme}
@@ -282,56 +280,53 @@ export default function ClientViewComponent({
                     />
 
                     <div
-                      className={`h-px my-1 ${
-                        currentTheme === "light"
-                          ? "bg-gray-200"
-                          : "bg-[#333333]" 
-                      }`}
+                      className={`h-px my-1 ${currentTheme === "light"
+                        ? "bg-gray-200"
+                        : "bg-[#333333]"
+                        }`}
                     />
 
                     {/* PRO CTA */}
                     <div className="px-2 pb-2 pt-1">
-                        {isPro ? (
-                          <button
-                            onClick={() => {
-                              window.open(
-                                "https://widget.khlasify.com/accounts",
-                                "_blank"
-                              );
-                            }}
-                            className={`
+                      {isPro ? (
+                        <button
+                          onClick={() => {
+                            window.open(
+                              "https://widget.khlasify.com/accounts",
+                              "_blank"
+                            );
+                          }}
+                          className={`
                           w-full py-2.5 text-sm font-semibold rounded-lg
                           transition
-          ${
-            currentTheme === "light"
-              ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
-              : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30" 
-          }
+          ${currentTheme === "light"
+                              ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
+                              : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30"
+                            }
               `}
-                          >
-                            Edit profile
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              window.open(
-                                "https://khlasify.myr.id/pl/content-pro",
-                                "_blank",
-                              );
-                            }}
-                            className={`
+                        >
+                          Edit profile
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            window.open(
+                              "https://khlasify.myr.id/pl/content-pro",
+                              "_blank",
+                            );
+                          }}
+                          className={`
           w-full py-2.5 text-sm font-semibold rounded-lg
           transition
-          ${
-            currentTheme === "light"
-              ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
-              : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30" 
-          }
+          ${currentTheme === "light"
+                              ? "text-purple-600 bg-purple-50 hover:bg-purple-100"
+                              : "text-purple-400 bg-purple-600/20 hover:bg-purple-600/30"
+                            }
               `}
-                          >
-                            Upgrade to PRO
-                          </button>
-                        )}
+                        >
+                          Upgrade to PRO
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -388,11 +383,10 @@ export default function ClientViewComponent({
         flex items-center justify-between gap-3
         px-4 py-3 rounded-2xl shadow-lg
         backdrop-blur
-        ${
-          currentTheme === "light"
-            ? "bg-white/90 text-gray-900 border border-gray-200"
-            : "bg-[#222222]/90 text-white border border-[#333333]" 
-        }
+        ${currentTheme === "light"
+                  ? "bg-white/90 text-gray-900 border border-gray-200"
+                  : "bg-[#222222]/90 text-white border border-[#333333]"
+                }
       `}
             >
               <p className="text-xs sm:text-sm font-medium">
@@ -461,14 +455,12 @@ function SettingToggle({ label, value, onChange, theme, disabled }: any) {
     >
       <span>{label}</span>
       <span
-        className={`w-9 h-5 rounded-full transition ${
-          value ? "bg-purple-600" : "bg-gray-300"
-        }`}
+        className={`w-9 h-5 rounded-full transition ${value ? "bg-purple-600" : "bg-gray-300"
+          }`}
       >
         <span
-          className={`block w-4 h-4 bg-white rounded-full translate-y-0.5 transition ${
-            value ? "translate-x-4" : "translate-x-1"
-          }`}
+          className={`block w-4 h-4 bg-white rounded-full translate-y-0.5 transition ${value ? "translate-x-4" : "translate-x-1"
+            }`}
         />
       </span>
     </button>
@@ -479,7 +471,7 @@ function BioSection({ profile, theme }: any) {
   const {
     username = "",
     name = "Your Name",
-    avatarUrl = "", 
+    avatarUrl = "",
     bio = "🚀 Build efficient & friendly Notion workspaces.\n🔥 Minimalist setup, maximal productivity.\n🎁 FREE Notion Template! 👇",
     link = "https://khlasify.notion.site",
   } = profile || {};
@@ -489,21 +481,20 @@ function BioSection({ profile, theme }: any) {
     return bioText.split("\n").map((line, i) => <p key={i}>{line}</p>);
   };
 
-  const isValidAvatar = 
-    Boolean(avatarUrl) && 
-    avatarUrl.trim() !== "" && 
+  const isValidAvatar =
+    Boolean(avatarUrl) &&
+    avatarUrl.trim() !== "" &&
     !avatarUrl.includes("notion.so/image") &&
     !avatarUrl.includes("dicebear.com/7.x/notionists");
 
   return (
     <section
-      className={`flex flex-col items-start text-left w-full px-1 ${
-        theme === "light" ? "text-gray-900" : "text-white"
-      }`}
+      className={`flex flex-col items-start text-left w-full px-1 ${theme === "light" ? "text-gray-900" : "text-white"
+        }`}
     >
-      <div className={`w-[84px] h-[84px] rounded-full overflow-hidden border mb-3 shrink-0 flex items-center justify-center ${theme === "light" ? "border-gray-200 bg-gray-50" : "border-[#333333] bg-[#222222]"}`}>
+      <div className={`w-[84px] h-[84px] rounded-full overflow-y-hidden border mb-3 shrink-0 flex items-center justify-center ${theme === "light" ? "border-gray-200 bg-gray-50" : "border-[#333333] bg-[#222222]"}`}>
         <img
-          src={isValidAvatar ? avatarUrl : "/person.png"} 
+          src={isValidAvatar ? avatarUrl : "/person.png"}
           alt="Profile Avatar"
           className="w-full h-full object-cover"
         />
@@ -538,20 +529,19 @@ function HighlightSection({ highlights, theme }: any) {
   const displayHighlights =
     !highlights || highlights.length === 0
       ? [
-          { title: "Highlight", image: "" },
-          { title: "Highlight", image: "" },
-          { title: "Highlight", image: "" },
-          { title: "Highlight", image: "" },
-        ]
+        { title: "Highlight", image: "" },
+        { title: "Highlight", image: "" },
+        { title: "Highlight", image: "" },
+        { title: "Highlight", image: "" },
+      ]
       : highlights;
 
   return (
     <section
-      className={`border rounded-2xl p-4 ${
-        theme === "light"
-          ? "bg-gray-50 border-gray-200 text-gray-900"
-          : "bg-[#222222] border-[#333333] text-gray-300" 
-      }`}
+      className={`border rounded-2xl p-4 ${theme === "light"
+        ? "bg-gray-50 border-gray-200 text-gray-900"
+        : "bg-[#222222] border-[#333333] text-gray-300"
+        }`}
     >
       <div className="flex gap-4 overflow-x-auto pb-1 items-center">
         {displayHighlights.map((h: any, i: number) => (
@@ -560,11 +550,10 @@ function HighlightSection({ highlights, theme }: any) {
             className="min-w-[64px] flex flex-col items-center gap-2"
           >
             <div
-              className={`w-16 h-16 rounded-full border-2 overflow-hidden flex items-center justify-center shrink-0 ${
-                theme === "light"
-                  ? "bg-gray-100 border-gray-200"
-                  : "bg-[#333333] border-[#444444]" 
-              }`}
+              className={`w-16 h-16 rounded-full border-2 overflow-hidden flex items-center justify-center shrink-0 ${theme === "light"
+                ? "bg-gray-100 border-gray-200"
+                : "bg-[#333333] border-[#444444]"
+                }`}
             >
               {h.image && (
                 <img
@@ -587,27 +576,27 @@ function HighlightSection({ highlights, theme }: any) {
 function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
-    const options: Intl.DateTimeFormatOptions = { 
-      day: 'numeric', 
-      month: 'long', 
-      year: 'numeric' 
+    const options: Intl.DateTimeFormatOptions = {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
     };
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
   return (
     <div
-      className="grid" 
+      className="grid"
       style={{
         gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
       }}
     >
       {filtered.map((item: any, i: number) => {
         const name = getProp(item.properties, "Name")?.title?.[0]?.plain_text || "Untitled";
-        
+
         // 🔥 MENGGUNAKAN FUNGSI BARU UNTUK MENDAPATKAN ARRAY GAMBAR (MENDUKUNG CAROUSEL)
         const images = extractAllImages(item);
-        
+
         const pinned = getProp(item.properties, "Pinned")?.checkbox;
         const publishDateRaw = getProp(item.properties, "Publish Date")?.date?.start;
         const publishDateStr = formatDate(publishDateRaw);
@@ -617,9 +606,9 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
             key={i}
             onClick={() => onSelect(item)}
             className={`relative group overflow-hidden aspect-[4/5] cursor-pointer hover:-translate-y-1 transition ${cardBg} border ${theme === "dark" ? "border-[#333333]" : "border-gray-100"}`}
-            style={{ 
-               marginRight: i % 3 !== 2 ? '-1px' : '0',
-               marginBottom: '-1px'
+            style={{
+              marginRight: i % 3 !== 2 ? '-1px' : '0',
+              marginBottom: '-1px'
             }}
           >
             {pinned && (
@@ -637,14 +626,14 @@ function VisualGrid({ filtered, gridColumns, theme, cardBg, onSelect }: any) {
             <AutoThumbnail src={images} />
 
             <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-               {publishDateStr && (
-                 <p className="text-white/80 text-[10px] sm:text-xs font-medium mb-0.5">
-                   {publishDateStr}
-                 </p>
-               )}
-               <p className="text-white text-xs sm:text-sm font-bold line-clamp-2 leading-tight">
-                 {name}
-               </p>
+              {publishDateStr && (
+                <p className="text-white/80 text-[10px] sm:text-xs font-medium mb-0.5">
+                  {publishDateStr}
+                </p>
+              )}
+              <p className="text-white text-xs sm:text-sm font-bold line-clamp-2 leading-tight">
+                {name}
+              </p>
             </div>
           </div>
         );
@@ -672,11 +661,10 @@ function DetailModal({ item, theme, onClose }: any) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-5xl rounded-2xl overflow-hidden ${
-          theme === "light"
-            ? "bg-gray-50 border-gray-200"
-            : "bg-[#222222] border-[#333333]" 
-        }`}
+        className={`w-full max-w-5xl rounded-2xl overflow-hidden ${theme === "light"
+          ? "bg-gray-50 border-gray-200"
+          : "bg-[#222222] border-[#333333]"
+          }`}
       >
         <button
           onClick={onClose}
@@ -688,8 +676,8 @@ function DetailModal({ item, theme, onClose }: any) {
         <div className="flex flex-col lg:flex-row">
           <div className="w-full lg:w-2/3 bg-black flex items-center justify-center relative min-h-[50vh]">
             <div className="w-full h-[80vh] flex items-center justify-center">
-               {/* 🔥 MENGGANTI TAG <img> LAMA AGAR CAROUSEL BISA BEKERJA DI MODAL */}
-               <AutoThumbnail src={images} style={{ objectFit: "contain" }} />
+              {/* 🔥 MENGGANTI TAG <img> LAMA AGAR CAROUSEL BISA BEKERJA DI MODAL */}
+              <AutoThumbnail src={images} style={{ objectFit: "contain" }} />
             </div>
           </div>
         </div>
@@ -704,7 +692,7 @@ function DetailModal({ item, theme, onClose }: any) {
 function extractAllImages(item: any): string[] {
   const p = item.properties;
   const images: string[] = [];
-  
+
   // 1. Cek Kolom File/Attachment (Upload Lokal / Kolom "Upload" dari CSV)
   // Menambahkan array target props agar aman menangkap data CSV Anda
   const fileProps = ["Attachment", "Files & media", "Upload", "Image"];
@@ -741,12 +729,12 @@ function extractAllImages(item: any): string[] {
   const attachment = getProp(p, "Attachment") || getProp(p, "Files & media") || getProp(p, "Upload");
   const simpleUrl = attachment?.url;
   if (typeof simpleUrl === "string" && simpleUrl.startsWith("http")) {
-      images.push(simpleUrl);
+    images.push(simpleUrl);
   }
 
   // 5. Jika tetap kosong, gunakan gambar dadu
   if (images.length === 0) {
-     images.push("https://api.dicebear.com/7.x/shapes/svg?seed=placeholder");
+    images.push("https://api.dicebear.com/7.x/shapes/svg?seed=placeholder");
   }
 
   // Filter duplikat agar jika ada URL yang sama tidak dirender 2x di Carousel
