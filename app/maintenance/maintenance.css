@@ -1,0 +1,344 @@
+/* ═══════════════════════════════════════════════════════
+   Maintenance Page — khlasify Theme
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Root Container ── */
+.maintenance-root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: linear-gradient(145deg, #faf5ff 0%, #ffffff 40%, #f3e8ff 100%);
+  padding: 24px;
+}
+
+/* ── Floating Gradient Orbs ── */
+.orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.orb-1 {
+  width: 420px;
+  height: 420px;
+  top: -80px;
+  left: -100px;
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.25) 0%, rgba(147, 51, 234, 0.05) 70%);
+}
+
+.orb-2 {
+  width: 350px;
+  height: 350px;
+  bottom: -60px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, rgba(139, 92, 246, 0.05) 70%);
+}
+
+.orb-3 {
+  width: 200px;
+  height: 200px;
+  top: 30%;
+  right: 15%;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.2) 0%, transparent 70%);
+}
+
+/* ── Glassmorphism Card ── */
+.maintenance-card {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 560px;
+  width: 100%;
+  padding: 48px 32px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 24px;
+  box-shadow:
+    0 20px 60px -10px rgba(147, 51, 234, 0.1),
+    0 8px 24px -6px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Logo ── */
+.maintenance-logo {
+  margin-bottom: 28px;
+}
+
+/* ── Animated Icons ── */
+.maintenance-icons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+}
+
+.icon-wrapper--gear {
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(135deg, #9333ea, #7c3aed);
+  box-shadow: 0 4px 16px rgba(147, 51, 234, 0.3);
+}
+
+.icon-wrapper--wrench {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #a855f7, #8b5cf6);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);
+}
+
+.icon-gear {
+  width: 26px;
+  height: 26px;
+  color: #ffffff;
+}
+
+.icon-wrench {
+  width: 22px;
+  height: 22px;
+  color: #ffffff;
+}
+
+/* ── Title ── */
+.maintenance-title {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #1e293b;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.maintenance-title--gradient {
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 50%, #6d28d9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Subtitle ── */
+.maintenance-subtitle {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: #64748b;
+  margin-bottom: 32px;
+  max-width: 420px;
+}
+
+/* ── Countdown Row ── */
+.countdown-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+
+.countdown-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 62px;
+  padding: 12px 8px;
+  background: linear-gradient(145deg, #faf5ff, #f3e8ff);
+  border: 1px solid #e9d5ff;
+  border-radius: 16px;
+}
+
+.countdown-value {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #7c3aed;
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #a78bfa;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.countdown-separator {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #c4b5fd;
+  padding-bottom: 18px;
+}
+
+/* ── Email Subscribe ── */
+.subscribe-section {
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: 24px;
+}
+
+.subscribe-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.subscribe-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 4px 4px 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.subscribe-input-wrapper:focus-within {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+}
+
+.subscribe-icon {
+  width: 18px;
+  height: 18px;
+  color: #a78bfa;
+  flex-shrink: 0;
+}
+
+.subscribe-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.9rem;
+  color: #1e293b;
+  padding: 12px 0;
+}
+
+.subscribe-input::placeholder {
+  color: #94a3b8;
+}
+
+.subscribe-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #9333ea, #7c3aed);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 16px rgba(147, 51, 234, 0.3);
+}
+
+.subscribe-button:hover {
+  box-shadow: 0 6px 24px rgba(147, 51, 234, 0.4);
+}
+
+.subscribe-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.subscribe-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+}
+
+.subscribe-success {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+  color: #16a34a;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* ── Footer ── */
+.maintenance-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* ── Responsive ── */
+@media (min-width: 640px) {
+  .maintenance-card {
+    padding: 56px 48px;
+  }
+
+  .maintenance-title {
+    font-size: 2.5rem;
+  }
+
+  .countdown-card {
+    min-width: 76px;
+    padding: 16px 12px;
+  }
+
+  .countdown-value {
+    font-size: 2rem;
+  }
+
+  .subscribe-form {
+    flex-direction: row;
+  }
+
+  .subscribe-input-wrapper {
+    flex: 1;
+  }
+}
+
+@media (max-width: 400px) {
+  .countdown-row {
+    gap: 4px;
+  }
+
+  .countdown-card {
+    min-width: 52px;
+    padding: 10px 6px;
+  }
+
+  .countdown-value {
+    font-size: 1.4rem;
+  }
+
+  .countdown-separator {
+    font-size: 1.1rem;
+  }
+
+  .maintenance-title {
+    font-size: 1.6rem;
+  }
+}
